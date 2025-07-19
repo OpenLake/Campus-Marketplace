@@ -1,36 +1,50 @@
-# 🎓 Campus Marketplace
+# 🏫 Campus Marketplace - IIT Bhilai
 
-A student-focused platform for buying, selling, and exchanging goods within your college community. Whether it’s textbooks, electronics, or everyday essentials — this marketplace helps students connect and trade in a secure, verified, and sustainable way.
-
----
-
-## 🚀 Features (Planned)
-
-- 🔐 Verified campus-only access (via institute email or login)
-- 📦 List items for sale or exchange
-- 🔍 Browse or search for available products
-- 💬 In-app chat or contact option for negotiations
-- 📍 Item pickup coordination within campus
-- ♻️ Promotes reuse and reduces waste
+A community-first marketplace app for IIT Bhilai students — built *by the students, for the students*.
 
 ---
 
-## 🛠️ Tech Stack
+## 🚀 What’s the Idea?
 
-> *(To be updated as development progresses)*
+Campus Marketplace is a platform where students of IIT Bhilai can **buy, sell, exchange, or pre-order** items within the campus community.
 
-- **Frontend**: React / Next.js / Flutter / etc.
-- **Backend**: Node.js / Express / Django / etc.
-- **Database**: MongoDB / PostgreSQL
-- **Auth**: Google / Institute SSO / JWT
+Whether you're:
+
+* A graduating student selling your **cycle or mattress** 🛏️🚲
+* Looking to **pre-order food** from Tech Café or AtMart 🥪
+* CoSA and clubs selling **merchandise, T-shirts, or hoodies** 👕
+  — this is the one-stop solution.
 
 ---
 
-## 📁 Project Structure
+## 🛠️ Core Features (Planned)
 
-```bash
-campus-marketplace/
-├── frontend/          # User-facing app
-├── backend/           # API and database logic
-├── docs/              # Planning, wireframes, etc.
-└── README.md
+* 📦 **Student-to-student listing**: Buy/sell second-hand goods like cycles, books, appliances, etc.
+* 🛍️ **Campus Storefronts**: Pre-order from AtMart, Tech Café, or any official campus vendor.
+* 👕 **Merch Sales**: Allow clubs/CoSA to sell merchandise directly through the app.
+* 🔍 **Search & Discover**: View what’s up for sale around campus (Amazon-style).
+* 📱 **Mobile-first design**: Built as a progressive web app or native mobile app for quick access.
+
+---
+
+## 👥 Who is it for?
+
+* **Seniors** selling used items before graduating
+* **Freshers** looking for cheaper alternatives
+* **Campus groups & clubs** managing bulk orders or selling merch
+* **Everyone** who wants a simple way to trade within IIT Bhilai
+
+---
+
+## 📦 Project Status
+
+This is an early-stage idea and the repo is not yet initialized.
+We’re adding this README so anyone interested can **pick up the project** and start building.
+
+---
+
+## 🤝 How to Contribute
+
+Want to contribute to this idea? Feel free to fork the repo once it's set up, or reach out on campus/Discord/OpenLake.
+
+Let’s build something useful together for IIT Bhilai! 💙
