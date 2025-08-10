@@ -24,6 +24,7 @@ Whether you're:
 * 👕 **Merch Sales**: Allow clubs/CoSA to sell merchandise directly through the app.
 * 🔍 **Search & Discover**: View what’s up for sale around campus (Amazon-style).
 * 📱 **Mobile-first design**: Built as a progressive web app or native mobile app for quick access.
+* dominos
 
 ---
 
