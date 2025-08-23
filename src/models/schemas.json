@@ -1,0 +1,474 @@
+{
+  "Analytics": {
+    "metricType": {
+      "type": "String",
+      "enum": [
+        "user_registration",
+        "listing_creation",
+        "order_placed",
+        "order_completed",
+        "review_submitted"
+      ],
+      "required": true,
+      "index": true
+    },
+    "value": { "type": "Number", "required": true, "default": 1 },
+    "date": { "type": "Date", "default": "Date.now", "index": true },
+    "userId": { "type": "ObjectId", "ref": "User", "index": true },
+    "entityType": {
+      "type": "String",
+      "enum": ["User", "Listing", "Order", "Review"],
+      "index": true
+    },
+    "entityId": { "type": "ObjectId", "index": true },
+    "timestamps": true
+  },
+  "User": {
+    "name": {
+      "type": "String",
+      "required": true,
+      "trim": true,
+      "minlength": 2,
+      "maxlength": 50
+    },
+    "username": {
+      "type": "String",
+      "required": true,
+      "unique": true,
+      "trim": true,
+      "lowercase": true,
+      "minlength": 3,
+      "maxlength": 30,
+      "match": "^[a-zA-Z0-9_]+$"
+    },
+    "email": {
+      "type": "String",
+      "required": true,
+      "unique": true,
+      "trim": true,
+      "lowercase": true,
+      "index": true,
+      "match": "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"
+    },
+    "password": {
+      "type": "String",
+      "required": true,
+      "minlength": 8,
+      "select": false
+    },
+    "academicInfo": {
+      "studentId": {
+        "type": "String",
+        "unique": true,
+        "sparse": true,
+        "match": "^\\d{9}$"
+      },
+      "department": {
+        "type": "String",
+        "enum": ["CSE", "ECE", "ME", "CE", "EEE", "MME", "DSAI", "BT", "CHE"]
+      },
+      "year": { "type": "String", "enum": ["1st", "2nd", "3rd", "4th"] },
+      "batch": { "type": "Number", "min": 2020, "max": "currentYear" }
+    },
+    "domainVerified": { "type": "Boolean", "default": false },
+    "phone": {
+      "type": "String",
+      "sparse": true,
+      "match": "^(\\+91|91)?[6-9]\\d{9}$"
+    },
+    "whatsapp": { "type": "String", "match": "^(\\+91|91)?[6-9]\\d{9}$" },
+    "roles": {
+      "type": "Array",
+      "enum": ["student", "vendor_admin", "club_admin", "moderator", "admin"],
+      "default": ["student"]
+    },
+    "profileImage": { "type": "String", "default": null },
+    "isVerified": { "type": "Boolean", "default": false },
+    "isActive": { "type": "Boolean", "default": true },
+    "lastLogin": { "type": "Date" },
+    "loginAttempts": { "type": "Number", "default": 0 },
+    "lockUntil": { "type": "Date" },
+    "verificationToken": { "type": "String", "select": false },
+    "verificationTokenExpires": { "type": "Date" },
+    "resetPasswordToken": { "type": "String", "select": false },
+    "resetPasswordExpires": { "type": "Date" },
+    "refreshTokens": [{ "token": "String", "expiresAt": "Date" }],
+    "preferences": {
+      "notifications": {
+        "email": { "type": "Boolean", "default": true },
+        "push": { "type": "Boolean", "default": true }
+      },
+      "privacy": {
+        "showPhone": { "type": "Boolean", "default": false },
+        "showEmail": { "type": "Boolean", "default": true }
+      }
+    },
+    "wishlist": [{ "type": "ObjectId", "ref": "Listing" }],
+    "hostelLocation": {
+      "hostel": {
+        "type": "String",
+        "enum": ["kanhar", "Gopad", "Indravati", "Shivnath"]
+      },
+      "room": { "type": "String", "trim": true },
+      "notes": "String"
+    },
+    "rating": {
+      "average": { "type": "Number", "default": 0, "min": 0, "max": 5 },
+      "count": { "type": "Number", "default": 0 }
+    },
+    "trustScore": { "type": "Number", "default": 0, "min": 0, "max": 100 },
+    "timestamps": true
+  },
+  "Report": {
+    "reporter": {
+      "type": "ObjectId",
+      "ref": "User",
+      "required": true,
+      "index": true
+    },
+    "reportedItem": { "type": "ObjectId", "required": true, "index": true },
+    "reportedItemType": {
+      "type": "String",
+      "enum": ["Listing", "User", "Review"],
+      "required": true
+    },
+    "type": {
+      "type": "String",
+      "enum": [
+        "inappropriate_content",
+        "spam",
+        "fraud",
+        "harassment",
+        "fake_listing",
+        "other"
+      ],
+      "required": true
+    },
+    "description": { "type": "String", "required": true, "maxlength": 500 },
+    "status": {
+      "type": "String",
+      "enum": ["pending", "reviewed", "resolved", "dismissed"],
+      "default": "pending",
+      "index": true
+    },
+    "reviewedBy": { "type": "ObjectId", "ref": "User" },
+    "reviewedAt": { "type": "Date" },
+    "resolution": { "type": "String", "maxlength": 300 },
+    "timestamps": true
+  },
+  "Settings": {
+    "key": {
+      "type": "String",
+      "required": true,
+      "unique": true,
+      "index": true
+    },
+    "value": { "type": "Mixed", "required": true },
+    "category": {
+      "type": "String",
+      "enum": ["general", "security", "payment", "notification"],
+      "default": "general"
+    },
+    "description": { "type": "String", "maxlength": 200 },
+    "isActive": { "type": "Boolean", "default": true },
+    "timestamps": true
+  },
+  "Notification": {
+    "recipient": {
+      "type": "ObjectId",
+      "ref": "User",
+      "required": true,
+      "index": true
+    },
+    "sender": { "type": "ObjectId", "ref": "User" },
+    "type": {
+      "type": "String",
+      "enum": [
+        "order_placed",
+        "order_completed",
+        "order_cancelled",
+        "new_listing",
+        "listing_sold",
+        "review_received",
+        "message_received"
+      ],
+      "required": true,
+      "index": true
+    },
+    "title": { "type": "String", "required": true, "maxlength": 100 },
+    "message": { "type": "String", "required": true, "maxlength": 300 },
+    "relatedId": { "type": "ObjectId", "index": true },
+    "relatedModel": {
+      "type": "String",
+      "enum": ["Order", "Listing", "User", "Review"]
+    },
+    "isRead": { "type": "Boolean", "default": false, "index": true },
+    "readAt": { "type": "Date" },
+    "timestamps": true
+  },
+  "Listing": {
+    "title": {
+      "type": "String",
+      "required": true,
+      "trim": true,
+      "minlength": 3,
+      "maxlength": 100,
+      "index": "text"
+    },
+    "description": {
+      "type": "String",
+      "required": true,
+      "minlength": 10,
+      "maxlength": 2000,
+      "index": "text"
+    },
+    "price": { "type": "Number", "required": true, "min": 0, "max": 1000000 },
+    "originalPrice": { "type": "Number", "min": 0 },
+    "priceHistory": [{ "price": "Number", "changedAt": "Date" }],
+    "negotiable": { "type": "Boolean", "default": true },
+    "images": [
+      { "url": "String", "publicId": "String", "isPrimary": "Boolean" }
+    ],
+    "category": {
+      "type": "String",
+      "enum": [
+        "books",
+        "electronics",
+        "cycle",
+        "hostel-item",
+        "clothing",
+        "stationery",
+        "sports",
+        "food",
+        "other"
+      ],
+      "required": true,
+      "index": true
+    },
+    "subcategory": { "type": "String", "trim": true },
+    "condition": {
+      "type": "String",
+      "enum": ["new", "like-new", "good", "fair", "poor"],
+      "default": "good",
+      "required": true
+    },
+    "brand": { "type": "String", "trim": true, "maxlength": 50 },
+    "model": { "type": "String", "trim": true, "maxlength": 50 },
+    "owner": {
+      "type": "ObjectId",
+      "ref": "User",
+      "required": true,
+      "index": true
+    },
+    "status": {
+      "type": "String",
+      "enum": ["active", "sold", "reserved", "expired", "banned"],
+      "default": "active",
+      "index": true
+    },
+    "isAvailable": { "type": "Boolean", "default": true, "index": true },
+    "isFeatured": { "type": "Boolean", "default": false, "index": true },
+    "isUrgent": { "type": "Boolean", "default": false },
+    "location": {
+      "hostel": {
+        "type": "String",
+        "enum": ["kanhar", "Gopad", "Indravati", "Shivnath"],
+        "required": true
+      },
+      "pickupPoint": { "type": "String", "trim": true },
+      "deliveryAvailable": { "type": "Boolean", "default": false }
+    },
+    "tags": [
+      { "type": "String", "trim": true, "lowercase": true, "maxlength": 20 }
+    ],
+    "views": { "total": { "type": "Number", "default": 0 } },
+    "likes": [{ "type": "ObjectId", "ref": "User" }],
+    "soldTo": { "type": "ObjectId", "ref": "User" },
+    "soldAt": { "type": "Date" },
+    "soldPrice": { "type": "Number" },
+    "expiresAt": { "type": "Date", "index": "expireAfterSeconds:0" },
+    "timestamps": true
+  },
+  "Wishlist": {
+    "user": {
+      "type": "ObjectId",
+      "ref": "User",
+      "required": true,
+      "index": true
+    },
+    "items": [
+      {
+        "listing": { "type": "ObjectId", "ref": "Listing", "required": true },
+        "addedAt": { "type": "Date", "default": "Date.now" }
+      }
+    ],
+    "timestamps": true
+  },
+  "Review": {
+    "reviewer": {
+      "type": "ObjectId",
+      "ref": "User",
+      "required": true,
+      "index": true
+    },
+    "reviewee": {
+      "type": "ObjectId",
+      "ref": "User",
+      "required": true,
+      "index": true
+    },
+    "listing": { "type": "ObjectId", "ref": "Listing", "index": true },
+    "order": { "type": "ObjectId", "ref": "Order", "index": true },
+    "rating": {
+      "type": "Number",
+      "min": 1,
+      "max": 5,
+      "required": true,
+      "index": true
+    },
+    "title": { "type": "String", "trim": true, "maxlength": 100 },
+    "comment": { "type": "String", "trim": true, "maxlength": 500 },
+    "verified": { "type": "Boolean", "default": false },
+    "helpful": { "type": "Number", "default": 0 },
+    "isActive": { "type": "Boolean", "default": true, "index": true },
+    "timestamps": true
+  },
+  "Order": {
+    "orderNumber": { "type": "String", "unique": true, "required": true },
+    "buyer": {
+      "type": "ObjectId",
+      "ref": "User",
+      "required": true,
+      "index": true
+    },
+    "seller": {
+      "type": "ObjectId",
+      "ref": "User",
+      "required": true,
+      "index": true
+    },
+    "listing": { "type": "ObjectId", "ref": "Listing", "required": true },
+    "quantity": { "type": "Number", "default": 1, "min": 1 },
+    "pricing": {
+      "itemPrice": { "type": "Number", "required": true, "min": 0 },
+      "deliveryFee": { "type": "Number", "default": 0, "min": 0 },
+      "total": { "type": "Number", "required": true, "min": 0 }
+    },
+    "status": {
+      "type": "String",
+      "enum": ["pending", "confirmed", "delivered", "cancelled"],
+      "default": "pending",
+      "index": true
+    },
+    "paymentStatus": {
+      "type": "String",
+      "enum": ["pending", "completed", "failed", "refunded"],
+      "default": "pending",
+      "index": true
+    },
+    "paymentMethod": {
+      "type": "String",
+      "enum": ["upi", "cash", "card"],
+      "required": true
+    },
+    "transactionId": { "type": "String", "sparse": true },
+    "deliveryMethod": {
+      "type": "String",
+      "enum": ["pickup", "delivery"],
+      "required": true,
+      "default": "pickup"
+    },
+    "deliveryAddress": {
+      "hostel": {
+        "type": "String",
+        "enum": ["kanhar", "Gopad", "Indravati", "Shivnath"]
+      },
+      "roomNo": { "type": "String", "trim": true },
+      "contactNumber": { "type": "String" }
+    },
+    "notes": { "type": "String", "maxlength": 500 },
+    "completedAt": { "type": "Date" },
+    "cancelledAt": { "type": "Date" },
+    "cancellationReason": { "type": "String" },
+    "timestamps": true
+  },
+  "Chat": {
+    "chatType": {
+      "type": "String",
+      "enum": ["direct", "group"],
+      "default": "direct"
+    },
+    "participants": [
+      {
+        "user": { "type": "ObjectId", "ref": "User", "required": true },
+        "joinedAt": { "type": "Date", "default": "Date.now" },
+        "lastSeen": { "type": "Date", "default": "Date.now" }
+      }
+    ],
+    "messages": [
+      {
+        "sender": { "type": "ObjectId", "ref": "User", "required": true },
+        "messageType": {
+          "type": "String",
+          "enum": ["text", "image", "file"],
+          "default": "text"
+        },
+        "content": { "type": "String", "required": true, "maxlength": 1000 },
+        "attachments": [
+          {
+            "type": "String",
+            "enum": ["image", "document"],
+            "url": "String",
+            "fileName": "String"
+          }
+        ],
+        "readBy": [
+          {
+            "user": { "type": "ObjectId", "ref": "User" },
+            "readAt": { "type": "Date", "default": "Date.now" }
+          }
+        ],
+        "isDeleted": { "type": "Boolean", "default": false },
+        "timestamps": true
+      }
+    ],
+    "lastMessage": {
+      "content": "String",
+      "sender": { "type": "ObjectId", "ref": "User" },
+      "timestamp": "Date"
+    },
+    "isActive": { "type": "Boolean", "default": true },
+    "relatedListing": { "type": "ObjectId", "ref": "Listing" },
+    "timestamps": true
+  },
+  "ActivityLog": {
+    "user": {
+      "type": "ObjectId",
+      "ref": "User",
+      "required": true,
+      "index": true
+    },
+    "activityType": {
+      "type": "String",
+      "enum": [
+        "listing_created",
+        "listing_sold",
+        "order_placed",
+        "order_completed",
+        "review_given",
+        "user_registered",
+        "vendor_created"
+      ],
+      "required": true,
+      "index": true
+    },
+    "description": { "type": "String", "required": true, "maxlength": 200 },
+    "entityType": {
+      "type": "String",
+      "enum": ["User", "Listing", "Order", "Vendor", "Review"],
+      "index": true
+    },
+    "entityId": { "type": "ObjectId", "index": true },
+    "timestamps": true
+  }
+}
