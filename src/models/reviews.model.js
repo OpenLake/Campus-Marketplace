@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import mongoosePaginate from "mongoose-paginate-v2";
 
 const reviewSchema = new mongoose.Schema(
   {
@@ -15,4 +16,6 @@ const reviewSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.model("Review", reviewSchema);
+reviewSchema.plugin(mongoosePaginate);
+
+export const Review = mongoose.model("Review", reviewSchema);

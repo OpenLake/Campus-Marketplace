@@ -49,3 +49,5 @@ We’re adding this README so anyone interested can **pick up the project** and 
 Want to contribute to this idea? Feel free to fork the repo once it's set up, or reach out on campus/Discord/OpenLake.
 
 Let’s build something useful together for IIT Bhilai! 💙
+
+Maintainers : @Rahul5977 , @Slok9931

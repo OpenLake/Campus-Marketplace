@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import mongoosePaginate from "mongoose-paginate-v2";
 
 const REPORT_TYPES = [
   "inappropriate_content",
@@ -104,4 +105,6 @@ reportSchema.index({ reportedItem: 1, reportedItemType: 1 });
 reportSchema.index({ type: 1, status: 1 });
 reportSchema.index({ createdAt: -1 });
 
-export default mongoose.model("Report", reportSchema);
+reportSchema.plugin(mongoosePaginate);
+
+export const Report = mongoose.model("Report", reportSchema);

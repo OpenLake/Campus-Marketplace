@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import mongoosePaginate from "mongoose-paginate-v2";
 
 const METRIC_TYPES = [
   "user_registration",
@@ -89,4 +90,6 @@ analyticsSchema.statics.getBasicStats = function (startDate, endDate) {
   ]);
 };
 
-export default mongoose.model("Analytics", analyticsSchema);
+analyticsSchema.plugin(mongoosePaginate);
+
+export const Analytics = mongoose.model("Analytics", analyticsSchema);

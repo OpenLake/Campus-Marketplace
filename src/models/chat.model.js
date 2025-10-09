@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import mongoosePaginate from "mongoose-paginate-v2";
 
 const messageSchema = new mongoose.Schema(
   {
@@ -21,4 +22,6 @@ const chatSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.model("Chat", chatSchema);
+chatSchema.plugin(mongoosePaginate);
+
+export const Chat = mongoose.model("Chat", chatSchema);

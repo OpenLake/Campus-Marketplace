@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import mongoosePaginate from "mongoose-paginate-v2";
+
 //Send updates (order status, new listing, etc.).
 const notificationSchema = new mongoose.Schema(
   {
@@ -19,4 +21,6 @@ const notificationSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.model("Notification", notificationSchema);
+notificationSchema.plugin(mongoosePaginate);
+
+export const Notification = mongoose.model("Notification", notificationSchema);

@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import mongoosePaginate from "mongoose-paginate-v2";
 
 const CATEGORIES = [
   "books",
@@ -357,4 +358,6 @@ listingSchema.index({ "views.total": -1 });
 listingSchema.index({ likes: 1 });
 listingSchema.index({ expiresAt: 1 });
 
-export default mongoose.model("Listing", listingSchema);
+listingSchema.plugin(mongoosePaginate);
+
+export const Listing = mongoose.model("Listing", listingSchema);

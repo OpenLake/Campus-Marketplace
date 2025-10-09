@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import mongoosePaginate from "mongoose-paginate-v2";
 
 const vendorSchema = new mongoose.Schema(
   {
@@ -18,4 +19,6 @@ const vendorSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.model("Vendor", vendorSchema);
+vendorSchema.plugin(mongoosePaginate);
+
+export const Vendor = mongoose.model("Vendor", vendorSchema);

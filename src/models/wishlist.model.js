@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import mongoosePaginate from "mongoose-paginate-v2";
 
 const wishlistSchema = new mongoose.Schema(
   {
@@ -66,4 +67,6 @@ wishlistSchema.statics.createUserWishlist = function (userId) {
 wishlistSchema.index({ user: 1 }, { unique: true });
 wishlistSchema.index({ "items.listing": 1 });
 
-export default mongoose.model("Wishlist", wishlistSchema);
+wishlistSchema.plugin(mongoosePaginate);
+
+export const Wishlist = mongoose.model("Wishlist", wishlistSchema);
