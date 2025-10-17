@@ -312,3 +312,31 @@ export const createRateLimiter = (
     next();
   };
 };
+
+//Optional authentication middleware
+export const optionalAuth = asyncHandler(async (req, res, next) => {
+  try {
+    const token =
+      req.cookies?.accessToken ||
+      req.header("Authorization")?.replace("Bearer ", "");
+
+    if (!token) {
+      return next(); // Proceed without authentication
+    }
+
+    const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+
+    const user = await User.findById(decodedToken?._id).select(
+      "-password -refreshTokens -verificationToken -resetPasswordToken"
+    );
+
+    if (user) {
+      req.user = user;
+    }
+
+    next();
+  } catch (error) {
+    // Ignore errors and proceed without authentication
+    next();
+  }
+});
