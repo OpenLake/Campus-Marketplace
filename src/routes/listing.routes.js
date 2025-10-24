@@ -1,121 +1,64 @@
 import { Router } from "express";
 import {
-  //core CRUD operations
+  // Core CRUD operations (MVP)
   createListing,
   getAllListings,
   getListingById,
   updateListing,
   deleteListing,
 
-  //user-specific operations
+  // User-specific operations (MVP)
   getUserListings,
   getMyListings,
   getDashboardStats,
-  getListingAnalytics,
-  //search & discovery
-  searchListings,
-  getPopularListings,
-  getSimilarListings,
-  getRecommendations,
-
-  //engagement features
-  toggleLike,
-  addToWatchlist,
-  removeFromWatchlist,
-  incrementViews,
-
-  //status management
-  toggleListingStatus,
   markAsSold,
-  reserveListing,
-  bumpListing,
-
-  //analytics & reporting
-  getListingAnalytics,
-  getViewHistory,
-  getPriceHistory,
-  generateReport,
-
-  //Admin functions
 } from "../controllers/listing.controller.js";
 
 import {
   verifyJWT,
-  checkRole,
   optionalAuth,
-  checkOwnership,
-  checkOwnershipOrRole,
-} from "../middleware/auth.middleware.js";
+  verifyListingOwnershipOrAdmin,
+} from "../middlewares/auth.middleware.js";
 
 import { upload } from "../middlewares/multer.js";
 
-// Core CRUD Operations
-
 const listingRouter = Router();
 
-//public routes
-listingRouter.get("/", getAllListings);
-listingRouter.get("/popular", getPopularListings);
-listingRouter.get("/search", searchListings);
-listingRouter.get("/:id", optionalAuth, getListingById);
-listingRouter.get("/:id/similar", getSimilarListings);
+// PUBLIC ROUTES (No Authentication Required)
+listingRouter.get("/", getAllListings); // Browse all listings
 
-//protected routes
-listingRouter.use(verifyJWT);
+// PROTECTED ROUTES (Authentication Required)
 
-listingRouter.post("/", upload.array("images", 10), createListing);
+// User-Specific Routes (MUST come BEFORE /:id to avoid route conflicts)
+listingRouter.get("/me/listings", verifyJWT, getMyListings); // Get current user's listings
+listingRouter.get("/me/dashboard", verifyJWT, getDashboardStats); // Get seller dashboard stats
+
+// Core CRUD Operations
+listingRouter.post("/", verifyJWT, upload.array("images", 10), createListing); // Create new listing
+
+// Single Listing Operations (/:id routes - MUST come AFTER specific routes)
+listingRouter.get("/user/:userId", getUserListings); // Get listings by specific user
+listingRouter.get("/:id", optionalAuth, getListingById); // View single listing (optional auth for tracking)
 listingRouter.put(
   "/:id",
+  verifyJWT,
+  verifyListingOwnershipOrAdmin,
   upload.array("images", 10),
-  checkOwnershipOrRole(["admin", "moderator"]),
   updateListing
-);
+); // Update listing (owner or admin only)
 listingRouter.delete(
   "/:id",
-  checkOwnershipOrRole(["admin", "moderator"]),
+  verifyJWT,
+  verifyListingOwnershipOrAdmin,
   deleteListing
-);
+); // Delete listing (owner or admin only)
 
-//user-specific routes
-listingRouter.get("/user/:userId", getUserListings);
-listingRouter.get("/me/listings", getMyListings);
-listingRouter.get("/me/dashboard", getDashboardStats);
-listingRouter.get("/:id/recommendations", getRecommendations);
-
-//engagement routes
-listingRouter.post("/:id/like", toggleLike);
-listingRouter.post("/:id/watchlist", addToWatchlist);
-listingRouter.delete("/:id/watchlist", removeFromWatchlist);
-listingRouter.post("/:id/views", incrementViews);
-
-//status management routes
+// Status Management
 listingRouter.patch(
-  "/:id/toggle-status",
-  checkOwnershipOrRole(["admin", "moderator"]),
-  toggleListingStatus
-);
-listingRouter.patch("/:id/mark-sold", checkOwnership, markAsSold);
-listingRouter.patch("/:id/reserve", checkOwnership, reserveListing);
-listingRouter.patch("/:id/bump", checkOwnership, bumpListing);
-
-//analytics & reporting routes
-listingRouter.get(
-  "/:id/analytics",
-  checkOwnershipOrRole(["admin", "moderator"]),
-  getListingAnalytics
-);
-listingRouter.get(
-  "/:id/view-history",
-  checkOwnershipOrRole(["admin", "moderator"]),
-  getViewHistory
-);
-listingRouter.get("/:id/price-history", getPriceHistory);
-
-//Admin/moderator reporting routes
-listingRouter.use(checkRole(["admin", "moderator"]));
-listingRouter.get("/admin/featured", getPopularListings); // Or getFeaturedListings if available
-listingRouter.get("/admin/reported", generateReport); // Or getReportedListings if available
-listingRouter.patch("/:id/feature", toggleListingStatus); // Or toggleFeatureStatus if available
-listingRouter.patch("/:id/ban", markAsSold); // Or banListing if available
+  "/:id/mark-sold",
+  verifyJWT,
+  verifyListingOwnershipOrAdmin,
+  markAsSold
+); // Mark listing as sold (owner or admin only)
 
 export default listingRouter;

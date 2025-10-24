@@ -1,5 +1,5 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
-import Listing from "../models/listing.model.js";
+import { Listing } from "../models/listing.model.js";
 import { removeLocalFiles } from "../middlewares/multer.js";
 import { uploadToCloudinary } from "../utils/upload.js";
 
@@ -14,7 +14,10 @@ const ALLOWED_ROLES = [
 // Core CRUD Operations
 export const createListing = (asyncHandler = async (req, res) => {
   //1. Authorization check
-  if (!ALLOWED_ROLES.includes(req.user.role)) {
+  const userRoles = req.user.roles || [];
+  const hasAllowedRole = ALLOWED_ROLES.some((role) => userRoles.includes(role));
+
+  if (!hasAllowedRole) {
     removeLocalFiles(req.files);
     return res.status(403).json({ message: "Unauthorized to create listings" });
   }
@@ -173,9 +176,12 @@ export const getAllListings = (asyncHandler = async (req, res) => {
 }); // Browse listings with pagination & filters
 
 export const getListingById = (asyncHandler = async (req, res) => {
-    const { id } = req.params;
+  const { id } = req.params;
   const listing = await Listing.findById(id)
-    .populate("owner", "name username profileImage roles hostelLocation ratingAsSeller")
+    .populate(
+      "owner",
+      "name username profileImage roles hostelLocation ratingAsSeller"
+    )
     .lean();
 
   if (!listing) {
@@ -188,41 +194,418 @@ export const getListingById = (asyncHandler = async (req, res) => {
   res.json(listing);
 }); // Get detailed listing information
 
-export const updateListing = (asyncHandler = (req, res) => {}); // Update listing (owner/admin only)
-export const deleteListing = (asyncHandler = (req, res) => {}); // Soft delete listing (owner/admin only)
+export const updateListing = asyncHandler(async (req, res) => {
+  const { id } = req.params;
 
-// User-Specific Operations
-export const getUserListings = (asyncHandler = (req, res) => {}); // Get all listings by specific user
-export const getMyListings = (asyncHandler = (req, res) => {}); // Get current user's listings
-export const getDashboardStats = (asyncHandler = (req, res) => {}); // Seller dashboard statistics
+  // 1. Find the listing
+  const listing = await Listing.findById(id);
+
+  if (!listing) {
+    removeLocalFiles(req.files);
+    return res.status(404).json({ message: "Listing not found" });
+  }
+
+  // 2. Authorization check - only owner or admin/moderator can update
+  const isOwner = listing.owner.toString() === req.user._id.toString();
+  const userRoles = req.user.roles || [];
+  const isAdminOrMod =
+    userRoles.includes("admin") || userRoles.includes("moderator");
+
+  if (!isOwner && !isAdminOrMod) {
+    removeLocalFiles(req.files);
+    return res
+      .status(403)
+      .json({ message: "Unauthorized to update this listing" });
+  }
+
+  // 3. Extract and validate update fields
+  const {
+    title,
+    description,
+    price,
+    category,
+    condition,
+    location,
+    negotiable,
+    tags,
+    brand,
+    model,
+    isUrgent,
+    originalPrice,
+    subcategory,
+    isAvailable,
+    status,
+  } = req.body;
+
+  // Validate if provided
+  if (title && title.trim().length < 3) {
+    removeLocalFiles(req.files);
+    return res
+      .status(400)
+      .json({ message: "Title must be at least 3 characters long" });
+  }
+
+  if (description && description.trim().length < 10) {
+    removeLocalFiles(req.files);
+    return res
+      .status(400)
+      .json({ message: "Description must be at least 10 characters long" });
+  }
+
+  if (price !== undefined && (isNaN(price) || price < 0)) {
+    removeLocalFiles(req.files);
+    return res.status(400).json({ message: "Price must be a valid number" });
+  }
+
+  // 4. Handle new images if provided
+  let newImages = [];
+  if (req.files && req.files.length > 0) {
+    try {
+      for (const [i, file] of req.files.entries()) {
+        const result = await uploadToCloudinary(
+          file.path,
+          "campus-marketplace"
+        );
+        newImages.push({
+          url: result.secure_url,
+          publicId: result.public_id,
+          isPrimary: i === 0 && listing.images.length === 0,
+        });
+      }
+      removeLocalFiles(req.files);
+    } catch (err) {
+      removeLocalFiles(req.files);
+      return res
+        .status(500)
+        .json({ error: "Image upload failed.", details: err.message });
+    }
+  }
+
+  // 5. Track price history if price changed
+  if (price !== undefined && price !== listing.price) {
+    listing.priceHistory.push({
+      price: listing.price,
+      changedAt: new Date(),
+      changedBy: req.user._id,
+    });
+  }
+
+  // 6. Update fields
+  if (title) listing.title = title;
+  if (description) listing.description = description;
+  if (price !== undefined) listing.price = price;
+  if (originalPrice !== undefined) listing.originalPrice = originalPrice;
+  if (category) listing.category = category;
+  if (subcategory !== undefined) listing.subcategory = subcategory;
+  if (condition) listing.condition = condition;
+  if (brand !== undefined) listing.brand = brand;
+  if (model !== undefined) listing.model = model;
+  if (negotiable !== undefined) listing.negotiable = negotiable;
+  if (isUrgent !== undefined) listing.isUrgent = isUrgent;
+  if (isAvailable !== undefined) listing.isAvailable = isAvailable;
+  if (location)
+    listing.location =
+      typeof location === "string" ? JSON.parse(location) : location;
+  if (tags) listing.tags = Array.isArray(tags) ? tags : [tags];
+  if (newImages.length > 0) {
+    listing.images = [...listing.images, ...newImages];
+  }
+
+  // Only admin/moderator can change status
+  if (status && isAdminOrMod) {
+    listing.status = status;
+  }
+
+  listing.updatedAt = new Date();
+
+  // 7. Save updated listing
+  try {
+    const updatedListing = await listing.save();
+    return res.status(200).json({
+      message: "Listing updated successfully.",
+      listing: updatedListing,
+    });
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ error: "Failed to update listing.", details: err.message });
+  }
+}); // Update listing (owner/admin only)
+
+export const deleteListing = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { permanent } = req.query; // ?permanent=true for hard delete
+
+  // 1. Find the listing
+  const listing = await Listing.findById(id);
+
+  if (!listing) {
+    return res.status(404).json({ message: "Listing not found" });
+  }
+
+  // 2. Authorization check - only owner or admin/moderator can delete
+  const isOwner = listing.owner.toString() === req.user._id.toString();
+  const userRoles = req.user.roles || [];
+  const isAdminOrMod =
+    userRoles.includes("admin") || userRoles.includes("moderator");
+
+  if (!isOwner && !isAdminOrMod) {
+    return res
+      .status(403)
+      .json({ message: "Unauthorized to delete this listing" });
+  }
+
+  // 3. Check if already deleted (soft delete)
+  if (listing.status === "deleted" && !permanent) {
+    return res.status(400).json({ message: "Listing is already deleted" });
+  }
+
+  try {
+    // 4. Permanent delete (admin only)
+    if (permanent === "true" && isAdminOrMod) {
+      // Optional: Delete images from cloudinary here
+      // for (const image of listing.images) {
+      //   await deleteFromCloudinary(image.publicId);
+      // }
+
+      await Listing.findByIdAndDelete(id);
+      return res.status(200).json({
+        message: "Listing permanently deleted.",
+        listingId: id,
+      });
+    }
+
+    // 5. Soft delete (default)
+    listing.status = "deleted";
+    listing.isAvailable = false;
+    listing.deletedAt = new Date();
+    listing.deletedBy = req.user._id;
+
+    await listing.save();
+
+    return res.status(200).json({
+      message: "Listing deleted successfully.",
+      listing: {
+        id: listing._id,
+        status: listing.status,
+        deletedAt: listing.deletedAt,
+      },
+    });
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ error: "Failed to delete listing.", details: err.message });
+  }
+}); // Soft delete listing (owner/admin only)
+
+// User-Specific Operations (MVP)
+export const getUserListings = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const {
+    page = 1,
+    limit = 20,
+    status = "active",
+    sortBy = "createdAt",
+    sortOrder = "desc",
+  } = req.query;
+
+  // Build filter
+  const filter = { owner: userId };
+  if (status !== "all") {
+    filter.status = status;
+  }
+
+  const sortObj = {};
+  sortObj[sortBy] = sortOrder === "asc" ? 1 : -1;
+
+  const options = {
+    page: parseInt(page),
+    limit: parseInt(limit),
+    sort: sortObj,
+    populate: { path: "owner", select: "name username profileImage roles" },
+  };
+
+  try {
+    const listings = await Listing.paginate(filter, options);
+    return res.status(200).json({
+      message: "User listings retrieved successfully.",
+      data: listings,
+    });
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ error: "Failed to fetch user listings.", details: err.message });
+  }
+}); // Get all listings by specific user
+
+export const getMyListings = asyncHandler(async (req, res) => {
+  const {
+    page = 1,
+    limit = 20,
+    status,
+    sortBy = "createdAt",
+    sortOrder = "desc",
+  } = req.query;
+
+  // Build filter for current user's listings
+  const filter = { owner: req.user._id };
+  if (status && status !== "all") {
+    filter.status = status;
+  }
+
+  const sortObj = {};
+  sortObj[sortBy] = sortOrder === "asc" ? 1 : -1;
+
+  const options = {
+    page: parseInt(page),
+    limit: parseInt(limit),
+    sort: sortObj,
+    populate: { path: "owner", select: "name username profileImage roles" },
+  };
+
+  try {
+    const listings = await Listing.paginate(filter, options);
+    return res.status(200).json({
+      message: "Your listings retrieved successfully.",
+      data: listings,
+    });
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ error: "Failed to fetch your listings.", details: err.message });
+  }
+}); // Get current user's listings
+
+export const getDashboardStats = asyncHandler(async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Get counts by status
+    const [activeCount, soldCount, deletedCount, totalViews] =
+      await Promise.all([
+        Listing.countDocuments({ owner: userId, status: "active" }),
+        Listing.countDocuments({ owner: userId, status: "sold" }),
+        Listing.countDocuments({ owner: userId, status: "deleted" }),
+        Listing.aggregate([
+          { $match: { owner: userId } },
+          { $group: { _id: null, totalViews: { $sum: "$views.total" } } },
+        ]),
+      ]);
+
+    // Get recent listings
+    const recentListings = await Listing.find({ owner: userId })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .select("title price status createdAt images views")
+      .lean();
+
+    // Get total revenue (from sold items)
+    const revenueData = await Listing.aggregate([
+      { $match: { owner: userId, status: "sold" } },
+      { $group: { _id: null, totalRevenue: { $sum: "$price" } } },
+    ]);
+
+    const stats = {
+      totalListings: activeCount + soldCount + deletedCount,
+      activeListings: activeCount,
+      soldListings: soldCount,
+      deletedListings: deletedCount,
+      totalViews: totalViews[0]?.totalViews || 0,
+      totalRevenue: revenueData[0]?.totalRevenue || 0,
+      recentListings,
+    };
+
+    return res.status(200).json({
+      message: "Dashboard stats retrieved successfully.",
+      data: stats,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      error: "Failed to fetch dashboard stats.",
+      details: err.message,
+    });
+  }
+}); // Seller dashboard statistics
+
+export const markAsSold = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  // 1. Find the listing
+  const listing = await Listing.findById(id);
+
+  if (!listing) {
+    return res.status(404).json({ message: "Listing not found" });
+  }
+
+  // 2. Authorization check - only owner can mark as sold
+  const isOwner = listing.owner.toString() === req.user._id.toString();
+  const userRoles = req.user.roles || [];
+  const isAdminOrMod =
+    userRoles.includes("admin") || userRoles.includes("moderator");
+
+  if (!isOwner && !isAdminOrMod) {
+    return res
+      .status(403)
+      .json({ message: "Unauthorized to mark this listing as sold" });
+  }
+
+  // 3. Check if already sold
+  if (listing.status === "sold") {
+    return res
+      .status(400)
+      .json({ message: "Listing is already marked as sold" });
+  }
+
+  try {
+    // 4. Update listing status
+    listing.status = "sold";
+    listing.isAvailable = false;
+    listing.soldAt = new Date();
+    listing.updatedAt = new Date();
+
+    await listing.save();
+
+    return res.status(200).json({
+      message: "Listing marked as sold successfully.",
+      listing: {
+        id: listing._id,
+        title: listing.title,
+        status: listing.status,
+        soldAt: listing.soldAt,
+      },
+    });
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ error: "Failed to mark listing as sold.", details: err.message });
+  }
+}); // Mark listing as sold
+
+// FUTURE ENHANCEMENTS
 
 // Search & Discovery
-export const searchListings = (asyncHandler = (req, res) => {}); // Advanced search with multiple filters
-export const getPopularListings = (asyncHandler = (req, res) => {}); // Trending and popular items
-export const getSimilarListings = (asyncHandler = (req, res) => {}); // Related/similar listings
-export const getRecommendations = (asyncHandler = (req, res) => {}); // Personalized recommendations
+
+// export const searchListings = asyncHandler(async (req, res) => {}); // Advanced search with multiple filters
+// export const getPopularListings = asyncHandler(async (req, res) => {}); // Trending and popular items
+// export const getSimilarListings = asyncHandler(async (req, res) => {}); // Related/similar listings
+// export const getRecommendations = asyncHandler(async (req, res) => {}); // Personalized recommendations
 
 // Engagement Features
-export const toggleLike = (asyncHandler = (req, res) => {}); // Like/unlike listing
-export const addToWatchlist = (asyncHandler = (req, res) => {}); // Add to user's watchlist
-export const removeFromWatchlist = (asyncHandler = (req, res) => {}); // Remove from watchlist
-export const incrementViews = (asyncHandler = (req, res) => {}); // Track listing views
 
-// Status Management
-export const toggleListingStatus = (asyncHandler = (req, res) => {}); // Activate/deactivate listing
-export const markAsSold = (asyncHandler = (req, res) => {}); // Mark listing as sold
-export const reserveListing = (asyncHandler = (req, res) => {}); // Reserve for specific buyer
-export const bumpListing = (asyncHandler = (req, res) => {}); // Refresh listing position
+// export const toggleLike = asyncHandler(async (req, res) => {}); // Like/unlike listing
+// export const addToWatchlist = asyncHandler(async (req, res) => {}); // Add to user's watchlist
+// export const removeFromWatchlist = asyncHandler(async (req, res) => {}); // Remove from watchlist
+// export const incrementViews = asyncHandler(async (req, res) => {}); // Track listing views
+
+// Status Management (Additional)
+
+// export const toggleListingStatus = asyncHandler(async (req, res) => {}); // Activate/deactivate listing
+// export const reserveListing = asyncHandler(async (req, res) => {}); // Reserve for specific buyer
+// export const bumpListing = asyncHandler(async (req, res) => {}); // Refresh listing position
 
 // Analytics & Reporting
-export const getListingAnalytics = (asyncHandler = (req, res) => {}); // Detailed listing performance
-export const getViewHistory = (asyncHandler = (req, res) => {}); // View tracking data
-export const getPriceHistory = (asyncHandler = (req, res) => {}); // Price change history
-export const generateReport = (asyncHandler = (req, res) => {}); // Admin reporting functions
 
-// Utility Functions
-export const validateListingData = (asyncHandler = (req, res) => {}); // Input validation helper
-export const processImages = (asyncHandler = (req, res) => {}); // Image upload/processing
-export const updatePriceHistory = (asyncHandler = (req, res) => {}); // Track price changes
-export const checkOwnership = (asyncHandler = (req, res) => {}); // Verify listing ownership
-export const sendNotifications = (asyncHandler = (req, res) => {}); // Notify watchers of updates
+// export const getListingAnalytics = asyncHandler(async (req, res) => {}); // Detailed listing performance
+// export const getViewHistory = asyncHandler(async (req, res) => {}); // View tracking data
+// export const getPriceHistory = asyncHandler(async (req, res) => {}); // Price change history
+// export const generateReport = asyncHandler(async (req, res) => {}); // Admin reporting functions

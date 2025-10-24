@@ -83,20 +83,23 @@ export const verifyListingOwnershipOrAdmin = asyncHandler(
       throw new ApiError(401, "Unauthorized request");
     }
 
-    // Admin can access any resource
-    if (req.user.roles.includes("admin")) {
+    // Admin or moderator can access any resource
+    if (
+      req.user.roles.includes("admin") ||
+      req.user.roles.includes("moderator")
+    ) {
       return next();
     }
 
     // Check if user owns the listing
-    const Listing = (await import("../models/listing.model.js")).Listing;
+    const { Listing } = await import("../models/listing.model.js");
     const listing = await Listing.findById(id);
 
     if (!listing) {
       throw new ApiError(404, "Listing not found");
     }
 
-    if (listing.seller.toString() === req.user._id.toString()) {
+    if (listing.owner.toString() === req.user._id.toString()) {
       return next();
     }
 

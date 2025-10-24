@@ -22,25 +22,25 @@ import {
 
 const userRouter = Router();
 
-// Public routes
-userRouter.route("/register").post(registerUser);
-userRouter.route("/login").post(loginUser);
-userRouter.route("/verify-email").post(verifyEmail);
-userRouter.route("/forgot-password").post(forgotPassword);
-userRouter.route("/reset-password").post(resetPassword);
+userRouter.post("/register", registerUser);
+userRouter.post("/login", loginUser);
+userRouter.post("/verify-email", verifyEmail);
+userRouter.post("/forgot-password", forgotPassword);
+userRouter.post("/reset-password", resetPassword);
 
-// Protected routes (require authentication) - Place these BEFORE dynamic routes
-userRouter.route("/logout").post(verifyJWT, logoutUser);
-userRouter.route("/me").get(verifyJWT, getCurrentUser);
-userRouter.route("/me").put(verifyJWT, updateUserProfile);
-userRouter.route("/me/password").put(verifyJWT, changePassword);
 
-// Public profile route - Place dynamic routes AFTER specific routes
-userRouter.route("/:id").get(getUserById);
+// Current User Routes (MUST come BEFORE /:id to avoid route conflicts)
+userRouter.get("/me", verifyJWT, getCurrentUser);
+userRouter.put("/me", verifyJWT, updateUserProfile);
+userRouter.put("/me/password", verifyJWT, changePassword);
+userRouter.post("/logout", verifyJWT, logoutUser);
 
-// Admin only routes
-userRouter.route("/").get(verifyJWT, verifyAdmin, listUsers);
-userRouter.route("/:id").delete(verifyJWT, verifyAdmin, deleteUser);
-userRouter.route("/:id/roles").patch(verifyJWT, verifyAdmin, updateUserRoles);
+// Admin Only Routes (MUST come BEFORE public /:id route)
+userRouter.get("/", verifyJWT, verifyAdmin, listUsers); // List all users
+userRouter.delete("/:id", verifyJWT, verifyAdmin, deleteUser); // Delete user by ID
+userRouter.patch("/:id/roles", verifyJWT, verifyAdmin, updateUserRoles); // Update user roles
+
+// Public User Profile Route (/:id - MUST come LAST)
+userRouter.get("/:id", getUserById); // Get user profile by ID (public)
 
 export default userRouter;
