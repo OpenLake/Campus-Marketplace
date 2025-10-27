@@ -2,6 +2,8 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { Listing } from "../models/listing.model.js";
 import { removeLocalFiles } from "../middlewares/multer.js";
 import { uploadToCloudinary } from "../utils/upload.js";
+import { ApiError } from "../utils/api-error.js";
+import { ApiResponse } from "../utils/api-response.js";
 
 const ALLOWED_ROLES = [
   "student",
@@ -12,14 +14,15 @@ const ALLOWED_ROLES = [
 ];
 
 // Core CRUD Operations
-export const createListing = (asyncHandler = async (req, res) => {
+export const createListing = asyncHandler ( async (req, res) => {
   //1. Authorization check
   const userRoles = req.user.roles || [];
   const hasAllowedRole = ALLOWED_ROLES.some((role) => userRoles.includes(role));
 
   if (!hasAllowedRole) {
     removeLocalFiles(req.files);
-    return res.status(403).json({ message: "Unauthorized to create listings" });
+    // return res.status(403).json({ message: "Unauthorized to create listings" });
+    return new ApiError(403, "Unauthorized to create listings");
   }
   //2. Validate required fields
   const {
@@ -40,40 +43,36 @@ export const createListing = (asyncHandler = async (req, res) => {
 
   if (!title || title.trim().length < 3) {
     removeLocalFiles(req.files);
-    return res
-      .status(400)
-      .json({ message: "Title must be at least 3 characters long" });
+    return new ApiError(400, "Title must be at least 3 characters long");
   }
 
   if (!description || description.trim().length < 10) {
     removeLocalFiles(req.files);
-    return res
-      .status(400)
-      .json({ message: "Description must be at least 10 characters long" });
+    return new ApiError(400, "Description must be at least 10 characters long");
   }
 
   if (!price || isNaN(price) || price < 0) {
     removeLocalFiles(req.files);
-    return res.status(400).json({ message: "Price must be a valid number" });
+    return new ApiError(400, "Price must be a valid number");
   }
 
   if (!category) {
     removeLocalFiles(req.files);
-    return res.status(400).json({ message: "Category is required" });
+    return new ApiError(400, "Category is required");
   }
 
   if (!condition) {
     removeLocalFiles(req.files);
-    return res.status(400).json({ message: "Condition is required" });
+    return new ApiError(400, "Condition is required");
   }
 
   if (!location) {
     removeLocalFiles(req.files);
-    return res.status(400).json({ message: "Location is required" });
+    return new ApiError(400, "Location is required");
   }
 
   if (!req.files || req.files.length === 0) {
-    return res.status(400).json({ message: "At least one image is required" });
+    return new ApiError(400, "At least one image is required");
   }
   //3. Handle images: upload to Cloudinary
   let images = [];
@@ -92,13 +91,11 @@ export const createListing = (asyncHandler = async (req, res) => {
       }
       removeLocalFiles(req.files);
     } else {
-      return res.status(400).json({ error: "At least one image is required." });
+      return new ApiError(400, "At least one image is required.");
     }
   } catch (err) {
     removeLocalFiles(req.files);
-    return res
-      .status(500)
-      .json({ error: "Image upload failed.", details: err.message });
+    return new ApiError(500, "Image upload failed.", err.message);
   }
   // 4. Create listing document
   const listing = new Listing({
@@ -122,18 +119,14 @@ export const createListing = (asyncHandler = async (req, res) => {
   // 5. Save to DB
   try {
     const savedListing = await listing.save();
-    return res.status(201).json({
-      message: "Listing created successfully.",
-      listing: savedListing,
-    });
+
+    return new ApiResponse(201, savedListing, "Listing created successfully.");
   } catch (err) {
-    return res
-      .status(500)
-      .json({ error: "Failed to create listing.", details: err.message });
+    return new ApiError(500, "Failed to create listing.", err.message);
   }
 }); // Create new listing with validation
 
-export const getAllListings = (asyncHandler = async (req, res) => {
+export const getAllListings = asyncHandler (async (req, res) => {
   const {
     page = 1,
     limit = 20,
@@ -175,7 +168,7 @@ export const getAllListings = (asyncHandler = async (req, res) => {
   res.json(listings);
 }); // Browse listings with pagination & filters
 
-export const getListingById = (asyncHandler = async (req, res) => {
+export const getListingById = asyncHandler (async (req, res) => {
   const { id } = req.params;
   const listing = await Listing.findById(id)
     .populate(
@@ -185,7 +178,7 @@ export const getListingById = (asyncHandler = async (req, res) => {
     .lean();
 
   if (!listing) {
-    return res.status(404).json({ error: "Listing not found." });
+    return new ApiError(404, "Listing not found.");
   }
 
   // Optionally: increment views here
