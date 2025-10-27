@@ -32,7 +32,7 @@ const Sidebar = ({ user }) => {
                   : 'text-gray-700 hover:bg-gray-50'
               )}
             >
-              <Icon className="h-5 w-5 flex-shrink-0" />
+              <Icon className="h-5 w-5 shrink-0" />
               <span>{item.name}</span>
             </Link>
           );
