@@ -14,7 +14,7 @@
     "@hookform/resolvers": "^5.2.2",
     "@tailwindcss/cli": "^4.1.16",
     "@tailwindcss/vite": "^4.1.16",
-    "axios": "^1.12.2",
+    "axios": "^1.13.0",
     "clsx": "^2.1.1",
     "js-cookie": "^3.0.5",
     "lucide-react": "^0.548.0",

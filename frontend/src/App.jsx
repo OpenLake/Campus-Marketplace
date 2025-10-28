@@ -1,11 +1,22 @@
-import { useState } from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
-import AppLayout from './components/layout/AppLayout';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { Toaster } from "react-hot-toast";
+import { AuthProvider } from "./context/AuthContext.jsx";
+import AppLayout from "./components/layout/AppLayout.jsx";
+import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
 
-// Temporary placeholder pages (will be replaced in next phases)
+// Auth Pages
+import Login from "./pages/auth/Login.jsx";
+import Register from "./pages/auth/Register.jsx";
+import ForgotPassword from "./pages/auth/ForgotPassword.jsx";
+import ResetPassword from "./pages/auth/ResetPassword.jsx";
+import VerifyEmail from "./pages/auth/VerifyEmail.jsx";
+
+// Temporary placeholder pages
 const HomePage = () => (
   <div className="container py-8">
     <h1 className="text-3xl font-bold text-gray-900">Home Page</h1>
@@ -34,51 +45,112 @@ const MyListings = () => (
   </div>
 );
 
-const Login = () => (
+const Settings = () => (
   <div className="container py-8">
-    <h1 className="text-3xl font-bold text-gray-900">Login</h1>
-    <p className="mt-4 text-gray-600">Login form will be here.</p>
+    <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
+    <p className="mt-4 text-gray-600">Account settings will appear here.</p>
   </div>
 );
 
-const Register = () => (
-  <div className="container py-8">
-    <h1 className="text-3xl font-bold text-gray-900">Register</h1>
-    <p className="mt-4 text-gray-600">Registration form will be here.</p>
+const Unauthorized = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="text-center">
+      <h1 className="text-4xl font-bold text-gray-900">403</h1>
+      <p className="mt-2 text-gray-600">
+        You don't have permission to access this page.
+      </p>
+    </div>
   </div>
 );
 
 function App() {
-  // Temporary mock user for testing (will be replaced with AuthContext in Phase 1.3)
-  const mockUser = {
-    _id: '1',
-    name: 'Rahul Raj',
-    email: 'rahul@example.com',
-    username: 'rahulraj',
-    roles: ['superadmin', 'admin', 'moderator'],
-    profileImage: null,
-  };
-
-  // Mock logout handler
-  const handleLogout = () => {
-    console.log('Logout clicked');
-    alert('Logout functionality will be implemented with AuthContext');
-  };
-
   return (
     <Router>
-      <Routes>
-        <Route element={<AppLayout user={mockUser} onLogout={handleLogout} />}>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/listings" element={<BrowseListings />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/my-listings" element={<MyListings />} />
+      <AuthProvider>
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: "#363636",
+              color: "#fff",
+            },
+            success: {
+              duration: 3000,
+              iconTheme: {
+                primary: "#10B981",
+                secondary: "#fff",
+              },
+            },
+            error: {
+              duration: 4000,
+              iconTheme: {
+                primary: "#EF4444",
+                secondary: "#fff",
+              },
+            },
+          }}
+        />
+
+        <Routes>
+          {/* Public Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-        </Route>
-      </Routes>
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/unauthorized" element={<Unauthorized />} />
+
+          {/* Protected Routes */}
+          <Route element={<AppLayout />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/listings" element={<BrowseListings />} />
+
+            {/* Authenticated Routes */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-listings"
+              element={
+                <ProtectedRoute>
+                  <MyListings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <Settings />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Admin Only Routes */}
+            <Route
+              path="/admin/*"
+              element={
+                <ProtectedRoute requiredRoles={["admin", "moderator"]}>
+                  <div className="container py-8">
+                    <h1 className="text-3xl font-bold">Admin Panel</h1>
+                  </div>
+                </ProtectedRoute>
+              }
+            />
+          </Route>
+
+          {/* Catch all - redirect to home */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AuthProvider>
     </Router>
   );
 }
 
-export default App
+export default App;
