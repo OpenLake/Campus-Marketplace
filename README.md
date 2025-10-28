@@ -1,6 +1,47 @@
 # 🏫 Campus Marketplace - IIT Bhilai
 
-A community-first marketplace app for IIT Bhilai students — built *by the students, for the students*.
+A## 📁 Project Structure
+
+```
+Campus-Marketplace/
+├── backend/           # Node.js + Express API
+│   ├── src/
+│   ├── public/
+│   ├── .env
+│   └── package.json
+├── frontend/          # React + Vite frontend
+│   ├── src/
+│   ├── public/
+│   └── package.json
+├── markdown/          # Documentation
+└── README.md
+```
+
+## 🚀 Getting Started
+
+### Backend Setup
+
+```bash
+cd backend
+npm install
+cp .env.example .env  # Configure your environment variables
+npm run dev
+```
+
+### Frontend Setup
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+---
+
+## 📦 Project Status
+
+✅ **Backend**: Core API with authentication, listing management, and RBAC completed
+🚧 **Frontend**: Basic layout structure completed, authentication system in progressmunity-first marketplace app for IIT Bhilai students — built _by the students, for the students_.
 
 ---
 
@@ -10,30 +51,30 @@ Campus Marketplace is a platform where students of IIT Bhilai can **buy, sell, e
 
 Whether you're:
 
-* A graduating student selling your **cycle or mattress** 🛏️🚲
-* Looking to **pre-order food** from Tech Café or AtMart 🥪
-* CoSA and clubs selling **merchandise, T-shirts, or hoodies** 👕
+- A graduating student selling your **cycle or mattress** 🛏️🚲
+- Looking to **pre-order food** from Tech Café or AtMart 🥪
+- CoSA and clubs selling **merchandise, T-shirts, or hoodies** 👕
   — this is the one-stop solution.
 
 ---
 
 ## 🛠️ Core Features (Planned)
 
-* 📦 **Student-to-student listing**: Buy/sell second-hand goods like cycles, books, appliances, etc.
-* 🛍️ **Campus Storefronts**: Pre-order from AtMart, Tech Café, or any official campus vendor.
-* 👕 **Merch Sales**: Allow clubs/CoSA to sell merchandise directly through the app.
-* 🔍 **Search & Discover**: View what’s up for sale around campus (Amazon-style).
-* 📱 **Mobile-first design**: Built as a progressive web app or native mobile app for quick access.
-* dominos
+- 📦 **Student-to-student listing**: Buy/sell second-hand goods like cycles, books, appliances, etc.
+- 🛍️ **Campus Storefronts**: Pre-order from AtMart, Tech Café, or any official campus vendor.
+- 👕 **Merch Sales**: Allow clubs/CoSA to sell merchandise directly through the app.
+- 🔍 **Search & Discover**: View what’s up for sale around campus (Amazon-style).
+- 📱 **Mobile-first design**: Built as a progressive web app or native mobile app for quick access.
+- dominos
 
 ---
 
 ## 👥 Who is it for?
 
-* **Seniors** selling used items before graduating
-* **Freshers** looking for cheaper alternatives
-* **Campus groups & clubs** managing bulk orders or selling merch
-* **Everyone** who wants a simple way to trade within IIT Bhilai
+- **Seniors** selling used items before graduating
+- **Freshers** looking for cheaper alternatives
+- **Campus groups & clubs** managing bulk orders or selling merch
+- **Everyone** who wants a simple way to trade within IIT Bhilai
 
 ---
 
@@ -50,4 +91,4 @@ Want to contribute to this idea? Feel free to fork the repo once it's set up, or
 
 Let’s build something useful together for IIT Bhilai! 💙
 
-Maintainers : @Rahul5977 , @Slok9931
+Maintainer : @Rahul5977
