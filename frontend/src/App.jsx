@@ -8,6 +8,7 @@ import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import AppLayout from "./components/layout/AppLayout.jsx";
 import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
+import BrowseListings from "./components/lisitings/BrowseListings.jsx";
 
 // Auth Pages
 import Login from "./pages/auth/Login.jsx";
@@ -24,12 +25,12 @@ const HomePage = () => (
   </div>
 );
 
-const BrowseListings = () => (
-  <div className="container py-8">
-    <h1 className="text-3xl font-bold text-gray-900">Browse Listings</h1>
-    <p className="mt-4 text-gray-600">Listings will appear here.</p>
-  </div>
-);
+// const BrowseListings = () => (
+//   <div className="container py-8">
+//     <h1 className="text-3xl font-bold text-gray-900">Browse Listings</h1>
+//     <p className="mt-4 text-gray-600">Listings will appear here.</p>
+//   </div>
+// );
 
 const Dashboard = () => (
   <div className="container py-8">
