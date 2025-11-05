@@ -54,6 +54,16 @@ const listingService = {
     });
     return response.data;
   },
+  /**
+   * Upload images
+   */
+  uploadImage: async(formData)=>{
+    return api.post('/listings/upload-image', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
 
   /**
    * Create new listing

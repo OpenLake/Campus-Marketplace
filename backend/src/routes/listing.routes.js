@@ -27,6 +27,52 @@ const listingRouter = Router();
 // PUBLIC ROUTES (No Authentication Required)
 listingRouter.get("/", getAllListings); // Browse all listings
 
+// Image Upload Route (before other routes to avoid conflicts)
+listingRouter.post(
+  "/upload-image",
+  verifyJWT,
+  upload.single("image"),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No image file provided" });
+      }
+
+      // Import uploadToCloudinary and removeLocalFiles
+      const { uploadToCloudinary } = await import("../utils/upload.js");
+      const { removeLocalFiles } = await import("../middlewares/multer.js");
+
+      // Upload to Cloudinary
+      const result = await uploadToCloudinary(
+        req.file.path,
+        "campus-marketplace"
+      );
+
+      // Remove local file after upload
+      removeLocalFiles([req.file]);
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          url: result.secure_url,
+          publicId: result.public_id,
+        },
+      });
+    } catch (error) {
+      console.error("Image upload error:", error);
+      if (req.file) {
+        const { removeLocalFiles } = await import("../middlewares/multer.js");
+        removeLocalFiles([req.file]);
+      }
+      return res.status(500).json({
+        success: false,
+        message: "Failed to upload image",
+        error: error.message,
+      });
+    }
+  }
+);
+
 // PROTECTED ROUTES (Authentication Required)
 
 // User-Specific Routes (MUST come BEFORE /:id to avoid route conflicts)

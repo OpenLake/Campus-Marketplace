@@ -20,6 +20,7 @@ import VerifyEmail from "./pages/auth/VerifyEmail.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import BrowseListings from "./components/listings/BrowseListings.jsx";
 import ListingDetail from "./pages/listings/ListingsDetails.jsx";
+import CreateListing from "./pages/listings/CreateListing.jsx";
 
 function App() {
   return (
@@ -63,6 +64,9 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/listings" element={<BrowseListings />} />
             <Route path="/listings/:id" element={<ListingDetail />} />
+            <Route element={<ProtectedRoute />}>
+              <Route path="/listings/create" element={<CreateListing />} />
+            </Route>
 
             {/* Protected routes that require authentication */}
             <Route element={<ProtectedRoute />}>

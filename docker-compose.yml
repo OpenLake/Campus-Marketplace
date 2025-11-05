@@ -28,15 +28,14 @@ services:
     ports:
       - "3000:3000"
     environment:
-      PORT: 3000
-      MONGO_URI: mongodb://mongodb:27017/campus-marketplace
-      ACCESS_TOKEN_SECRET: secret
-      REFRESH_TOKEN_SECRET: refreshsecret
-      CORS_ORIGIN: http://localhost:5173
-      CLOUDINARY_CLOUD_NAME: dft6plppq
-      CLOUDINARY_API_KEY: 969212669239411
-      CLOUDINARY_API_SECRET: RReTfRfCX0mpoWbWQHHm5Wu3e5k
-      CLOUDINARY_URL: cloudinary://969212669239411:RReTfRfCX0mpoWbWQHHm5Wu3e5k@dft6plppq
+      PORT: ${PORT:-3000}
+      MONGO_URI: ${MONGO_URI:-mongodb://mongodb:27017/campus-marketplace}
+      ACCESS_TOKEN_SECRET: ${ACCESS_TOKEN_SECRET}
+      REFRESH_TOKEN_SECRET: ${REFRESH_TOKEN_SECRET}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
     volumes:
       - ./backend/src:/app/src
       - ./backend/public:/app/public
