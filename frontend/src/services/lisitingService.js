@@ -11,8 +11,14 @@ const listingService = {
    * @returns {Promise} Paginated listings
    */
   getAllListings: async (params = {}) => {
-    const response = await api.get("/listings", { params });
-    return response.data;
+    try {
+      const response = await api.get("/listings", { params });
+      console.log("API Response:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Listing Service Error:", error);
+      throw error;
+    }
   },
 
   /**

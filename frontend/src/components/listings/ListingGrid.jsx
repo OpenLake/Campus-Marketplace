@@ -1,4 +1,4 @@
-import ListingCard from "./LisitingCard.jsx";
+import ListingCard from "./ListingCard.jsx";
 import { Package } from "lucide-react";
 
 /**

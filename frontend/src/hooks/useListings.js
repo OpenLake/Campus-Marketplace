@@ -40,7 +40,7 @@ export const useListings = (initialFilters = {}) => {
       const params = {
         page: pagination.currentPage,
         limit: pagination.itemsPerPage,
-        sortBy: filters.sortBy,
+        sort: filters.sortBy,
       };
 
       // Add filters if they exist
@@ -52,18 +52,47 @@ export const useListings = (initialFilters = {}) => {
       if (filters.location) params.location = filters.location;
       if (filters.search) params.search = filters.search;
 
+      console.log("Fetching listings with params:", params);
+
       const response = await listingService.getAllListings(params);
 
-      setListings(response.data.docs || response.data);
-      setPagination({
-        currentPage: response.data.page || 1,
-        totalPages: response.data.totalPages || 1,
-        totalItems: response.data.totalDocs || response.data.length,
-        itemsPerPage: response.data.limit || 12,
-      });
+      console.log("Listings response:", response);
+
+      // Handle different response formats from backend
+      let listingsData = [];
+      let paginationData = {
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: 0,
+        itemsPerPage: 12,
+      };
+
+      if (response.success && response.data) {
+        // If backend returns paginated response
+        if (response.data.docs) {
+          listingsData = response.data.docs;
+          paginationData = {
+            currentPage: response.data.page || 1,
+            totalPages: response.data.totalPages || 1,
+            totalItems: response.data.totalDocs || 0,
+            itemsPerPage: response.data.limit || 12,
+          };
+        }
+        // If backend returns simple array
+        else if (Array.isArray(response.data)) {
+          listingsData = response.data;
+          paginationData.totalItems = response.data.length;
+        }
+      }
+
+      setListings(listingsData);
+      setPagination(paginationData);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to fetch listings");
-      toast.error("Failed to load listings");
+      console.error("Error fetching listings:", err);
+      const errorMessage =
+        err.response?.data?.message || "Failed to fetch listings";
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -98,6 +127,7 @@ export const useListings = (initialFilters = {}) => {
    */
   const changePage = useCallback((page) => {
     setPagination((prev) => ({ ...prev, currentPage: page }));
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
   /**

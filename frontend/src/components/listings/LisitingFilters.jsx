@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { X, Filter as FilterIcon } from "lucide-react";
-import { cn } from "../../utils/cn";
-import Input from "../ui/Input";
-import Button from "../ui/Button";
+import { cn } from "../../utils/cn.js";
+import Input from "../ui/Input.jsx";
+import Button from "../ui/Button.jsx";
 import listingService from "../../services/lisitingService.js";
 
 /**

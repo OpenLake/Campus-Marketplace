@@ -1,8 +1,8 @@
 import { useListings } from "../../hooks/useListings.js";
-import ListingGrid from "../lisitings/LisitingGrid.jsx";
-import ListingFilters from "../lisitings/LisitingFilters.jsx";
-import SearchBar from "../lisitings/SearchBar.jsx";
-import SortDropdown from "../lisitings/SortDropdown.jsx";
+import ListingGrid from "./ListingGrid.jsx";
+import ListingFilters from "./LisitingFilters.jsx";
+import SearchBar from "./SearchBar.jsx";
+import SortDropdown from "./SortDropdown.jsx";
 import Pagination from "../ui/Pagination.jsx";
 import { SlidersHorizontal } from "lucide-react";
 
