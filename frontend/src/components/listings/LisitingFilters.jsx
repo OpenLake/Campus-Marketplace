@@ -3,7 +3,7 @@ import { X, Filter as FilterIcon } from "lucide-react";
 import { cn } from "../../utils/cn.js";
 import Input from "../ui/Input.jsx";
 import Button from "../ui/Button.jsx";
-import listingService from "../../services/lisitingService.js";
+import listingService from "../../services/listingService.js";
 
 /**
  * ListingFilters Component

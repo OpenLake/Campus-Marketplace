@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import listingService from "../services/lisitingService.js";
+import listingService from "../services/listingService.js";
 import toast from "react-hot-toast";
 
 /**

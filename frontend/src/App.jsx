@@ -17,8 +17,9 @@ import ResetPassword from "./pages/auth/ResetPassword.jsx";
 import VerifyEmail from "./pages/auth/VerifyEmail.jsx";
 
 // Main Pages
-import HomePage from "./pages/Home.jsx";
+import HomePage from "./pages/HomePage.jsx";
 import BrowseListings from "./components/listings/BrowseListings.jsx";
+import ListingDetail from "./pages/listings/ListingsDetails.jsx";
 
 function App() {
   return (
@@ -61,6 +62,7 @@ function App() {
           <Route element={<AppLayout />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/listings" element={<BrowseListings />} />
+            <Route path="/listings/:id" element={<ListingDetail />} />
 
             {/* Protected routes that require authentication */}
             <Route element={<ProtectedRoute />}>
