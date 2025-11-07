@@ -6,7 +6,7 @@
 
 ```bash
 # Connect to MongoDB in Docker
-docker exec -it campus-marketplace-mongodb mongosh campus-marketplace
+docker exec -it campus-marketplace-mongo mongosh campus-marketplace
 
 # Run query from command line
 docker exec campus-marketplace-mongodb mongosh campus-marketplace --eval 'QUERY_HERE'

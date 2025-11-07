@@ -67,8 +67,9 @@ export const useListings = (initialFilters = {}) => {
         itemsPerPage: 12,
       };
 
+      // Check if response has ApiResponse wrapper
       if (response.success && response.data) {
-        // If backend returns paginated response
+        // If backend returns mongoose-paginate inside ApiResponse
         if (response.data.docs) {
           listingsData = response.data.docs;
           paginationData = {
@@ -83,6 +84,16 @@ export const useListings = (initialFilters = {}) => {
           listingsData = response.data;
           paginationData.totalItems = response.data.length;
         }
+      }
+      // Fallback: Backend returns mongoose-paginate format directly (old format)
+      else if (response.docs) {
+        listingsData = response.docs;
+        paginationData = {
+          currentPage: response.page || 1,
+          totalPages: response.totalPages || 1,
+          totalItems: response.totalDocs || 0,
+          itemsPerPage: response.limit || 12,
+        };
       }
 
       setListings(listingsData);

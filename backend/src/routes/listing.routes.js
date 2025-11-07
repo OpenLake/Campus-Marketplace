@@ -12,6 +12,11 @@ import {
   getMyListings,
   getDashboardStats,
   markAsSold,
+
+  // Utility operations
+  getCategories,
+  deleteListingImage,
+  getPriceHistory,
 } from "../controllers/listing.controller.js";
 
 import {
@@ -26,6 +31,7 @@ const listingRouter = Router();
 
 // PUBLIC ROUTES (No Authentication Required)
 listingRouter.get("/", getAllListings); // Browse all listings
+listingRouter.get("/categories", getCategories); // Get available categories
 
 // Image Upload Route (before other routes to avoid conflicts)
 listingRouter.post(
@@ -84,6 +90,18 @@ listingRouter.post("/", verifyJWT, upload.array("images", 10), createListing); /
 
 // Single Listing Operations (/:id routes - MUST come AFTER specific routes)
 listingRouter.get("/user/:userId", getUserListings); // Get listings by specific user
+
+// Price history route (MUST come BEFORE /:id to avoid route conflicts)
+listingRouter.get("/:id/price-history", getPriceHistory);
+
+// DELETE image from listing
+listingRouter.delete(
+  "/:id/images",
+  verifyJWT,
+  verifyListingOwnershipOrAdmin,
+  deleteListingImage
+);
+
 listingRouter.get("/:id", optionalAuth, getListingById); // View single listing (optional auth for tracking)
 listingRouter.put(
   "/:id",
@@ -106,5 +124,4 @@ listingRouter.patch(
   verifyListingOwnershipOrAdmin,
   markAsSold
 ); // Mark listing as sold (owner or admin only)
-
 export default listingRouter;

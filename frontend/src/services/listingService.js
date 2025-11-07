@@ -57,10 +57,10 @@ const listingService = {
   /**
    * Upload images
    */
-  uploadImage: async(formData)=>{
-    return api.post('/listings/upload-image', formData, {
+  uploadImage: async (formData) => {
+    return api.post("/listings/upload-image", formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        "Content-Type": "multipart/form-data",
       },
     });
   },
@@ -101,7 +101,7 @@ const listingService = {
    * @returns {Promise} Available categories
    */
   getCategories: async () => {
-    const response = await api.get("/categories");
+    const response = await api.get("/listings/categories");
     return response.data;
   },
 
@@ -114,6 +114,30 @@ const listingService = {
     const response = await api.put(`/listings/${id}/sold`);
     return response.data;
   },
+  /**
+   * Get listing by ID for edit
+   * @param {string} id - Listing ID
+   * @returns {Promise} Listing details
+   */
+  getListingForEdit: async(id)=>{
+    return api.get(`/listings/${id}`);
+  },
+
+  /**
+   * Delete image from listing
+   */
+  deleteListingImage: async (listingId, imageUrl) => {
+    return api.delete(`/listings/${listingId}/images`, {
+      data: { imageUrl },
+    });
+  },
+  /**
+   * Get price history for a listing
+   */
+  getPriceHistory: async (listingId) => {
+    return api.get(`/listings/${listingId}/price-history`);
+  },
+
 };
 
 export default listingService;

@@ -55,6 +55,7 @@ const CreateListing = () => {
 
   // Check if user has permission to create listings
   useEffect(() => {
+    if (loading) return;
     if (!user) {
       toast.error("Please login to create a listing");
       navigate("/login", { state: { from: "/listings/create" } });
@@ -186,7 +187,8 @@ const CreateListing = () => {
         formDataToSend.append("image", image.file);
 
         const response = await listingService.uploadImage(formDataToSend);
-        uploadedUrls.push(response.data.url);
+        // FIX: Use response.data.data.url for Cloudinary image URL
+        uploadedUrls.push(response.data.data.url);
       } catch (error) {
         console.error("Error uploading image:", error);
         throw new Error("Failed to upload images");
@@ -230,11 +232,13 @@ const CreateListing = () => {
       // Create listing
       toast.dismiss();
       toast.loading("Creating listing...");
-      await listingService.createListing(listingData);
+      const createdListing = await listingService.createListing(listingData);
 
       toast.dismiss();
       toast.success("Listing created successfully!");
-      navigate("/my-listings");
+
+      // Navigate to the created listing or browse listings
+      navigate("/listings");
     } catch (error) {
       console.error("Error creating listing:", error);
       toast.dismiss();

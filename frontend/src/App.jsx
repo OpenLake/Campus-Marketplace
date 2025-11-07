@@ -21,6 +21,7 @@ import HomePage from "./pages/HomePage.jsx";
 import BrowseListings from "./components/listings/BrowseListings.jsx";
 import ListingDetail from "./pages/listings/ListingsDetails.jsx";
 import CreateListing from "./pages/listings/CreateListing.jsx";
+import EditListing from "./pages/listings/EditListing.jsx";
 
 function App() {
   return (
@@ -66,6 +67,9 @@ function App() {
             <Route path="/listings/:id" element={<ListingDetail />} />
             <Route element={<ProtectedRoute />}>
               <Route path="/listings/create" element={<CreateListing />} />
+            </Route>
+            <Route element={<ProtectedRoute />}>
+              <Route path="/listings/:id/edit" element={<EditListing />} />
             </Route>
 
             {/* Protected routes that require authentication */}

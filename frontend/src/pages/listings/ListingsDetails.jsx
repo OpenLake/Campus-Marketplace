@@ -258,20 +258,20 @@ const ListingDetail = () => {
                 </h3>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <button
-                    onClick={handleEdit}
-                    className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-white hover:bg-gray-50 text-gray-900 font-semibold rounded-lg border border-gray-300 transition-colors"
+                    onClick={() => navigate(`/listings/${id}/edit`)}
+                    className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
                   >
                     <Edit className="h-5 w-5" />
                     Edit Listing
                   </button>
-                  <button
+                  <Button
                     onClick={handleDelete}
                     disabled={deleting}
                     className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Trash2 className="h-5 w-5" />
                     {deleting ? "Deleting..." : "Delete Listing"}
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
