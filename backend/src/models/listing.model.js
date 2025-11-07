@@ -19,6 +19,10 @@ const priceHistorySchema = new mongoose.Schema(
   {
     price: { type: Number, required: true },
     changedAt: { type: Date, default: Date.now },
+    changedBy:{
+      type: mongoose.Schema.Types.ObjectId,
+      ref:"User",
+    }
   },
   { _id: false }
 );

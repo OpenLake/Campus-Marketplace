@@ -1,4 +1,4 @@
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, Outlet } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth.js";
 
 /**
@@ -42,7 +42,7 @@ const ProtectedRoute = ({
   }
 
   // User is authenticated and has required roles (if any)
-  return children;
+  return children ? children : <Outlet />;
 };
 
 export default ProtectedRoute;
