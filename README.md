@@ -1,6 +1,7 @@
 # 🏫 Campus Marketplace - IIT Bhilai
+<img width="1024" height="1024" alt="image" src="https://github.com/user-attachments/assets/a3d6b8c0-cba9-406e-be10-f36d9e0f8999" />
 
-A## 📁 Project Structure
+## 📁 Project Structure
 
 ```
 Campus-Marketplace/
