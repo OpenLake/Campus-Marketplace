@@ -15,6 +15,7 @@ import Register from "./pages/auth/Register.jsx";
 import ForgotPassword from "./pages/auth/ForgotPassword.jsx";
 import ResetPassword from "./pages/auth/ResetPassword.jsx";
 import VerifyEmail from "./pages/auth/VerifyEmail.jsx";
+import Profile from "./pages/Profile.jsx";
 
 // Temporary placeholder pages
 const HomePage = () => (
@@ -45,12 +46,7 @@ const MyListings = () => (
   </div>
 );
 
-const Settings = () => (
-  <div className="container py-8">
-    <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
-    <p className="mt-4 text-gray-600">Account settings will appear here.</p>
-  </div>
-);
+
 
 const Unauthorized = () => (
   <div className="min-h-screen flex items-center justify-center">
@@ -124,10 +120,18 @@ function App() {
               }
             />
             <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/settings"
               element={
                 <ProtectedRoute>
-                  <Settings />
+                  <Navigate to="/profile" replace />
                 </ProtectedRoute>
               }
             />
