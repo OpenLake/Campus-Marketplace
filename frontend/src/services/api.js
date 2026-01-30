@@ -1,7 +1,6 @@
-//Axios instance with interceptors
-
 import axios from 'axios';
 import Cookies from 'js-cookie';
+
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
 
@@ -13,7 +12,6 @@ const api = axios.create({
   },
 });
 
-// Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
     const token = Cookies.get('accessToken');
@@ -22,28 +20,25 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-//handles toekn refresh on 401 responses
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    if (error.response && error.response.status === 401 && !originalRequest._retry) {
+    // 401 Unauth + not a retry -> Attempt token refresh
+    if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
-        const refreshToken = Cookies.get('refreshToken');
-        if (refreshToken) {
-          const response = await axios.post(`${API_BASE_URL}/auth/refresh-token`, { token: refreshToken }, { withCredentials: true });
-          const { newAccessToken } = response.data.data;
-          Cookies.set('accessToken', newAccessToken);
-          originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
-          return api(originalRequest);
-        }
+        const response = await api.post('/users/refresh-token'); // Corrected path
+        const { accessToken } = response.data.data;
+        Cookies.set('accessToken', accessToken);
+        originalRequest.headers['Authorization'] = `Bearer ${accessToken}`;
+        return api(originalRequest);
       } catch (refreshError) {
+        // If refresh fails, clear everything and redirect to login
+        Cookies.remove('accessToken');
         return Promise.reject(refreshError);
       }
     }

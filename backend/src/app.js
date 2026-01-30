@@ -7,14 +7,13 @@ import { errorHandler } from "./middlewares/error.middleware.js";
 import heathcheckRouter from "./routes/healthcheck.route.js";
 import userRouter from "./routes/users.routes.js";
 import listingRouter from "./routes/listing.routes.js";
-import orderRouter from "./routes/order.routes.js";
+import orderRouter from "./routes/order.routes.js"; 
 
 const app = express();
 
-// Global middlewares
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN,
+    origin: process.env.CORS_ORIGIN, 
     credentials: true,
   })
 );
@@ -29,8 +28,6 @@ app.use("/api/healthcheck", heathcheckRouter);
 app.use("/api/users", userRouter);
 app.use("/api/listings", listingRouter);
 app.use("/api/orders", orderRouter);
-
-// Add other routers here as needed
 
 app.use(errorHandler);
 
