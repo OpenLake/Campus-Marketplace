@@ -13,6 +13,7 @@ import {
   listUsers,
   deleteUser,
   updateUserRoles,
+  refreshAccessToken
 } from "../controllers/users.controller.js";
 import {
   verifyJWT,
@@ -27,6 +28,7 @@ userRouter.post("/login", loginUser);
 userRouter.post("/verify-email", verifyEmail);
 userRouter.post("/forgot-password", forgotPassword);
 userRouter.post("/reset-password", resetPassword);
+userRouter.post("/refresh-token", refreshAccessToken);
 
 
 // Current User Routes (MUST come BEFORE /:id to avoid route conflicts)

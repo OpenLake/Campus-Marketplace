@@ -110,13 +110,16 @@ const registerUser = asyncHandler(async (req, res) => {
 });
 
 // Login User
+// controllers/users.controller.js -> loginUser function snippet
+
 const loginUser = asyncHandler(async (req, res) => {
   const { email, username, password } = req.body;
 
   if (!((username || email) && password)) {
-    throw new ApiError(400, "Username or email is required");
+    throw new ApiError(400, "Username/Email and password are required");
   }
 
+  // Find user and explicitly include password field for comparison
   const user = await User.findOne({
     $or: [{ username }, { email }],
   }).select("+password");
@@ -125,12 +128,14 @@ const loginUser = asyncHandler(async (req, res) => {
     throw new ApiError(404, "User does not exist");
   }
 
+  // Verify password using the model method
   const isPasswordValid = await user.comparePassword(password);
 
   if (!isPasswordValid) {
-    throw new ApiError(401, "Invalid user credentials");
+    // This triggers the 401 that the frontend needs to show
+    throw new ApiError(401, "Invalid user credentials. Please check your password.");
   }
-
+  
   const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
     user._id
   );
@@ -433,6 +438,44 @@ const updateUserRoles = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, user, "User roles updated successfully"));
 });
 
+// controllers/users.controller.js
+
+export const refreshAccessToken = asyncHandler(async (req, res) => {
+    const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
+
+    if (!incomingRefreshToken) {
+        throw new ApiError(401, "Unauthorized request");
+    }
+
+    try {
+        const decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET);
+        const user = await User.findById(decodedToken?._id);
+
+        if (!user) {
+            throw new ApiError(401, "Invalid refresh token");
+        }
+
+        // Check if the refresh token exists in user's token array
+        const isValidToken = user.refreshTokens.some(t => t.token === incomingRefreshToken);
+        if (!isValidToken) {
+            throw new ApiError(401, "Refresh token is expired or used");
+        }
+
+        const { accessToken, refreshToken: newRefreshToken } = await generateAccessAndRefreshTokens(user._id);
+
+        const options = { httpOnly: true, secure: true };
+
+        return res
+            .status(200)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", newRefreshToken, options)
+            .json(new ApiResponse(200, { accessToken, refreshToken: newRefreshToken }, "Access token refreshed"));
+
+    } catch (error) {
+        throw new ApiError(401, error?.message || "Invalid refresh token");
+    }
+});
+
 // Get Wishlist
 // const getWishlist = asyncHandler(async (req, res) => {
 //   const { id } = req.params;
@@ -510,6 +553,7 @@ export {
   listUsers,
   deleteUser,
   updateUserRoles,
+  
   // getWishlist,
   // addToWishlist,
   // removeFromWishlist,
