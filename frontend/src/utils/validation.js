@@ -4,13 +4,13 @@ export const validators = {
    * @param {string} email - Email address to validate
    * @returns {string|null} Error message if invalid, null if valid
    */
-  validateEmail: (email) => {
+  email: (email) => {
     if (!email) {
       return "Email is required";
     }
     const emailRegex = /^[^\s@]+@iitbhilai\.ac\.in$/;
     if (!emailRegex.test(email)) {
-      return "Invalid email format";
+      return "Email must be an @iitbhilai.ac.in address";
     }
     return null;
   },

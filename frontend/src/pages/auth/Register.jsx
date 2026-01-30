@@ -45,17 +45,22 @@ const Register = () => {
    * Handle registration submission
    */
   const handleRegister = async (values) => {
+    console.log("Handle Register Started", values);
     try {
       // Remove confirmPassword before sending to API
       const { confirmPassword, ...userData } = values;
+      console.log("Sending user data:", userData);
 
-      await register(userData);
+      const response = await register(userData);
+      console.log("Register API Response:", response);
 
       toast.success(
         "Registration successful! Please check your email to verify your account."
       );
+      console.log("Navigating to login...");
       navigate("/login");
     } catch (error) {
+      console.error("Registration Error Caught:", error);
       const errorMessage =
         error.response?.data?.message ||
         "Registration failed. Please try again.";
@@ -150,12 +155,12 @@ const Register = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="cursor-pointer"
+                  className="cursor-pointer bg-transparent hover:bg-transparent border-0 p-1 focus:ring-0"
                 >
                   {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
+                    <EyeOff className="h-4 w-4 text-gray-500 hover:text-gray-700" />
                   ) : (
-                    <Eye className="h-4 w-4" />
+                    <Eye className="h-4 w-4 text-gray-500 hover:text-gray-700" />
                   )}
                 </button>
               }
@@ -176,12 +181,12 @@ const Register = () => {
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="cursor-pointer"
+                  className="cursor-pointer bg-transparent hover:bg-transparent border-0 p-1 focus:ring-0"
                 >
                   {showConfirmPassword ? (
-                    <EyeOff className="h-4 w-4" />
+                    <EyeOff className="h-4 w-4 text-gray-500 hover:text-gray-700" />
                   ) : (
-                    <Eye className="h-4 w-4" />
+                    <Eye className="h-4 w-4 text-gray-500 hover:text-gray-700" />
                   )}
                 </button>
               }

@@ -62,6 +62,11 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(409, "User with email or username already exists");
   }
 
+  // Enforce IIT Bhilai domain
+  if (!email.endsWith("@iitbhilai.ac.in")) {
+    throw new ApiError(400, "Only @iitbhilai.ac.in emails are allowed to register.");
+  }
+
   // Create user
   const user = await User.create({
     name,

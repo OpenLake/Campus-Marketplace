@@ -7,7 +7,7 @@ import { errorHandler } from "./middlewares/error.middleware.js";
 import heathcheckRouter from "./routes/healthcheck.route.js";
 import userRouter from "./routes/users.routes.js";
 import listingRouter from "./routes/listing.routes.js";
-
+import orderRouter from "./routes/order.routes.js";
 
 const app = express();
 
@@ -28,6 +28,7 @@ app.use(cookieParser());
 app.use("/api/healthcheck", heathcheckRouter);
 app.use("/api/users", userRouter);
 app.use("/api/listings", listingRouter);
+app.use("/api/orders", orderRouter);
 
 // Add other routers here as needed
 
