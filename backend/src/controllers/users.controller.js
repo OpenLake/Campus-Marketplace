@@ -135,7 +135,7 @@ const loginUser = asyncHandler(async (req, res) => {
     // This triggers the 401 that the frontend needs to show
     throw new ApiError(401, "Invalid user credentials. Please check your password.");
   }
-  
+
   const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
     user._id
   );
@@ -438,8 +438,6 @@ const updateUserRoles = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, user, "User roles updated successfully"));
 });
 
-// controllers/users.controller.js
-
 export const refreshAccessToken = asyncHandler(async (req, res) => {
     const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
 
@@ -455,12 +453,16 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
             throw new ApiError(401, "Invalid refresh token");
         }
 
-        // Check if the refresh token exists in user's token array
+        // 1. Check if token exists in user array
         const isValidToken = user.refreshTokens.some(t => t.token === incomingRefreshToken);
         if (!isValidToken) {
             throw new ApiError(401, "Refresh token is expired or used");
         }
 
+        // 2. SECURITY FIX: Remove the old token from the array (Rotation)
+        user.refreshTokens = user.refreshTokens.filter(t => t.token !== incomingRefreshToken);
+
+        // 3. Generate new pair (this function will add the new refresh token to the array)
         const { accessToken, refreshToken: newRefreshToken } = await generateAccessAndRefreshTokens(user._id);
 
         const options = { httpOnly: true, secure: true };
@@ -469,7 +471,7 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
             .status(200)
             .cookie("accessToken", accessToken, options)
             .cookie("refreshToken", newRefreshToken, options)
-            .json(new ApiResponse(200, { accessToken, refreshToken: newRefreshToken }, "Access token refreshed"));
+            .json(new ApiResponse(200, { accessToken, refreshToken: newRefreshToken }, "Token refreshed successfully"));
 
     } catch (error) {
         throw new ApiError(401, error?.message || "Invalid refresh token");

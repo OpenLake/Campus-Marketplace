@@ -49,18 +49,18 @@ const Register = () => {
     try {
       // Remove confirmPassword before sending to API
       const { confirmPassword, ...userData } = values;
-      console.log("Sending user data:", userData);
+      
 
       const response = await register(userData);
-      console.log("Register API Response:", response);
+      
 
       toast.success(
         "Registration successful! Please check your email to verify your account."
       );
-      console.log("Navigating to login...");
+      
       navigate("/login");
     } catch (error) {
-      console.error("Registration Error Caught:", error);
+      
       const errorMessage =
         error.response?.data?.message ||
         "Registration failed. Please try again.";
