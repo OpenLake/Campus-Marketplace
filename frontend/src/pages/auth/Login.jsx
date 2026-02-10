@@ -7,12 +7,29 @@ import { validators } from "../../utils/validation.js";
 import Input from "../../components/ui/Input.jsx";
 import Button from "../../components/ui/Button.jsx";
 import toast from "react-hot-toast";
+import { GoogleLogin } from "@react-oauth/google";
+import axios from "axios";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+const handleGoogleLogin = async (credentialResponse) => {
+  try {
+    await axios.post(
+      "http://localhost:3000/api/auth/google",
+      { credential: credentialResponse.credential },
+      { withCredentials: true }
+    );
+
+    toast.success("Google login successful!");
+    navigate(from, { replace: true });
+
+  } catch (error) {
+    toast.error("Google login failed");
+  }
+};
 
   // Get the page user was trying to access
   const from = location.state?.from?.pathname || "/dashboard";
@@ -159,6 +176,21 @@ const Login = () => {
           >
             {isSubmitting ? "Signing in..." : "Sign in"}
           </Button>
+          {/* Divider */}
+<div className="flex items-center my-4">
+  <div className="flex-grow border-t"></div>
+  <span className="mx-4 text-gray-400 text-sm">OR</span>
+  <div className="flex-grow border-t"></div>
+</div>
+
+{/* Google Login */}
+<div className="flex justify-center">
+  <GoogleLogin
+    onSuccess={handleGoogleLogin}
+    onError={() => toast.error("Google Login Failed")}
+  />
+</div>
+
         </form>
       </div>
     </div>
