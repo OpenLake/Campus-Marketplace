@@ -1,3 +1,5 @@
+import dotenv from "dotenv";
+dotenv.config();
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -7,6 +9,7 @@ import { errorHandler } from "./middlewares/error.middleware.js";
 import heathcheckRouter from "./routes/healthcheck.route.js";
 import userRouter from "./routes/users.routes.js";
 import listingRouter from "./routes/listing.routes.js";
+import authRouter from "./routes/auth.routes.js";
 
 
 const app = express();
@@ -28,6 +31,7 @@ app.use(cookieParser());
 app.use("/api/healthcheck", heathcheckRouter);
 app.use("/api/users", userRouter);
 app.use("/api/listings", listingRouter);
+app.use("/api/auth", authRouter);
 
 // Add other routers here as needed
 
