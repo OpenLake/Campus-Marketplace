@@ -1,201 +1,149 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, Plus, User, LogOut, Settings, ChevronDown } from 'lucide-react';
-import Button from '../ui/Button';
-import { PUBLIC_NAVIGATION } from '../../constants/navigation';
+import { 
+  Search, 
+  User, 
+  Heart, 
+  ShoppingCart, 
+  RefreshCw, 
+  LayoutGrid, 
+  Headphones,
+  ChevronDown,
+  Flame,
+  UserPlus,
+  LogIn
+} from 'lucide-react';
 
 const Header = ({ user, onLogout }) => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-
   const isAuthenticated = !!user;
 
   return (
-    <header className="bg-white shadow-sm sticky top-0 z-40">
-      <nav className="container">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">CM</span>
-            </div>
-            <span className="text-xl font-bold text-gray-900 hidden sm:block">
-              Campus Marketplace
-            </span>
-          </Link>
-
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            {PUBLIC_NAVIGATION.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className="flex items-center space-x-1 text-gray-700 hover:text-primary-600 transition-colors"
-                >
-                  <Icon className="h-4 w-4" />
-                  <span>{item.name}</span>
-                </Link>
-              );
-            })}
+    <header className="w-full bg-white font-sans">
+      {/* 1. Top Utility Bar */}
+      <div className="border-b border-gray-100 py-2 hidden lg:block">
+        <div className="container mx-auto px-4 flex justify-between items-center text-[12px] text-gray-500">
+          <div className="flex gap-4">
+            <Link to="/about" className="hover:text-emerald-500">About Us</Link>
+            <span className="text-gray-200">|</span>
+            <Link to="/account" className="hover:text-emerald-500">My Account</Link>
+            <span className="text-gray-200">|</span>
+            <Link to="/track" className="hover:text-emerald-500">Order Tracking</Link>
           </div>
-
-          {/* Right Side Actions */}
-          <div className="flex items-center space-x-4">
-            {isAuthenticated ? (
-              <>
-                {/* Create Listing Button */}
-                <Link to="/listings/create" className="hidden md:inline-flex">
-                  <Button leftIcon={<Plus className="h-4 w-4" />} size="sm">
-                    Create Listing
-                  </Button>
-                </Link>
-
-                {/* Profile Dropdown */}
-                <div className="relative">
-                  <button
-                    onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-                    className="flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-md p-1"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center overflow-hidden">
-                      {user.profileImage ? (
-                        <img
-                          src={user.profileImage}
-                          alt={user.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <User className="h-4 w-4 text-primary-600" />
-                      )}
-                    </div>
-                    <span className="hidden md:block text-sm font-medium text-gray-700">
-                      {user.name}
-                    </span>
-                    <ChevronDown className="hidden md:block h-4 w-4 text-gray-400" />
-                  </button>
-
-                  {/* Dropdown Menu */}
-                  {profileMenuOpen && (
-                    <>
-                      {/* Backdrop for mobile */}
-                      <div
-                        className="fixed inset-0 z-10"
-                        onClick={() => setProfileMenuOpen(false)}
-                      />
-                      
-                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5 z-20">
-                        <Link
-                          to="/dashboard"
-                          className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          onClick={() => setProfileMenuOpen(false)}
-                        >
-                          <User className="h-4 w-4" />
-                          <span>Dashboard</span>
-                        </Link>
-                        <Link
-                          to="/settings"
-                          className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          onClick={() => setProfileMenuOpen(false)}
-                        >
-                          <Settings className="h-4 w-4" />
-                          <span>Settings</span>
-                        </Link>
-                        <hr className="my-1" />
-                        <button
-                          onClick={() => {
-                            setProfileMenuOpen(false);
-                            onLogout();
-                          }}
-                          className="flex items-center space-x-2 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                        >
-                          <LogOut className="h-4 w-4" />
-                          <span>Logout</span>
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </>
-            ) : (
-              <div className="hidden md:flex items-center space-x-4">
-                <Link to="/login">
-                  <Button variant="ghost" size="sm">
-                    Login
-                  </Button>
-                </Link>
-                <Link to="/register">
-                  <Button size="sm">Sign Up</Button>
-                </Link>
-              </div>
-            )}
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-md text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
-            >
-              {mobileMenuOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
-            </button>
+          <div className="text-emerald-500 font-medium">
+            100% Secure campus delivery without contacting the seller
+          </div>
+          <div className="flex gap-4">
+            <span>Need help? Call Us: <span className="text-emerald-500 font-bold">+1800900122</span></span>
+            <span className="text-gray-200">|</span>
+            <div className="flex items-center gap-1 cursor-pointer">English <ChevronDown size={12}/></div>
           </div>
         </div>
+      </div>
 
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-gray-200">
-            <div className="space-y-2">
-              {PUBLIC_NAVIGATION.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.name}
-                    to={item.href}
-                    className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-md"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span>{item.name}</span>
-                  </Link>
-                );
-              })}
-              
-              {isAuthenticated && (
-                <Link
-                  to="/listings/create"
-                  className="flex items-center space-x-2 px-4 py-2 text-primary-600 font-medium hover:bg-gray-50 rounded-md"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>Create Listing</span>
-                </Link>
-              )}
+      {/* 2. Middle Row: Logo, Search, Actions */}
+      <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-8">
+        {/* Logo */}
+        <Link to="/" className="flex items-center gap-2 shrink-0">
+          <div className="w-9 h-9 bg-emerald-500 rounded-lg flex items-center justify-center">
+             <span className="text-white font-bold text-lg italic">O</span>
+          </div>
+          <div className="leading-none">
+            <span className="text-xl font-bold text-emerald-500 block">Openlake</span>
+            <span className="text-[9px] tracking-[0.2em] text-gray-400 uppercase font-bold">Campus Market</span>
+          </div>
+        </Link>
 
-              {!isAuthenticated && (
-                <>
-                  <Link
-                    to="/login"
-                    className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-md"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    to="/register"
-                    className="block px-4 py-2 text-primary-600 font-medium hover:bg-gray-50 rounded-md"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Sign Up
-                  </Link>
-                </>
-              )}
+        {/* Search Bar */}
+        <div className="hidden md:flex flex-1 max-w-xl items-center border-2 border-emerald-100 rounded-md px-3 py-1.5 gap-3">
+          <input 
+            type="text" 
+            placeholder="Search for items..." 
+            className="w-full outline-none text-sm text-gray-600"
+          />
+          <button className="bg-emerald-500 text-white px-5 py-1.5 rounded-sm text-sm font-bold hover:bg-emerald-600 transition-colors">
+            Search
+          </button>
+        </div>
+
+        {/* Icons Action Row / Auth Options */}
+        <div className="flex items-center gap-6 text-gray-600">
+          {isAuthenticated ? (
+            <>
+              <div className="flex items-center gap-2 cursor-pointer group">
+                <div className="relative">
+                  <RefreshCw size={22} className="group-hover:text-emerald-500" />
+                  <span className="absolute -top-2 -right-2 bg-emerald-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">0</span>
+                </div>
+                <span className="text-xs hidden xl:block">Compare</span>
+              </div>
+              <div className="flex items-center gap-2 cursor-pointer group">
+                <div className="relative">
+                  <Heart size={22} className="group-hover:text-emerald-500" />
+                  <span className="absolute -top-2 -right-2 bg-emerald-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">0</span>
+                </div>
+                <span className="text-xs hidden xl:block">Wishlist</span>
+              </div>
+              <div className="flex items-center gap-2 cursor-pointer group">
+                <div className="relative">
+                  <ShoppingCart size={22} className="group-hover:text-emerald-500" />
+                  <span className="absolute -top-2 -right-2 bg-emerald-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">0</span>
+                </div>
+                <span className="text-xs hidden xl:block">Cart</span>
+              </div>
+              <div className="flex items-center gap-2 cursor-pointer group" onClick={() => {/* Toggle Profile */}}>
+                <User size={22} className="group-hover:text-emerald-500" />
+                <span className="text-xs hidden xl:block">Account</span>
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center gap-4">
+              <Link to="/login" className="flex items-center gap-2 text-sm font-bold text-gray-700 hover:text-emerald-500 transition-colors">
+                <LogIn size={18} className="text-emerald-500" />
+                Log In
+              </Link>
+              <span className="text-gray-300">|</span>
+              <Link to="/register" className="flex items-center gap-2 text-sm font-bold text-gray-700 hover:text-emerald-500 transition-colors">
+                <UserPlus size={18} className="text-emerald-500" />
+                Sign Up
+              </Link>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 3. Bottom Row: Categories and Nav */}
+      <div className="border-y border-gray-100 hidden lg:block">
+        <div className="container mx-auto px-4 flex items-center justify-between">
+          <div className="flex items-center gap-8">
+            {/* Category Button - Shorter height */}
+            <button className="bg-emerald-500 text-white px-5 py-2.5 flex items-center gap-2 rounded-t-md font-bold text-sm">
+              <LayoutGrid size={16} />
+              Browse Categories
+              <ChevronDown size={14} />
+            </button>
+
+            {/* Navigation Links */}
+            <nav className="flex items-center gap-6">
+              <Link className="flex items-center gap-1 font-bold text-gray-700 hover:text-emerald-500 text-sm">
+                <Flame size={16} className="text-emerald-500" /> Hot Deals
+              </Link>
+              <Link className="font-bold text-gray-700 hover:text-emerald-500 text-sm">Home</Link>
+              <Link className="font-bold text-gray-700 hover:text-emerald-500 text-sm">About</Link>
+              <Link className="font-bold text-gray-700 hover:text-emerald-500 text-sm">Shop</Link>
+              <Link className="font-bold text-gray-700 hover:text-emerald-500 text-sm">Vendors</Link>
+            </nav>
+          </div>
+
+          {/* Support Phone - More compact */}
+          <div className="flex items-center gap-2">
+            <Headphones size={24} className="text-gray-700" />
+            <div>
+              <p className="text-emerald-500 font-bold text-md leading-none">1900-888</p>
+              <p className="text-[9px] text-gray-400 font-bold text-right uppercase">Support</p>
             </div>
           </div>
-        )}
-      </nav>
+        </div>
+      </div>
     </header>
   );
 };
