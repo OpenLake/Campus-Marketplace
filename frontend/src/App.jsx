@@ -15,14 +15,11 @@ import Register from "./pages/auth/Register.jsx";
 import ForgotPassword from "./pages/auth/ForgotPassword.jsx";
 import ResetPassword from "./pages/auth/ResetPassword.jsx";
 import VerifyEmail from "./pages/auth/VerifyEmail.jsx";
+import ListingPage from "./pages/root/Listings.jsx";
+import HomePage from "./pages/root/Home.jsx";
 
 // Temporary placeholder pages
-const HomePage = () => (
-  <div className="container py-8">
-    <h1 className="text-3xl font-bold text-gray-900">Home Page</h1>
-    <p className="mt-4 text-gray-600">Welcome to Campus Marketplace!</p>
-  </div>
-);
+ 
 
 const BrowseListings = () => (
   <div className="container py-8">
@@ -104,7 +101,7 @@ function App() {
           {/* Protected Routes */}
           <Route element={<AppLayout />}>
             <Route path="/" element={<HomePage />} />
-            <Route path="/listings" element={<BrowseListings />} />
+            <Route path="/listings" element={<ListingPage/>} />
 
             {/* Authenticated Routes */}
             <Route
