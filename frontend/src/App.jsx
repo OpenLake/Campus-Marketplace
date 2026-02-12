@@ -67,7 +67,7 @@ function App() {
         <Toaster
           position="top-right"
           toastOptions={{
-            duration: 4000,
+            duration: 3000,
             style: {
               background: "#363636",
               color: "#fff",
@@ -75,14 +75,14 @@ function App() {
             success: {
               duration: 3000,
               iconTheme: {
-                primary: "#10B981",
+                primary: "#4ade80",
                 secondary: "#fff",
               },
             },
             error: {
               duration: 4000,
               iconTheme: {
-                primary: "#EF4444",
+                primary: "#ef4444",
                 secondary: "#fff",
               },
             },
@@ -94,52 +94,18 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/verify-email" element={<VerifyEmail />} />
-          <Route path="/unauthorized" element={<Unauthorized />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
+          <Route path="/verify-email/:token" element={<VerifyEmail />} />
 
-          {/* Protected Routes */}
+          {/* Protected Routes with Layout */}
           <Route element={<AppLayout />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/listings" element={<ListingPage/>} />
 
-            {/* Authenticated Routes */}
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/my-listings"
-              element={
-                <ProtectedRoute>
-                  <MyListings />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/settings"
-              element={
-                <ProtectedRoute>
-                  <Settings />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Admin Only Routes */}
-            <Route
-              path="/admin/*"
-              element={
-                <ProtectedRoute requiredRoles={["admin", "moderator"]}>
-                  <div className="container py-8">
-                    <h1 className="text-3xl font-bold">Admin Panel</h1>
-                  </div>
-                </ProtectedRoute>
-              }
-            />
+            {/* Protected routes that require authentication */}
+            <Route element={<ProtectedRoute />}>
+              {/* Add more protected routes here later */}
+            </Route>
           </Route>
 
           {/* Catch all - redirect to home */}
