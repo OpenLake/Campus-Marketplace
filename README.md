@@ -18,31 +18,54 @@ Campus-Marketplace/
 └── README.md
 ```
 
-## 🚀 Getting Started
+## 🚀 Quick Start
 
-### Backend Setup
+### Prerequisites
 
-```bash
-cd backend
-npm install
-cp .env.example .env  # Configure your environment variables
-npm run dev
-```
+- Docker Desktop (version 20.10+)
+- Docker Compose (version 2.0+)
+- Cloudinary account (free tier)
 
-### Frontend Setup
+### Setup
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
+1. **Clone the repository:**
+
+   ```bash
+   git clone <repository-url>
+   cd Campus-Marketplace
+   ```
+
+2. **Create environment file:**
+
+   ```bash
+   cp .env.example .env
+   # Edit .env and add your credentials
+   ```
+
+3. **Start the application:**
+
+   ```bash
+   docker-compose up -d
+   ```
+
+4. **Access the application:**
+   - Frontend: http://localhost:5173
+   - Backend API: http://localhost:3000/api
+   - Health Check: http://localhost:3000/api/healthcheck
+
+📚 **For detailed setup instructions, see [SETUP.md](./SETUP.md)**
+
+🔒 **For security information, see [SECURITY.md](./SECURITY.md)**
 
 ---
 
 ## 📦 Project Status
 
-✅ **Backend**: Core API with authentication, listing management, and RBAC completed
-🚧 **Frontend**: Basic layout structure completed, authentication system in progressmunity-first marketplace app for IIT Bhilai students — built _by the students, for the students_.
+✅ **Backend**: Core API with authentication, listing management, image upload, and RBAC completed
+✅ **Frontend**: Multi-step listing creation, authentication, image upload completed
+✅ **Docker**: Full containerization with MongoDB, backend, and frontend
+✅ **Security**: Environment-based configuration, no hardcoded credentials
+🚧 **In Progress**: Additional features and UI improvementsmunity-first marketplace app for IIT Bhilai students — built _by the students, for the students_.
 
 ---
 

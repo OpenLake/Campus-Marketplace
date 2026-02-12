@@ -4,6 +4,7 @@ import { removeLocalFiles } from "../middlewares/multer.js";
 import { uploadToCloudinary } from "../utils/upload.js";
 import { ApiError } from "../utils/api-error.js";
 import { ApiResponse } from "../utils/api-response.js";
+import { LISTING_CATEGORIES } from "../models/index.js";
 
 const ALLOWED_ROLES = [
   "student",
@@ -14,15 +15,14 @@ const ALLOWED_ROLES = [
 ];
 
 // Core CRUD Operations
-export const createListing = asyncHandler ( async (req, res) => {
+export const createListing = asyncHandler(async (req, res) => {
   //1. Authorization check
   const userRoles = req.user.roles || [];
   const hasAllowedRole = ALLOWED_ROLES.some((role) => userRoles.includes(role));
 
   if (!hasAllowedRole) {
     removeLocalFiles(req.files);
-    // return res.status(403).json({ message: "Unauthorized to create listings" });
-    return new ApiError(403, "Unauthorized to create listings");
+    throw new ApiError(403, "Unauthorized to create listings");
   }
   //2. Validate required fields
   const {
@@ -43,36 +43,36 @@ export const createListing = asyncHandler ( async (req, res) => {
 
   if (!title || title.trim().length < 3) {
     removeLocalFiles(req.files);
-    return new ApiError(400, "Title must be at least 3 characters long");
+    throw new ApiError(400, "Title must be at least 3 characters long");
   }
 
   if (!description || description.trim().length < 10) {
     removeLocalFiles(req.files);
-    return new ApiError(400, "Description must be at least 10 characters long");
+    throw new ApiError(400, "Description must be at least 10 characters long");
   }
 
   if (!price || isNaN(price) || price < 0) {
     removeLocalFiles(req.files);
-    return new ApiError(400, "Price must be a valid number");
+    throw new ApiError(400, "Price must be a valid number");
   }
 
   if (!category) {
     removeLocalFiles(req.files);
-    return new ApiError(400, "Category is required");
+    throw new ApiError(400, "Category is required");
   }
 
   if (!condition) {
     removeLocalFiles(req.files);
-    return new ApiError(400, "Condition is required");
+    throw new ApiError(400, "Condition is required");
   }
 
   if (!location) {
     removeLocalFiles(req.files);
-    return new ApiError(400, "Location is required");
+    throw new ApiError(400, "Location is required");
   }
 
   if (!req.files || req.files.length === 0) {
-    return new ApiError(400, "At least one image is required");
+    throw new ApiError(400, "At least one image is required");
   }
   //3. Handle images: upload to Cloudinary
   let images = [];
@@ -91,11 +91,11 @@ export const createListing = asyncHandler ( async (req, res) => {
       }
       removeLocalFiles(req.files);
     } else {
-      return new ApiError(400, "At least one image is required.");
+      throw new ApiError(400, "At least one image is required.");
     }
   } catch (err) {
     removeLocalFiles(req.files);
-    return new ApiError(500, "Image upload failed.", err.message);
+    throw new ApiError(500, "Image upload failed.", err.message);
   }
   // 4. Create listing document
   const listing = new Listing({
@@ -120,13 +120,18 @@ export const createListing = asyncHandler ( async (req, res) => {
   try {
     const savedListing = await listing.save();
 
-    return new ApiResponse(201, savedListing, "Listing created successfully.");
+    const response = new ApiResponse(
+      201,
+      savedListing,
+      "Listing created successfully."
+    );
+    return res.status(201).json(response);
   } catch (err) {
-    return new ApiError(500, "Failed to create listing.", err.message);
+    throw new ApiError(500, "Failed to create listing.", err.message);
   }
 }); // Create new listing with validation
 
-export const getAllListings = asyncHandler (async (req, res) => {
+export const getAllListings = asyncHandler(async (req, res) => {
   const {
     page = 1,
     limit = 20,
@@ -165,10 +170,15 @@ export const getAllListings = asyncHandler (async (req, res) => {
 
   const listings = await Listing.paginate(filter, options);
 
-  res.json(listings);
+  const response = new ApiResponse(
+    200,
+    listings,
+    "Listings fetched successfully"
+  );
+  return res.json(response);
 }); // Browse listings with pagination & filters
 
-export const getListingById = asyncHandler (async (req, res) => {
+export const getListingById = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const listing = await Listing.findById(id)
     .populate(
@@ -521,60 +531,86 @@ export const getDashboardStats = asyncHandler(async (req, res) => {
 }); // Seller dashboard statistics
 
 export const markAsSold = asyncHandler(async (req, res) => {
+  const listing = await Listing.findById(req.params.id);
+
+  if (!listing) {
+    return new ApiError(404, "Listing not found");
+  }
+
+  listing.status = "sold";
+  await listing.save();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, listing, "Listing marked as sold"));
+});
+
+// Get available categories
+export const getCategories = asyncHandler(async (req, res) => {
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      LISTING_CATEGORIES.map((cat) => ({
+        value: cat,
+        label: cat.charAt(0).toUpperCase() + cat.slice(1).replace(/-/g, " "),
+      })),
+      "Categories fetched successfully"
+    )
+  );
+});
+
+export const getPriceHistory = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  // 1. Find the listing
+  const listing = await Listing.findById(id)
+    .select("priceHistory price")
+    .lean();
+
+  if (!listing) {
+    throw new ApiError(404, "Listing not found");
+  }
+
+  // If no price history exists, create one with current price
+  const history =
+    listing.priceHistory && listing.priceHistory.length > 0
+      ? listing.priceHistory
+      : [{ price: listing.price, changedAt: listing.createdAt || new Date() }];
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, history, "Price history fetched successfully"));
+});
+
+export const deleteListingImage = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { imageUrl } = req.body;
+
   const listing = await Listing.findById(id);
 
   if (!listing) {
-    return res.status(404).json({ message: "Listing not found" });
+    throw new ApiError(404, "Listing not found");
   }
 
-  // 2. Authorization check - only owner can mark as sold
-  const isOwner = listing.owner.toString() === req.user._id.toString();
-  const userRoles = req.user.roles || [];
-  const isAdminOrMod =
-    userRoles.includes("admin") || userRoles.includes("moderator");
-
-  if (!isOwner && !isAdminOrMod) {
-    return res
-      .status(403)
-      .json({ message: "Unauthorized to mark this listing as sold" });
+  // Check ownership
+  if (listing.seller.toString() !== req.user._id.toString()) {
+    throw new ApiError(
+      403,
+      "You do not have permission to modify this listing"
+    );
   }
 
-  // 3. Check if already sold
-  if (listing.status === "sold") {
-    return res
-      .status(400)
-      .json({ message: "Listing is already marked as sold" });
-  }
+  // Remove image from array
+  listing.images = listing.images.filter((img) => img !== imageUrl);
+  await listing.save();
 
-  try {
-    // 4. Update listing status
-    listing.status = "sold";
-    listing.isAvailable = false;
-    listing.soldAt = new Date();
-    listing.updatedAt = new Date();
+  // Note: In production, also delete from Cloudinary
+  // await cloudinary.uploader.destroy(publicId);
 
-    await listing.save();
-
-    return res.status(200).json({
-      message: "Listing marked as sold successfully.",
-      listing: {
-        id: listing._id,
-        title: listing.title,
-        status: listing.status,
-        soldAt: listing.soldAt,
-      },
-    });
-  } catch (err) {
-    return res
-      .status(500)
-      .json({ error: "Failed to mark listing as sold.", details: err.message });
-  }
-}); // Mark listing as sold
-
-// FUTURE ENHANCEMENTS
+  return res
+    .status(200)
+    .json(new ApiResponse(200, listing, "Image deleted successfully"));
+});
+// Future Features (Commented out - implement as needed)
 
 // Search & Discovery
 

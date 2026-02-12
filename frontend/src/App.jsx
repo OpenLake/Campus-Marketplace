@@ -16,52 +16,12 @@ import ForgotPassword from "./pages/auth/ForgotPassword.jsx";
 import ResetPassword from "./pages/auth/ResetPassword.jsx";
 import VerifyEmail from "./pages/auth/VerifyEmail.jsx";
 
-// Temporary placeholder pages
-const HomePage = () => (
-  <div className="container py-8">
-    <h1 className="text-3xl font-bold text-gray-900">Home Page</h1>
-    <p className="mt-4 text-gray-600">Welcome to Campus Marketplace!</p>
-  </div>
-);
-
-const BrowseListings = () => (
-  <div className="container py-8">
-    <h1 className="text-3xl font-bold text-gray-900">Browse Listings</h1>
-    <p className="mt-4 text-gray-600">Listings will appear here.</p>
-  </div>
-);
-
-const Dashboard = () => (
-  <div className="container py-8">
-    <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-    <p className="mt-4 text-gray-600">Your dashboard statistics.</p>
-  </div>
-);
-
-const MyListings = () => (
-  <div className="container py-8">
-    <h1 className="text-3xl font-bold text-gray-900">My Listings</h1>
-    <p className="mt-4 text-gray-600">Your listings will appear here.</p>
-  </div>
-);
-
-const Settings = () => (
-  <div className="container py-8">
-    <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
-    <p className="mt-4 text-gray-600">Account settings will appear here.</p>
-  </div>
-);
-
-const Unauthorized = () => (
-  <div className="min-h-screen flex items-center justify-center">
-    <div className="text-center">
-      <h1 className="text-4xl font-bold text-gray-900">403</h1>
-      <p className="mt-2 text-gray-600">
-        You don't have permission to access this page.
-      </p>
-    </div>
-  </div>
-);
+// Main Pages
+import HomePage from "./pages/HomePage.jsx";
+import BrowseListings from "./components/listings/BrowseListings.jsx";
+import ListingDetail from "./pages/listings/ListingsDetails.jsx";
+import CreateListing from "./pages/listings/CreateListing.jsx";
+import EditListing from "./pages/listings/EditListing.jsx";
 
 function App() {
   return (
@@ -70,7 +30,7 @@ function App() {
         <Toaster
           position="top-right"
           toastOptions={{
-            duration: 4000,
+            duration: 3000,
             style: {
               background: "#363636",
               color: "#fff",
@@ -78,14 +38,14 @@ function App() {
             success: {
               duration: 3000,
               iconTheme: {
-                primary: "#10B981",
+                primary: "#4ade80",
                 secondary: "#fff",
               },
             },
             error: {
               duration: 4000,
               iconTheme: {
-                primary: "#EF4444",
+                primary: "#ef4444",
                 secondary: "#fff",
               },
             },
@@ -97,52 +57,25 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/verify-email" element={<VerifyEmail />} />
-          <Route path="/unauthorized" element={<Unauthorized />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
+          <Route path="/verify-email/:token" element={<VerifyEmail />} />
 
-          {/* Protected Routes */}
+          {/* Protected Routes with Layout */}
           <Route element={<AppLayout />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/listings" element={<BrowseListings />} />
+            <Route path="/listings/:id" element={<ListingDetail />} />
+            <Route element={<ProtectedRoute />}>
+              <Route path="/listings/create" element={<CreateListing />} />
+            </Route>
+            <Route element={<ProtectedRoute />}>
+              <Route path="/listings/:id/edit" element={<EditListing />} />
+            </Route>
 
-            {/* Authenticated Routes */}
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/my-listings"
-              element={
-                <ProtectedRoute>
-                  <MyListings />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/settings"
-              element={
-                <ProtectedRoute>
-                  <Settings />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Admin Only Routes */}
-            <Route
-              path="/admin/*"
-              element={
-                <ProtectedRoute requiredRoles={["admin", "moderator"]}>
-                  <div className="container py-8">
-                    <h1 className="text-3xl font-bold">Admin Panel</h1>
-                  </div>
-                </ProtectedRoute>
-              }
-            />
+            {/* Protected routes that require authentication */}
+            <Route element={<ProtectedRoute />}>
+              {/* Add more protected routes here later */}
+            </Route>
           </Route>
 
           {/* Catch all - redirect to home */}
