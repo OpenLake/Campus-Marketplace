@@ -9,10 +9,17 @@ const authService = {
   login: async (credentials) => {
     const response = await api.post("/users/login", credentials);
 
-    // Store access token and user data
-    if (response.data.data.accessToken) {
-      localStorage.setItem("accessToken", response.data.data.accessToken);
-      localStorage.setItem("user", JSON.stringify(response.data.data.user));
+    // Store access token, refresh token, and user data
+    if (response.data.data) {
+      if (response.data.data.accessToken) {
+        localStorage.setItem("accessToken", response.data.data.accessToken);
+      }
+      if (response.data.data.refreshToken) {
+        localStorage.setItem("refreshToken", response.data.data.refreshToken);
+      }
+      if (response.data.data.user) {
+        localStorage.setItem("user", JSON.stringify(response.data.data.user));
+      }
     }
 
     return response.data;
@@ -38,12 +45,14 @@ const authService = {
 
       // Clear local storage
       localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
 
       return response.data;
     } catch (error) {
       // Even if API call fails, clear local data
       localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
       throw error;
     }
