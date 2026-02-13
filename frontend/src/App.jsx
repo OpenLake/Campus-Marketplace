@@ -8,6 +8,7 @@ import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import AppLayout from "./components/layout/AppLayout.jsx";
 import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 // Auth Pages
 import Login from "./pages/auth/Login.jsx";
@@ -63,8 +64,9 @@ const Unauthorized = () => (
 function App() {
   return (
     <Router>
-      <AuthProvider>
-        <Toaster
+        <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+        <AuthProvider>
+                <Toaster
           position="top-right"
           toastOptions={{
             duration: 3000,
@@ -111,7 +113,9 @@ function App() {
           {/* Catch all - redirect to home */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </AuthProvider>
+        </AuthProvider>
+
+      </GoogleOAuthProvider>
     </Router>
   );
 }
