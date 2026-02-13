@@ -22,5 +22,9 @@
   "workspaces": [
     "backend",
     "frontend"
-  ]
+  ],
+  "dependencies": {
+    "prop-types": "^15.8.1",
+    "react-range-slider-input": "^3.3.2"
+  }
 }
