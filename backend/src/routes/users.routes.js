@@ -1,46 +1,40 @@
 import { Router } from "express";
+import { googleSignIn, completeGoogleSignup } from '../controllers/googleAuth.controller.js';
 import {
   registerUser,
   loginUser,
-  logoutUser,
-  verifyEmail,
-  forgotPassword,
-  resetPassword,
-  changePassword,
+  refreshAccessToken,
   getCurrentUser,
+  logoutUser,
   updateUserProfile,
-  getUserById,
   listUsers,
   deleteUser,
-  updateUserRoles,
+  
+
 } from "../controllers/users.controller.js";
-import {
-  verifyJWT,
-  verifyAdmin,
-  verifyOwnershipOrAdmin,
-} from "../middlewares/auth.middleware.js";
+import { verifyJWT, verifyAdmin, verifyOwnershipOrAdmin } from "../middlewares/auth.middleware.js";
 
 const userRouter = Router();
 
+// Public routes
 userRouter.post("/register", registerUser);
 userRouter.post("/login", loginUser);
-userRouter.post("/verify-email", verifyEmail);
-userRouter.post("/forgot-password", forgotPassword);
-userRouter.post("/reset-password", resetPassword);
+userRouter.post("/refresh-token", refreshAccessToken);
+userRouter.post("/google", googleSignIn);
+userRouter.post("/complete-google-signup", completeGoogleSignup);
 
-
-// Current User Routes (MUST come BEFORE /:id to avoid route conflicts)
+// Protected routes
 userRouter.get("/me", verifyJWT, getCurrentUser);
-userRouter.put("/me", verifyJWT, updateUserProfile);
-userRouter.put("/me/password", verifyJWT, changePassword);
 userRouter.post("/logout", verifyJWT, logoutUser);
+userRouter.put("/me", verifyJWT, updateUserProfile);
+// userRouter.put("/me/password", verifyJWT, changePassword); // implement if needed
 
-// Admin Only Routes (MUST come BEFORE public /:id route)
-userRouter.get("/", verifyJWT, verifyAdmin, listUsers); // List all users
-userRouter.delete("/:id", verifyJWT, verifyAdmin, deleteUser); // Delete user by ID
-userRouter.patch("/:id/roles", verifyJWT, verifyAdmin, updateUserRoles); // Update user roles
+// Admin routes
+userRouter.get("/", verifyJWT, verifyAdmin, listUsers);
+userRouter.delete("/:id", verifyJWT, verifyAdmin, deleteUser);
+// userRouter.patch("/:id/roles", verifyJWT, verifyAdmin, updateUserRoles);
 
-// Public User Profile Route (/:id - MUST come LAST)
-userRouter.get("/:id", getUserById); // Get user profile by ID (public)
+// Public profile
+// userRouter.get("/:id", getUserById);
 
 export default userRouter;
