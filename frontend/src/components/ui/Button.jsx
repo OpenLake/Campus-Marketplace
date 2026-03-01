@@ -4,21 +4,21 @@ import { Loader2 } from 'lucide-react';
 
 const buttonVariants = {
   variant: {
-    default: 'bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500',
-    destructive: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
-    outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-primary-500',
-    secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-gray-500',
+    // Changed bg-primary-600 to bg-indigo-600
+    default: 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm active:scale-95 transition-all',
+    destructive: 'bg-red-600 text-white hover:bg-red-700',
+    outline: 'border-2 border-indigo-600 bg-transparent text-indigo-600 hover:bg-indigo-50',
+    secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300',
     ghost: 'hover:bg-gray-100 text-gray-700',
-    link: 'text-primary-600 underline-offset-4 hover:underline',
+    link: 'text-indigo-600 underline-offset-4 hover:underline',
   },
   size: {
-    default: 'h-10 px-4 py-2',
+    default: 'h-10 px-4 py-2 font-semibold',
     sm: 'h-9 px-3 text-sm',
-    lg: 'h-11 px-8',
+    lg: 'h-11 px-8 text-base',
     icon: 'h-10 w-10',
   },
 };
-
 const Button = forwardRef(
   (
     {

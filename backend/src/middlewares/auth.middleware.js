@@ -8,6 +8,7 @@ import { findUserById } from "../models/users.model.js"; // add this import
 
 export const verifyJWT = asyncHandler(async (req, res, next) => {
   try {
+    // Defensive check for req.cookies
     const token =
       req.cookies?.accessToken ||
       req.header("Authorization")?.replace("Bearer ", "");

@@ -4,16 +4,19 @@ export const validators = {
    * @param {string} email - Email address to validate
    * @returns {string|null} Error message if invalid, null if valid
    */
-  email: (email) => {
-    if (!email) {
-      return "Email is required";
-    }
+  // utils/validation.js
+email: (email) => {
+    if (!email) return "Email is required";
+    
+    // Normalize input to prevent errors from uppercase or stray spaces
+    const normalizedEmail = email.trim().toLowerCase();
+    
     const emailRegex = /^[^\s@]+@iitbhilai\.ac\.in$/;
-    if (!emailRegex.test(email)) {
-      return "Invalid email format";
+    if (!emailRegex.test(normalizedEmail)) {
+      return "Email must be an @iitbhilai.ac.in address";
     }
     return null;
-  },
+},
   /**
    * Validate password strength
    * @param {string} password - Password to validate

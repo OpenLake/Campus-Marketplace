@@ -17,8 +17,8 @@ import ResetPassword from "./pages/auth/ResetPassword.jsx";
 import VerifyEmail from "./pages/auth/VerifyEmail.jsx";
 
 // Root Pages
-import Home from "./pages/root/Home.jsx";          // Fixed: Home.jsx exists, not HomePage.jsx
-import Listings from "./pages/root/Listings.jsx";  // Fixed: Listings.jsx exists
+import Home from "./pages/root/Home.jsx";
+import Listings from "./pages/root/Listings.jsx";
 
 // User Pages
 import Cart from "./pages/user/Cart.jsx";                    // Cart.jsx exists
@@ -52,6 +52,13 @@ const Unauthorized = () => (
   </div>
 );
 
+const MyListings = () => (
+  <div className="container py-8">
+    <h1 className="text-3xl font-bold text-gray-900">My Listings</h1>
+    <p className="mt-4 text-gray-600">Your listings will appear here.</p>
+  </div>
+);
+
 function App() {
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
@@ -67,20 +74,26 @@ function App() {
             },
             success: {
               duration: 3000,
-              iconTheme: {
-                primary: "#10b981",
-                secondary: "#fff",
+              style: {
+                background: "#363636",
+                color: "#fff",
               },
-            },
-            error: {
-              duration: 4000,
-              iconTheme: {
-                primary: "#ef4444",
-                secondary: "#fff",
+              success: {
+                duration: 3000,
+                iconTheme: {
+                  primary: "#10b981",
+                  secondary: "#fff",
+                },
               },
-            },
-          }}
-        />
+              error: {
+                duration: 4000,
+                iconTheme: {
+                  primary: "#ef4444",
+                  secondary: "#fff",
+                },
+              },
+            }}
+          />
 
         <Routes>
           {/* Public Auth Routes - No Layout */}
@@ -99,42 +112,56 @@ function App() {
             <Route path="/listings" element={<Listings />} />
             <Route path="/cart" element={<Cart />} />
             
-            {/* Protected Routes - Require Authentication */} 
-            <Route element={<ProtectedRoute />}>
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/products/add" element={<AddProduct />} />
-              <Route path="/transactions" element={<TransactionHistory />} />
-              <Route path="/profile" element={<Profile />} />
-              {/* Cart is already public above - no need to duplicate */}
+            {/* Routes with AppLayout */}
+            <Route element={<AppLayout />}>
+              {/* Public Routes - Accessible by everyone */}
+              <Route path="/" element={<Home />} />
+              <Route path="/listings" element={<Listings />} />
+              <Route path="/cart" element={<Cart />} />
+              
+              {/* Protected Routes - Require Authentication */} 
+              <Route element={<ProtectedRoute />}>
+                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/my-listings" element={<MyListings />} />
+                <Route path="/products/add" element={<AddProduct />} />
+                <Route path="/transactions" element={<TransactionHistory />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/settings" element={<Navigate to="/profile" replace />} />
+              </Route>
+
+              {/* Admin Routes - Require Admin/Moderator Role */}
+              <Route 
+                element={
+                  <ProtectedRoute 
+                    requiredRoles={["admin", "moderator"]}
+                  />
+                }
+              >
+                <Route 
+                  path="/admin/*" 
+                  element={
+                    <div className="container py-8">
+                      <h1 className="text-3xl font-bold">Admin Panel</h1>
+                    </div>
+                  } 
+                />
+              </Route>
+
+              {/* Vendor Routes - Require Vendor Role */}
+              <Route 
+                element={
+                  <ProtectedRoute 
+                    requiredRoles={["vendor_admin", "club_admin", "admin"]}
+                  />
+                }
+              >
+                {/* Add vendor routes here when ready */}
+              </Route>
             </Route>
 
-            {/* Vendor Routes - Require Vendor Role */}
-            <Route 
-              element={
-                <ProtectedRoute 
-                  requiredRoles={["vendor_admin", "club_admin", "admin"]}
-                />
-              }
-            >
-              {/* Add vendor routes here when ready */}
-              {/* <Route path="/vendor/dashboard" element={<VendorDashboard />} /> */}
-              {/* <Route path="/vendor/listings" element={<VendorListings />} /> */}
-            </Route>
-
-            {/* Admin Routes - Require Admin/Moderator Role */}
-            <Route 
-              element={
-                <ProtectedRoute 
-                  requiredRoles={["admin", "moderator"]}
-                />
-              }
-            >
-              {/* Add admin routes here when ready */}
-              {/* <Route path="/admin/dashboard" element={<AdminDashboard />} /> */}
-              {/* <Route path="/admin/users" element={<AdminUsers />} /> */}
-            </Route>
-          </Route>
+            {/* Unauthorized Route */}
+            <Route path="/unauthorized" element={<Unauthorized />} />
 
           {/* Unauthorized Route */}
           <Route path="/unauthorized" element={<Unauthorized />} />

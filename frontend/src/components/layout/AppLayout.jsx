@@ -22,7 +22,7 @@ const AppLayout = () => {
 
       <div className="flex flex-1"> 
 
-        <main className="flex-1 bg-gray-50">
+        <main className="flex-1">
           <Outlet />
         </main>
       </div>

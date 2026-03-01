@@ -1,6 +1,8 @@
-@import "tailwindcss";
-@import "tailwindcss";
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -21,11 +23,42 @@ body {
   width: 100vw;
   height: 100vh;
   min-height: 100vh;
-  background: transparent !important;
+  background: radial-gradient(ellipse at top right, #e0e7ff, #ffffff, #f3e8ff) !important;
+  background-attachment: fixed !important;
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   overflow-x: hidden;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.85);
+  /* Increased opacity */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+}
+
+.glass-input {
+  background: rgba(243, 244, 246, 0.9);
+  /* More distinct light gray */
+  border: 1px solid rgba(209, 213, 219, 0.6);
+  /* More visible border */
+  color: #111827;
+  /* gray-900 */
+}
+
+.glass-input:focus {
+  background: rgba(255, 255, 255, 1);
+  border-color: #6366f1;
+  /* indigo-500 */
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+}
+
+.glass-input::placeholder {
+  color: #6b7280;
+  /* gray-500 for better visibility */
 }
 
 body {
@@ -50,6 +83,7 @@ a {
   color: #646cff;
   text-decoration: inherit;
 }
+
 a:hover {
   color: #535bf2;
 }
@@ -70,9 +104,11 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
 }
+
 button:hover {
   border-color: #646cff;
 }
+
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
@@ -83,9 +119,11 @@ button:focus-visible {
     color: #213547;
     background-color: transparent;
   }
+
   a:hover {
     color: #747bff;
   }
+
   button {
     background-color: #f9f9f9;
   }
