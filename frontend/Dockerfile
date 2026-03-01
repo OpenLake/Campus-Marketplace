@@ -1,18 +1,17 @@
+# Use Node.js
 FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-
 # Install dependencies
+COPY package*.json ./
 RUN npm install
 
-# Copy source code
+# Copy source
 COPY . .
 
-# Expose Vite dev server port
-EXPOSE 5173
+# Vite dev server runs on 5173 by default
+EXPOSE 4173
 
-# Start development server with host binding
+# Run dev server
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

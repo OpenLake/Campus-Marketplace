@@ -1,21 +1,20 @@
 FROM node:20-alpine
 
-# Install curl for healthcheck
-RUN apk add --no-cache curl
-
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
+# Install ALL dependencies (including dev for nodemon)
 RUN npm install
 
 # Copy source code
 COPY . .
 
-# Expose port
-EXPOSE 3000
+# Create uploads directory
+RUN mkdir -p public/temp
 
-# Start the application
-CMD ["npm", "run", "dev"]
+EXPOSE 5000
+
+# Start with nodemon for development
+CMD ["npm", "run", "start"]

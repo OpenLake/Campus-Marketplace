@@ -1,83 +1,72 @@
 services:
-  # MongoDB Database
   mongodb:
-    image: mongo:7.0
-    container_name: campus-marketplace-mongo
-    restart: unless-stopped
+    image: mongo:latest
+    container_name: campus-mongo
     ports:
       - "27017:27017"
-    environment:
-      MONGO_INITDB_DATABASE: campus-marketplace
     volumes:
-      - mongodb_data:/data/db
+      - mongo-data:/data/db
+    networks:
+      - campus-network
+
+  postgres:
+    image: postgres:latest
+    container_name: campus-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: campus_pg
+      # Added PGDATA to support the parent-folder mount strategy
+      PGDATA: /var/lib/postgresql/data/pgdata 
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql
     networks:
       - campus-network
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # Backend API
+          test: ["CMD-SHELL", "pg_isready -U your_db_user -d your_db_name"]
+          interval: 5s
+          timeout: 5s
+          retries: 5
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: campus-marketplace-backend
-    restart: unless-stopped
+    build: ./backend
+    container_name: campus-backend
     ports:
-      - "3000:3000"
+      - "5000:5000"
+    env_file:
+      - ./backend/.env
     environment:
-      PORT: ${PORT:-3000}
-      MONGO_URI: ${MONGO_URI:-mongodb://mongodb:27017/campus-marketplace}
-      ACCESS_TOKEN_SECRET: ${ACCESS_TOKEN_SECRET}
-      REFRESH_TOKEN_SECRET: ${REFRESH_TOKEN_SECRET}
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
-      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
-      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
-      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+      # Force development mode so npm installs devDependencies (nodemon)
+      - NODE_ENV=production 
     volumes:
-      - ./backend/src:/app/src
-      - ./backend/public:/app/public
-      - /app/node_modules
+      - ./backend:/app
+      - /app/node_modules # Critical: Prevents local folder from wiping container modules
     depends_on:
-      mongodb:
-        condition: service_healthy
+      - mongodb
+      - postgres
     networks:
       - campus-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/healthcheck"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
 
-  # Frontend React App
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: campus-marketplace-frontend
-    restart: unless-stopped
+    build: ./frontend
+    container_name: campus-frontend
     ports:
-      - "5173:5173"
-    environment:
-      VITE_API_BASE_URL: http://localhost:3000/api
+      - "4173:4173" # Matches your Vite log: "Local: http://localhost:4173/"
+    env_file:
+      - ./frontend/.env
     volumes:
-      - ./frontend/src:/app/src
-      - ./frontend/public:/app/public
-      - /app/node_modules
+      - ./frontend:/app
+      - /app/node_modules # Critical: Ensures @react-oauth/google stays available
     depends_on:
       - backend
     networks:
       - campus-network
-    stdin_open: true
-    tty: true
+
+volumes:
+  mongo-data:
+  postgres-data:
 
 networks:
   campus-network:
     driver: bridge
-
-volumes:
-  mongodb_data:
-    driver: local
