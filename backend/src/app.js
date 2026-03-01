@@ -1,12 +1,12 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import { errorHandler } from "./middlewares/error.middleware.js";
+// import { errorHandler } from "./middlewares/error.middleware.js";
 
 // Import all routes
-import heathcheckRouter from "./routes/healthcheck.route.js";
-import userRouter from "./routes/users.routes.js";
-import listingRouter from "./routes/listing.routes.js";
+// import heathcheckRouter from "./routes/healthcheck.route.js";
+ import userRouter from "./routes/users.routes.js";
+// import listingRouter from "./routes/listing.routes.js";
 
 
 const app = express();
@@ -25,12 +25,12 @@ app.use(express.static("public"));
 app.use(cookieParser());
 
 // API routes
-app.use("/api/healthcheck", heathcheckRouter);
+// app.use("/api/healthcheck", heathcheckRouter);
 app.use("/api/users", userRouter);
-app.use("/api/listings", listingRouter);
+// app.use("/api/listings", listingRouter);
+ 
 
-// Add other routers here as needed
-
-app.use(errorHandler);
+// app.use(errorHandler);
 
 export default app;
+ 
