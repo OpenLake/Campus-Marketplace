@@ -1,15 +1,9 @@
  
 // src/index.js
 import app from "./app.js";
-<<<<<<< HEAD
 import dotenv from "dotenv";
 import connectMongoDB from "./db/dbConnect.js";  
 import { connectPostgres } from "./db/pgConnect.js"; 
-=======
-import dotenv from "dotenv"; 
-dotenv.config();
-import connectDB from "./db/dbConnect.js";
->>>>>>> auth
 
 console.log("🚀 Server file is starting ...");
 
