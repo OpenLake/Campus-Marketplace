@@ -11,7 +11,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
 
 // Auth Pages
 import Login from "./pages/auth/Login.jsx";
-import Register from "./pages/auth/Register.jsx";
+import Register from "./pages/auth/RegistrationDetails.jsx";
 import ForgotPassword from "./pages/auth/ForgotPassword.jsx";
 import ResetPassword from "./pages/auth/ResetPassword.jsx";
 import VerifyEmail from "./pages/auth/VerifyEmail.jsx";
@@ -27,6 +27,8 @@ import AddProduct from "./pages/user/AddProduct.jsx";        // AddProduct.jsx e
 import TransactionHistory from "./pages/user/TransactionHistory.jsx";  // Exists
 import Profile from "./pages/user/Profile.jsx";              // Profile.jsx exists
 import Dashboard from "./pages/user/Dashboard.jsx";          // Dashboard.jsx exists
+import RegisterDetails from "./pages/auth/RegistrationDetails.jsx";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 // These don't exist in your structure yet - commented out
 // import HomePage from "./pages/HomePage.jsx";  // This file doesn't exist
@@ -52,6 +54,7 @@ const Unauthorized = () => (
 
 function App() {
   return (
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
     <Router>
       <AuthProvider>
         <Toaster
@@ -83,6 +86,8 @@ function App() {
           {/* Public Auth Routes - No Layout */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/register/details" element={<RegisterDetails />} /> 
+          
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/verify-email/:token" element={<VerifyEmail />} />
@@ -139,6 +144,7 @@ function App() {
         </Routes>
       </AuthProvider>
     </Router>
+    </GoogleOAuthProvider>
   );
 }
 
