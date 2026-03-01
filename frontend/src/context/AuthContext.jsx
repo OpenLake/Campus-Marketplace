@@ -1,136 +1,124 @@
 import { createContext, useState, useEffect, useCallback } from "react";
 import authService from "../services/authService.js";
 import { tokenManager } from "../utils/tokenManager.js";
+import toast from "react-hot-toast";
 
 export const AuthContext = createContext(null);
 
-// TEMPORARY: Set to true for testing, false for production
-const TESTING_MODE = true;
+const TESTING_MODE = false; // set to false for production
 
-// Mock user for testing
-const mockUser = {
-  id: "12345",
-  name: "Test Student",
-  email: "student@iitbhilai.ac.in",
-  roles: ["student", "user"],
-  verified: true,
-  institute: "IIT Bhilai",
-  studentId: "2024CS123",
-  hostel: "Hostel B",
-  avatar: "/api/placeholder/100/100"
-};
-
-/**
- * AuthProvider Component
- * Manages global authentication state
- */
-export const AuthProvider = ({ children }) => {
+export const AuthProvider = ({ children } = {}) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [tempToken, setTempToken] = useState(null); // for Google new users
 
-  /**
-   * Check if user is authenticated on mount
-   */
   useEffect(() => {
     checkAuth();
   }, []);
+const checkAuth = async () => {
+  try {
+    if (TESTING_MODE) {
+      setLoading(false);
+      return;
+    }
 
-  /**
-   * Check authentication status
-   */
-  const checkAuth = async () => {
-    try {
-      if (TESTING_MODE) {
-        // Auto-login for testing
-        setUser(mockUser);
-        setIsAuthenticated(true);
-        setLoading(false);
-        return;
-      }
+    const response = await authService.getCurrentUser();
+    console.log("Raw /me response:", response);
 
-      const token = tokenManager.getToken();
-      const storedUser = tokenManager.getUser();
+    // Look directly on the response first, then fall back to response.data
+    const userData = 
+      response?.user || 
+      response?.data?.user || 
+      response?.data || 
+      response;
 
-      if (token && storedUser) {
-        setUser(storedUser);
-        setIsAuthenticated(true);
-      } else {
-        setUser(null);
-        setIsAuthenticated(false);
-      }
-    } catch (error) {
-      console.error("Auth check failed:", error);
-      if (!TESTING_MODE) {
-        tokenManager.clearAuth();
-      }
+    console.log("Extracted userData:", userData);
+
+    if (userData && typeof userData === 'object' && !Array.isArray(userData)) {
+      setUser(userData);
+      setIsAuthenticated(true);
+      tokenManager.setUser(userData);
+    } else {
       setUser(null);
       setIsAuthenticated(false);
-    } finally {
-      setLoading(false);
+      tokenManager.clearAuth();
+    }
+  } catch (error) {
+    console.error("Auth check failed:", error);
+    setUser(null);
+    setIsAuthenticated(false);
+    tokenManager.clearAuth();
+  } finally {
+    setLoading(false);
+  }
+};
+  // Google Sign-In
+  const handleGoogleSignIn = async (credential) => {
+    try {
+      const data = await authService.googleSignIn(credential);
+      if (data.requiresDetails) {
+        setTempToken(data.tempToken);
+        return { requiresDetails: true };
+      } else {
+        const userData = data.user || data.data?.user;
+        tokenManager.setUser(userData);
+        setUser(userData);
+        setIsAuthenticated(true);
+        toast.success(`Welcome back, ${userData.first_name || "User"}!`);
+        return { success: true, user: userData };
+      }
+    } catch (error) {
+      toast.error(error.message || "Google sign-in failed");
+      return { error: error.message };
     }
   };
 
-  /**
-   * Login user
-   * @param {Object} credentials - { email, password }
-   */
+  const completeRegistration = async (userDetails) => {
+    try {
+      const data = await authService.completeRegistration(tempToken, userDetails);
+      const userData = data.user || data.data?.user;
+      tokenManager.setUser(userData);
+      setUser(userData);
+      setIsAuthenticated(true);
+      setTempToken(null);
+      toast.success("Registration complete!");
+      return { success: true, user: userData };
+    } catch (error) {
+      toast.error(error.message || "Registration failed");
+      return { error: error.message };
+    }
+  };
+
+  // Email/Password login
   const login = async (credentials) => {
     try {
-      if (TESTING_MODE) {
-        // Mock successful login
-        setUser(mockUser);
-        setIsAuthenticated(true);
-        return { 
-          data: { 
-            user: mockUser,
-            token: "mock-token-12345" 
-          } 
-        };
-      }
-
       const response = await authService.login(credentials);
-      setUser(response.data.user);
+      const userData = response.data?.user || response.data?.data;
+      tokenManager.setUser(userData);
+      setUser(userData);
       setIsAuthenticated(true);
+      toast.success("Login successful!");
       return response;
     } catch (error) {
       throw error;
     }
   };
 
-  /**
-   * Register new user
-   * @param {Object} userData - Registration data
-   */
   const register = async (userData) => {
     try {
-      if (TESTING_MODE) {
-        // Mock successful registration
-        const newUser = {
-          ...mockUser,
-          ...userData,
-          id: "67890",
-        };
-        setUser(newUser);
-        setIsAuthenticated(true);
-        return { 
-          data: { 
-            user: newUser,
-            token: "mock-token-67890" 
-          } 
-        };
-      }
-
       const response = await authService.register(userData);
+      const newUser = response.data?.user || response.data?.data;
+      tokenManager.setUser(newUser);
+      setUser(newUser);
+      setIsAuthenticated(true);
+      toast.success("Registration successful!");
       return response;
     } catch (error) {
       throw error;
     }
   };
 
-  /**
-   * Logout user
-   */
   const logout = async () => {
     try {
       if (!TESTING_MODE) {
@@ -139,96 +127,42 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
-      if (!TESTING_MODE) {
-        tokenManager.clearAuth();
-      }
+      tokenManager.clearAuth();
       setUser(null);
       setIsAuthenticated(false);
+      setTempToken(null);
+      toast.success("Logged out");
     }
   };
 
-  /**
-   * Update user data
-   * @param {Object} userData - Updated user data
-   */
   const updateUser = (userData) => {
     setUser(userData);
-    if (!TESTING_MODE) {
-      tokenManager.setUser(userData);
-    }
+    tokenManager.setUser(userData);
   };
 
-  /**
-   * Check if user has a specific role
-   * @param {string} role - Role to check
-   * @returns {boolean}
-   */
-  const hasRole = useCallback(
-    (role) => {
-      return user?.roles?.includes(role) || false;
-    },
-    [user]
-  );
-
-  /**
-   * Check if user has any of the specified roles
-   * @param {Array<string>} roles - Roles to check
-   * @returns {boolean}
-   */
-  const hasAnyRole = useCallback(
-    (roles) => {
-      return roles.some((role) => user?.roles?.includes(role)) || false;
-    },
-    [user]
-  );
-
-  /**
-   * Check if user can create listings
-   * @returns {boolean}
-   */
-  const canCreateListing = useCallback(() => {
-    const allowedRoles = [
-      "student",
-      "vendor_admin",
-      "club_admin",
-      "admin",
-      "moderator",
-    ];
-    return hasAnyRole(allowedRoles);
-  }, [hasAnyRole]);
-
-  /**
-   * Check if user is admin or moderator
-   * @returns {boolean}
-   */
-  const isAdminOrModerator = useCallback(() => {
-    return hasAnyRole(["admin", "moderator"]);
-  }, [hasAnyRole]);
-
-  /**
-   * Refresh user data from server
-   */
   const refreshUser = async () => {
     try {
-      if (TESTING_MODE) {
-        // Just return mock user in testing mode
-        return mockUser;
-      }
-
       const response = await authService.getCurrentUser();
-      setUser(response.data.user);
-      tokenManager.setUser(response.data.user);
-      return response.data.user;
+      const userData = response.data?.data || response.data;
+      setUser(userData);
+      tokenManager.setUser(userData);
+      return userData;
     } catch (error) {
-      console.error("Failed to refresh user:", error);
+      console.error("Refresh user failed:", error);
       throw error;
     }
   };
+
+  const hasRole = useCallback((role) => user?.roles?.includes(role) || false, [user]);
+  const hasAnyRole = useCallback((roles) => roles.some((role) => user?.roles?.includes(role)), [user]);
 
   const value = {
     user,
     loading,
     isAuthenticated,
+    tempToken,
+    handleGoogleSignIn,
+    completeRegistration,
     login,
     register,
     logout,
@@ -237,10 +171,6 @@ export const AuthProvider = ({ children }) => {
     checkAuth,
     hasRole,
     hasAnyRole,
-    canCreateListing,
-    isAdminOrModerator,
-    // Helper for testing
-    isTestMode: TESTING_MODE,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
