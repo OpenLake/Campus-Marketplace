@@ -13,24 +13,23 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-const handleGoogleLogin = async (credentialResponse) => {
-  try {
-    await axios.post(
-      "http://localhost:3000/api/auth/google",
-      { credential: credentialResponse.credential },
-      { withCredentials: true }
-    );
+  const handleGoogleLogin = async (credentialResponse) => {
+    try {
+      await axios.post(
+        "http://localhost:3000/api/auth/google",
+        { credential: credentialResponse.credential },
+        { withCredentials: true },
+      );
 
-    toast.success("Google login successful!");
-    navigate(from, { replace: true });
-
-  } catch (error) {
-    toast.error("Google login failed");
-  }
-};
+      toast.success("Google login successful!");
+      navigate(from, { replace: true });
+    } catch (error) {
+      toast.error("Google login failed");
+    }
+  };
 
   // Get the page user was trying to access
-const from = location.state?.from?.pathname || location.state?.from || "/";
+  const from = location.state?.from?.pathname || location.state?.from || "/";
   /**
    * Validate login form
    */
@@ -58,18 +57,19 @@ const from = location.state?.from?.pathname || location.state?.from || "/";
       navigate(from, { replace: true });
     } catch (error) {
       // Get the specific message from the backend error response
-      const errorMessage = error.response?.data?.message || "Invalid email or password.";
+      const errorMessage =
+        error.response?.data?.message || "Invalid email or password.";
       toast.error(errorMessage);
-      
+
       // We throw the error so that useForm sets it in the 'errors' state
-      throw error; 
+      throw error;
     }
   };
 
   const { values, errors, isSubmitting, handleChange, handleSubmit } = useForm(
     { email: "", password: "" },
     handleLogin,
-    validateForm
+    validateForm,
   );
 
   return (
@@ -193,44 +193,25 @@ const from = location.state?.from?.pathname || location.state?.from || "/";
               disabled={isSubmitting}
               className="w-full py-3 px-4 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Forgot password?
-            </Link>
-          </div>
+              {isSubmitting ? "Signing in..." : "Sign in"}
+            </button>
 
-          {/* Submit Error */}
-          {errors.submit && (
-            <div className="rounded-md bg-red-50 p-4">
-              <p className="text-sm text-red-800">{errors.submit}</p>
+            {/* Divider */}
+            <div className="flex items-center my-4">
+              <div className="grow border-t border-gray-200"></div>
+              <span className="mx-4 text-gray-400 text-sm">OR</span>
+              <div className="grow border-t border-gray-200"></div>
             </div>
-          )}
 
-          {/* Submit Button */}
-          
-          <Button
-            type="submit"
-            className="w-full mt-6" // Added margin top for better look
-            isLoading={isSubmitting}
-            disabled={isSubmitting}
-            variant="default" // Explicitly set the variant
-          >
-            {isSubmitting ? "Signing in..." : "Sign in"}
-          </Button>
-          {/* Divider */}
-<div className="flex items-center my-4">
-  <div className="flex-grow border-t"></div>
-  <span className="mx-4 text-gray-400 text-sm">OR</span>
-  <div className="flex-grow border-t"></div>
-</div>
-
-{/* Google Login */}
-<div className="flex justify-center">
-  <GoogleLogin
-    onSuccess={handleGoogleLogin}
-    onError={() => toast.error("Google Login Failed")}
-  />
-</div>
-
-        </form>
+            {/* Google Login */}
+            <div className="flex justify-center">
+              <GoogleLogin
+                onSuccess={handleGoogleLogin}
+                onError={() => toast.error("Google Login Failed")}
+              />
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

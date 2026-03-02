@@ -1,5 +1,6 @@
 # 🏫 Campus Marketplace - IIT Bhilai
-<img width="1024" height="1024" alt="image" src="https://github.com/user-attachments/assets/a3d6b8c0-cba9-406e-be10-f36d9e0f8999" />
+
+![image](https://github.com/user-attachments/assets/a3d6b8c0-cba9-406e-be10-f36d9e0f8999)
 
 ## 📁 Project Structure
 
@@ -99,13 +100,6 @@ Whether you're:
 - **Freshers** looking for cheaper alternatives
 - **Campus groups & clubs** managing bulk orders or selling merch
 - **Everyone** who wants a simple way to trade within IIT Bhilai
-
----
-
-## 📦 Project Status
-
-This is an early-stage idea and the repo is not yet initialized.
-We’re adding this README so anyone interested can **pick up the project** and start building.
 
 ---
 
