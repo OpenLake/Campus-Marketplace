@@ -1,3 +1,4 @@
+// src/context/AuthContext.jsx
 import { createContext, useState, useEffect, useCallback } from "react";
 import authService from "../services/authService.js";
 import { tokenManager } from "../utils/tokenManager.js";
@@ -5,63 +6,62 @@ import toast from "react-hot-toast";
 
 export const AuthContext = createContext(null);
 
-const TESTING_MODE = false; // set to false for production
+const TESTING_MODE = false;
 
 export const AuthProvider = ({ children } = {}) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [tempToken, setTempToken] = useState(null); // for Google new users
+  const [tempToken, setTempToken] = useState(null);
 
+  // Only check auth once when app loads
   useEffect(() => {
     checkAuth();
   }, []);
-const checkAuth = async () => {
-  try {
-    if (TESTING_MODE) {
-      setLoading(false);
-      return;
-    }
 
-    const response = await authService.getCurrentUser();
-    console.log("Raw /me response:", response);
+  const checkAuth = async () => {
+    try {
+      if (TESTING_MODE) {
+        setLoading(false);
+        return;
+      }
 
-    // Look directly on the response first, then fall back to response.data
-    const userData = 
-      response?.user || 
-      response?.data?.user || 
-      response?.data || 
-      response;
+      const response = await authService.getCurrentUser();
+      console.log("Auth check response:", response);
 
-    console.log("Extracted userData:", userData);
-
-    if (userData && typeof userData === 'object' && !Array.isArray(userData)) {
-      setUser(userData);
-      setIsAuthenticated(true);
-      tokenManager.setUser(userData);
-    } else {
+      if (response?.success && response?.user) {
+        setUser(response.user);
+        setIsAuthenticated(true);
+        tokenManager.setUser(response.user);
+      } else if (response?.user) {
+        setUser(response.user);
+        setIsAuthenticated(true);
+        tokenManager.setUser(response.user);
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+        tokenManager.clearAuth();
+      }
+    } catch (error) {
+      console.log("Not authenticated:", error.message);
       setUser(null);
       setIsAuthenticated(false);
       tokenManager.clearAuth();
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error("Auth check failed:", error);
-    setUser(null);
-    setIsAuthenticated(false);
-    tokenManager.clearAuth();
-  } finally {
-    setLoading(false);
-  }
-};
-  // Google Sign-In
+  };
+
   const handleGoogleSignIn = async (credential) => {
     try {
       const data = await authService.googleSignIn(credential);
+      console.log("Google sign-in response:", data);
+      
       if (data.requiresDetails) {
         setTempToken(data.tempToken);
         return { requiresDetails: true };
       } else {
-        const userData = data.user || data.data?.user;
+        const userData = data.user || data.data?.user || data.data;
         tokenManager.setUser(userData);
         setUser(userData);
         setIsAuthenticated(true);
@@ -69,6 +69,7 @@ const checkAuth = async () => {
         return { success: true, user: userData };
       }
     } catch (error) {
+      console.error("Google sign-in error:", error);
       toast.error(error.message || "Google sign-in failed");
       return { error: error.message };
     }
@@ -77,7 +78,9 @@ const checkAuth = async () => {
   const completeRegistration = async (userDetails) => {
     try {
       const data = await authService.completeRegistration(tempToken, userDetails);
-      const userData = data.user || data.data?.user;
+      console.log("Complete registration response:", data);
+      
+      const userData = data.user || data.data?.user || data.data;
       tokenManager.setUser(userData);
       setUser(userData);
       setIsAuthenticated(true);
@@ -85,22 +88,25 @@ const checkAuth = async () => {
       toast.success("Registration complete!");
       return { success: true, user: userData };
     } catch (error) {
+      console.error("Registration error:", error);
       toast.error(error.message || "Registration failed");
       return { error: error.message };
     }
   };
 
-  // Email/Password login
   const login = async (credentials) => {
     try {
       const response = await authService.login(credentials);
-      const userData = response.data?.user || response.data?.data;
+      console.log("Login response:", response);
+      
+      const userData = response.data?.user || response.data?.data || response.data;
       tokenManager.setUser(userData);
       setUser(userData);
       setIsAuthenticated(true);
       toast.success("Login successful!");
       return response;
     } catch (error) {
+      console.error("Login error:", error);
       throw error;
     }
   };
@@ -108,13 +114,16 @@ const checkAuth = async () => {
   const register = async (userData) => {
     try {
       const response = await authService.register(userData);
-      const newUser = response.data?.user || response.data?.data;
+      console.log("Register response:", response);
+      
+      const newUser = response.data?.user || response.data?.data || response.data;
       tokenManager.setUser(newUser);
       setUser(newUser);
       setIsAuthenticated(true);
       toast.success("Registration successful!");
       return response;
     } catch (error) {
+      console.error("Register error:", error);
       throw error;
     }
   };
@@ -132,6 +141,9 @@ const checkAuth = async () => {
       setIsAuthenticated(false);
       setTempToken(null);
       toast.success("Logged out");
+      
+      // Redirect to login
+      window.location.href = '/login';
     }
   };
 
@@ -143,7 +155,9 @@ const checkAuth = async () => {
   const refreshUser = async () => {
     try {
       const response = await authService.getCurrentUser();
-      const userData = response.data?.data || response.data;
+      console.log("Refresh user response:", response);
+      
+      const userData = response.user || response.data?.user || response.data;
       setUser(userData);
       tokenManager.setUser(userData);
       return userData;
@@ -153,8 +167,15 @@ const checkAuth = async () => {
     }
   };
 
-  const hasRole = useCallback((role) => user?.roles?.includes(role) || false, [user]);
-  const hasAnyRole = useCallback((roles) => roles.some((role) => user?.roles?.includes(role)), [user]);
+  const hasRole = useCallback((role) => {
+    if (!user) return false;
+    return user.role === role || user.roles?.includes(role) || false;
+  }, [user]);
+  
+  const hasAnyRole = useCallback((roles) => {
+    if (!user) return false;
+    return roles.some(role => user.role === role || user.roles?.includes(role));
+  }, [user]);
 
   const value = {
     user,
