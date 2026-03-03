@@ -30,9 +30,12 @@ const Header = () => {
     setIsProfileMenuOpen(false);
   };
 
+  // Get first name for welcome message
+  const firstName = user?.first_name + ' '+ user?.last_name;
+
   return (
     <header className="w-full bg-white font-sans sticky top-0 z-50 shadow-sm">
-      {/* 1. Top Utility Bar */}
+      {/* 1. Top Utility Bar - Simplified */}
       <div className="border-b border-gray-100 py-2 hidden lg:block bg-gray-50">
         <div className="container mx-auto px-4 flex justify-between items-center text-[12px] text-gray-500">
           <div className="flex gap-4">
@@ -42,18 +45,13 @@ const Header = () => {
             <span className="text-gray-200">|</span>
             <Link to="/orders/track" className="hover:text-emerald-500 transition-colors">Order Tracking</Link>
           </div>
-          <div className="text-emerald-600 font-medium flex items-center gap-1">
-            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-            100% Secure campus delivery
-          </div>
-          <div className="flex gap-4">
-            <span>Need help? <Link to="/support" className="text-emerald-600 font-bold hover:underline">+1800 900 122</Link></span>
-            <span className="text-gray-200">|</span>
-            <div className="flex items-center gap-1 cursor-pointer group">
-              <span className="group-hover:text-emerald-600">English</span> 
-              <ChevronDown size={12} className="group-hover:text-emerald-600"/>
+          
+          {/* Welcome message for authenticated users */}
+          {isAuthenticated && (
+            <div className="bg-emerald-600 text-white px-4 py-1 rounded-full text-xs font-medium">
+              Welcome back, {firstName}!
             </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -87,8 +85,6 @@ const Header = () => {
         <div className="flex items-center gap-4 lg:gap-6 text-gray-600">
           {isAuthenticated ? (
             <>
-               
-              
               <Link to="/cart" className="flex items-center gap-2 cursor-pointer group">
                 <div className="relative">
                   <ShoppingCart size={22} className="group-hover:text-emerald-600 transition-colors" />
@@ -111,7 +107,7 @@ const Header = () => {
                     )}
                   </div>
                   <span className="text-xs hidden xl:block group-hover:text-emerald-600">
-                    {user?.name?.split(' ')[0] || 'Account'}
+                    {firstName || 'Account'}
                   </span>
                   <ChevronDown size={14} className="group-hover:text-emerald-600 hidden xl:block" />
                 </button>

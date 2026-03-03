@@ -76,3 +76,50 @@ email: (email) => {
     return null;
   },
 };
+
+export const validateRegistrationForm = (formData) => {
+  const errors = {};
+
+  // First name
+  if (!formData.first_name?.trim()) {
+    errors.first_name = 'First name is required';
+  } else if (formData.first_name.length < 2) {
+    errors.first_name = 'Must be at least 2 characters';
+  }
+
+  // Last name
+  if (!formData.last_name?.trim()) {
+    errors.last_name = 'Last name is required';
+  } else if (formData.last_name.length < 2) {
+    errors.last_name = 'Must be at least 2 characters';
+  }
+
+  // Phone number (Indian format)
+  const phoneRegex = /^[6-9]\d{9}$/;
+  if (!formData.phone_number?.trim()) {
+    errors.phone_number = 'Phone number is required';
+  } else if (!phoneRegex.test(formData.phone_number)) {
+    errors.phone_number = 'Enter a valid 10-digit Indian mobile number';
+  }
+
+  // Vendor fields
+  if (formData.role === 'vendor') {
+    if (!formData.shop_name?.trim()) {
+      errors.shop_name = 'Shop name is required';
+    }
+    if (!formData.shop_category) {
+      errors.shop_category = 'Please select a category';
+    }
+    if (!formData.campus_location?.trim()) {
+      errors.campus_location = 'Campus location is required';
+    }
+    if (!formData.opening_time) {
+      errors.opening_time = 'Opening time is required';
+    }
+    if (!formData.closing_time) {
+      errors.closing_time = 'Closing time is required';
+    }
+  }
+
+  return errors;
+};
