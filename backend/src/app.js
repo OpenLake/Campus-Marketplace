@@ -23,7 +23,7 @@ app.use(cors({
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(express.static("public"));
-
+app.use(cookieParser());
 // API routes
 // app.use("/api/healthcheck", heathcheckRouter);
 app.use("/api/users", userRouter);
