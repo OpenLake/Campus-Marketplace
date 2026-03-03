@@ -25,7 +25,7 @@ services:
     networks:
       - campus-network
     healthcheck:
-          test: ["CMD-SHELL", "pg_isready -U your_db_user -d your_db_name"]
+          test: ["CMD-SHELL", "pg_isready -U postgres -d campus_pg"]
           interval: 5s
           timeout: 5s
           retries: 5
