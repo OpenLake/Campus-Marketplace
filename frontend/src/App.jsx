@@ -5,6 +5,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import AppLayout from "./components/layout/AppLayout.jsx";
 import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
@@ -15,24 +16,19 @@ import Register from "./pages/auth/RegistrationDetails.jsx";
 import ForgotPassword from "./pages/auth/ForgotPassword.jsx";
 import ResetPassword from "./pages/auth/ResetPassword.jsx";
 import VerifyEmail from "./pages/auth/VerifyEmail.jsx";
+import RegisterDetails from "./pages/auth/RegistrationDetails.jsx";
 
 // Root Pages
 import Home from "./pages/root/Home.jsx";
 import Listings from "./pages/root/Listings.jsx";
 
 // User Pages
-import Cart from "./pages/user/Cart.jsx";                    // Cart.jsx exists
-import Checkout from "./pages/user/Checkout.jsx";            // Checkout.jsx exists
-import AddProduct from "./pages/user/AddProduct.jsx";        // AddProduct.jsx exists
-import TransactionHistory from "./pages/user/TransactionHistory.jsx";  // Exists
-import Profile from "./pages/user/Profile.jsx";              // Profile.jsx exists
-import Dashboard from "./pages/user/Dashboard.jsx";          // Dashboard.jsx exists
-import RegisterDetails from "./pages/auth/RegistrationDetails.jsx";
-import { GoogleOAuthProvider } from "@react-oauth/google";
-
-// These don't exist in your structure yet - commented out
-// import HomePage from "./pages/HomePage.jsx";  // This file doesn't exist
-// import ListingPage from "./pages/root/Listings.jsx";  // Duplicate of Listings
+import Cart from "./pages/user/Cart.jsx";
+import Checkout from "./pages/user/Checkout.jsx";
+import AddProduct from "./pages/user/AddProduct.jsx";
+import TransactionHistory from "./pages/user/TransactionHistory.jsx";
+import Profile from "./pages/user/Profile.jsx";
+import Dashboard from "./pages/user/Dashboard.jsx";
 
 // Temporary placeholder pages
 const Unauthorized = () => (
@@ -62,17 +58,11 @@ const MyListings = () => (
 function App() {
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-    <Router>
-      <AuthProvider>
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 3000,
-            style: {
-              background: "#363636",
-              color: "#fff",
-            },
-            success: {
+      <Router>
+        <AuthProvider>
+          <Toaster
+            position="top-right"
+            toastOptions={{
               duration: 3000,
               style: {
                 background: "#363636",
@@ -95,31 +85,23 @@ function App() {
             }}
           />
 
-        <Routes>
-          {/* Public Auth Routes - No Layout */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/register/details" element={<RegisterDetails />} /> 
-          
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:token" element={<ResetPassword />} />
-          <Route path="/verify-email/:token" element={<VerifyEmail />} />
-          
-          {/* Routes with AppLayout */}
-          <Route element={<AppLayout />}>
-            {/* Public Routes - Accessible by everyone */}
-            <Route path="/" element={<Home />} />
-            <Route path="/listings" element={<Listings />} />
-            <Route path="/cart" element={<Cart />} />
-            
+          <Routes>
+            {/* Public Auth Routes - No Layout */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/register/details" element={<RegisterDetails />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
+            <Route path="/verify-email/:token" element={<VerifyEmail />} />
+
             {/* Routes with AppLayout */}
             <Route element={<AppLayout />}>
               {/* Public Routes - Accessible by everyone */}
               <Route path="/" element={<Home />} />
               <Route path="/listings" element={<Listings />} />
               <Route path="/cart" element={<Cart />} />
-              
-              {/* Protected Routes - Require Authentication */} 
+
+              {/* Protected Routes - Require Authentication */}
               <Route element={<ProtectedRoute />}>
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/dashboard" element={<Dashboard />} />
@@ -163,16 +145,13 @@ function App() {
             {/* Unauthorized Route */}
             <Route path="/unauthorized" element={<Unauthorized />} />
 
-          {/* Unauthorized Route */}
-          <Route path="/unauthorized" element={<Unauthorized />} />
-
-          {/* Catch all - redirect to home */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </AuthProvider>
-    </Router>
+            {/* Catch all - redirect to home */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </AuthProvider>
+      </Router>
     </GoogleOAuthProvider>
   );
 }
 
-export default App;
+export default App; 
