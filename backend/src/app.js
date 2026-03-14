@@ -6,17 +6,17 @@ import cookieParser from "cookie-parser";
 // Import all routes
 // import heathcheckRouter from "./routes/healthcheck.route.js";
  import userRouter from "./routes/users.routes.js";
-// import listingRouter from "./routes/listing.routes.js";
+ import listingRouter from "./routes/listing.routes.js";
 
 
 const app = express();
 app.use(cors({
   origin: ['http://localhost:4173', 'http://172.19.0.5:4173'], // Your frontend URLs
   credentials: true, // Important for cookies/authentication
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS','PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
-
+import orderRouter from "./routes/order.routes.js"; 
 // --- 1. Global Middleware (Order matters!) ---
 
 // Body Parsers (Must be at the top so controllers can read req.body)
@@ -27,8 +27,8 @@ app.use(cookieParser());
 // API routes
 // app.use("/api/healthcheck", heathcheckRouter);
 app.use("/api/users", userRouter);
-// app.use("/api/listings", listingRouter);
- 
+app.use("/api/listings", listingRouter);
+ app.use("/api/orders", orderRouter);
 
 // app.use(errorHandler);
 
