@@ -29,6 +29,12 @@ import AddProduct from "./pages/user/AddProduct.jsx";
 import TransactionHistory from "./pages/user/TransactionHistory.jsx";
 import Profile from "./pages/user/Profile.jsx";
 import Dashboard from "./pages/user/Dashboard.jsx";
+import EditListing from "./pages/user/EditListing.jsx";
+import ListingDetails from "./pages/user/ListingDetails.jsx";
+import MyListings from "./pages/user/Mylistings.jsx";
+import DashboardRoutes from "./pages/user/Dashboardroutes.jsx";
+import MyInterests from "./pages/user/MyInterests.jsx";
+import IncomingInterests from "./pages/user/IncomingInterests.jsx";
 
 // Temporary placeholder pages
 const Unauthorized = () => (
@@ -38,7 +44,7 @@ const Unauthorized = () => (
       <p className="mt-2 text-gray-600">
         You don't have permission to access this page.
       </p>
-      <button 
+      <button
         onClick={() => window.history.back()}
         className="mt-4 px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition"
       >
@@ -47,14 +53,6 @@ const Unauthorized = () => (
     </div>
   </div>
 );
-
-const MyListings = () => (
-  <div className="container py-8">
-    <h1 className="text-3xl font-bold text-gray-900">My Listings</h1>
-    <p className="mt-4 text-gray-600">Your listings will appear here.</p>
-  </div>
-);
-
 function App() {
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
@@ -100,40 +98,48 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/listings" element={<Listings />} />
               <Route path="/cart" element={<Cart />} />
-
+              <Route path="/listings" element={<Listings />} />
+              <Route path="/listings/:id" element={<ListingDetails />} />
               {/* Protected Routes - Require Authentication */}
               <Route element={<ProtectedRoute />}>
-                <Route path="/checkout" element={<Checkout />} />
-                <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/my-listings" element={<MyListings />} />
+                <Route path="/listings/edit/:id" element={<EditListing />} />
+                <Route path="/checkout" element={<Checkout />} />
                 <Route path="/products/add" element={<AddProduct />} />
+                <Route path="/dashboard/*" element={<DashboardRoutes />} />
                 <Route path="/transactions" element={<TransactionHistory />} />
                 <Route path="/profile" element={<Profile />} />
-                <Route path="/settings" element={<Navigate to="/profile" replace />} />
+                <Route
+                  path="/settings"
+                  element={<Navigate to="/profile" replace />}
+                />
+                <Route path="/my-interests" element={<MyInterests />} />
+                <Route
+                  path="/incoming-interests"
+                  element={<IncomingInterests />}
+                />
               </Route>
 
               {/* Admin Routes - Require Admin/Moderator Role */}
-              <Route 
+              <Route
                 element={
-                  <ProtectedRoute 
-                    requiredRoles={["admin", "moderator"]}
-                  />
+                  <ProtectedRoute requiredRoles={["admin", "moderator"]} />
                 }
               >
-                <Route 
-                  path="/admin/*" 
+                <Route
+                  path="/admin/*"
                   element={
                     <div className="container py-8">
                       <h1 className="text-3xl font-bold">Admin Panel</h1>
                     </div>
-                  } 
+                  }
                 />
               </Route>
 
               {/* Vendor Routes - Require Vendor Role */}
-              <Route 
+              <Route
                 element={
-                  <ProtectedRoute 
+                  <ProtectedRoute
                     requiredRoles={["vendor_admin", "club_admin", "admin"]}
                   />
                 }
@@ -154,4 +160,4 @@ function App() {
   );
 }
 
-export default App; 
+export default App;
