@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS users (
     
     -- Constraint: Students must use @iitbhilai.ac.in
     CONSTRAINT check_student_email 
-    CHECK (role != 'student' OR email LIKE '%@iitbhilai.ac.in')
+    CHECK (role = 'student' OR email LIKE '%@iitbhilai.ac.in')
 );
 
 -- 2. Vendor profiles table (only for users with role = 'vendor')
