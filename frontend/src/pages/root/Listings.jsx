@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   LayoutGrid, 
   Filter, 
@@ -14,57 +14,190 @@ import {
   ChevronDown,
   Search,
   Eye,
-  Heart
+  Heart,
+  Loader
 } from 'lucide-react';
 import DoubleSlider from '../../components/ui/DoubleSlider';
+import listingService from '../../services/listingService';
+import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 const ListingPage = () => {
+  const navigate = useNavigate();
   const [priceRange, setPriceRange] = useState([0, 5000]);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
+  const [listings, setListings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedConditions, setSelectedConditions] = useState([]);
+  const [totalListings, setTotalListings] = useState(0);
+  const [sortBy, setSortBy] = useState('createdAt');
+  const [sortOrder, setSortOrder] = useState('desc');
+  
   const itemsPerPage = 6;
 
-  const categories = [
-    { name: 'Books', count: 124, icon: <BookOpen size={18} /> },
-    { name: 'Cycles', count: 42, icon: <Bike size={18} /> },
-    { name: 'Electronics', count: 89, icon: <Cpu size={18} /> },
-    { name: 'Clothing', count: 65, icon: <Shirt size={18} /> },
-    { name: 'Dorm Essentials', count: 31, icon: <HomeIcon size={18} /> },
-  ];
+  // Fetch real listings from API
+  useEffect(() => {
+    fetchListings();
+  }, [currentPage, selectedCategory, priceRange, selectedConditions, sortBy, sortOrder]);
 
-  const listings = [
-    { id: 1, title: "Giant Mountain Bike - 2023 Edition", category: "Cycles", price: 4500, originalPrice: 6000, rating: 4.5, seller: "John Doe", tag: "Hot", img: "🚲", condition: "Used - Good", views: 42 },
-    { id: 2, title: "Calculus: Early Transcendentals 9th Ed.", category: "Books", price: 450, originalPrice: 1200, rating: 5.0, seller: "Jane Smith", tag: "New", img: "📚", condition: "Like New", views: 128 },
-    { id: 3, title: "TI-84 Plus Graphic Calculator", category: "Electronics", price: 2500, originalPrice: 4500, rating: 4.8, seller: "Mike Ross", tag: "Sale", img: "🔢", condition: "Used", views: 89 },
-    { id: 4, title: "Official Campus Hoodie (Navy Blue)", category: "Clothing", price: 599, originalPrice: 899, rating: 4.2, seller: "Openlake Store", tag: "Hot", img: "👕", condition: "New", views: 156 },
-    { id: 5, title: "Desk Lamp with Adjustable USB Port", category: "Dorm Essentials", price: 300, originalPrice: 550, rating: 4.0, seller: "Sarah Lee", tag: "New", img: "💡", condition: "Used", views: 67 },
-    { id: 6, title: "Engineering Physics Textbook - Semester 1", category: "Books", price: 200, originalPrice: 800, rating: 4.7, seller: "Alex P.", tag: "Best", img: "📖", condition: "Used - Good", views: 231 },
-    { id: 7, title: "MacBook Air M1 2020 - 8GB/256GB", category: "Electronics", price: 65000, originalPrice: 85000, rating: 4.9, seller: "Tech Guru", tag: "Hot", img: "💻", condition: "Used - Good", views: 312 },
-    { id: 8, title: "Chemistry Lab Coat - Size M", category: "Clothing", price: 350, originalPrice: 600, rating: 4.1, seller: "Science Dept", tag: "Sale", img: "🥼", condition: "Used", views: 45 },
-    { id: 9, title: "Portable Study Table", category: "Dorm Essentials", price: 1200, originalPrice: 2000, rating: 4.3, seller: "Furniture Hub", tag: "Best", img: "🪑", condition: "Like New", views: 89 },
-  ];
+  // Fetch categories
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
-  const filteredListings = listings.filter(item => 
-    (item.price >= priceRange[0] && item.price <= priceRange[1]) &&
-    (searchQuery === '' || 
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.seller.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
-
-  const totalPages = Math.ceil(filteredListings.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentListings = filteredListings.slice(startIndex, startIndex + itemsPerPage);
-
-  const handlePriceInputChange = (type, value) => {
-    if (type === 'min') {
-      const newMin = Math.min(Number(value), priceRange[1] - 1);
-      setPriceRange([newMin, priceRange[1]]);
-    } else {
-      const newMax = Math.max(Number(value), priceRange[0] + 1);
-      setPriceRange([priceRange[0], newMax]);
+  const fetchListings = async () => {
+    try {
+      setLoading(true);
+      
+      // Build filters
+      const filters = {
+        page: currentPage,
+        limit: itemsPerPage,
+        minPrice: priceRange[0],
+        maxPrice: priceRange[1],
+        sortBy,
+        sortOrder
+      };
+      
+      if (selectedCategory) {
+        filters.category = selectedCategory;
+      }
+      
+      if (searchQuery) {
+        filters.search = searchQuery;
+      }
+      
+      if (selectedConditions.length > 0) {
+        filters.condition = selectedConditions.join(',');
+      }
+      
+      console.log("Fetching with filters:", filters);
+      
+      const response = await listingService.getAllListings(filters);
+      console.log("API Response:", response);
+      
+      setListings(response.data.listings || []);
+      setTotalListings(response.data.pagination?.total || 0);
+      
+    } catch (error) {
+      console.error("Error fetching listings:", error);
+      toast.error("Failed to load listings");
+    } finally {
+      setLoading(false);
     }
   };
+
+  const fetchCategories = async () => {
+    try {
+      const response = await listingService.getCategories();
+      console.log("Categories API Response:", response);
+      
+      // Transform API categories to match your UI format
+      const categoryIcons = {
+        'books': <BookOpen size={18} />,
+        'cycles': <Bike size={18} />,
+        'electronics': <Cpu size={18} />,
+        'clothing': <Shirt size={18} />,
+        'furniture': <HomeIcon size={18} />,
+        'others': <LayoutGrid size={18} />
+      };
+      
+      // FIX: Handle different category data structures
+      let categoryData = [];
+      if (Array.isArray(response.data)) {
+        categoryData = response.data;
+      } else if (response.data?.categories) {
+        categoryData = response.data.categories;
+      }
+      
+      const formattedCategories = categoryData.map(cat => ({
+        // FIX: Get name properly - could be cat.name or cat._id
+        name: cat.name || cat._id,
+        // FIX: Get count properly
+        count: cat.count || cat.listingCount || 0,
+        // FIX: Get icon with fallback
+        icon: categoryIcons[cat._id?.toLowerCase()] || <LayoutGrid size={18} />
+      }));
+      
+      console.log("Formatted categories:", formattedCategories);
+      setCategories(formattedCategories);
+      
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
+
+  const handleSearch = () => {
+    setCurrentPage(1);
+    fetchListings();
+  };
+
+  const handleCategoryClick = (categoryName) => {
+    setSelectedCategory(categoryName.toLowerCase());
+    setCurrentPage(1);
+  };
+
+  const handleConditionChange = (condition) => {
+    setSelectedConditions(prev => {
+      if (prev.includes(condition)) {
+        return prev.filter(c => c !== condition);
+      } else {
+        return [...prev, condition];
+      }
+    });
+    setCurrentPage(1);
+  };
+
+  const handleApplyFilters = () => {
+    setCurrentPage(1);
+    fetchListings();
+  };
+
+  const handleSortChange = (value) => {
+    const [newSortBy, newSortOrder] = value.split('-');
+    setSortBy(newSortBy);
+    setSortOrder(newSortOrder);
+  };
+
+  const handleViewListing = (listingId) => {
+    navigate(`/listings/${listingId}`);
+  };
+
+  const getConditionColor = (condition) => {
+    const colors = {
+      'new': 'bg-green-100 text-green-800',
+      'like-new': 'bg-emerald-100 text-emerald-800',
+      'good': 'bg-blue-100 text-blue-800',
+      'fair': 'bg-yellow-100 text-yellow-800',
+      'poor': 'bg-red-100 text-red-800'
+    };
+    return colors[condition] || 'bg-gray-100 text-gray-800';
+  };
+
+  // FIX: Add this missing function
+  const getTagFromPrice = (price) => {
+    if (price < 500) return { text: 'Budget', color: 'bg-green-500' };
+    if (price < 2000) return { text: 'Value', color: 'bg-blue-500' };
+    if (price < 5000) return { text: 'Premium', color: 'bg-purple-500' };
+    return { text: 'Luxury', color: 'bg-orange-500' };
+  };
+
+  const totalPages = Math.ceil(totalListings / itemsPerPage);
+
+  // Loading state
+  if (loading && listings.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader className="h-12 w-12 animate-spin text-emerald-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading amazing deals...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#f8f9fa] min-h-screen font-sans pb-20">
@@ -87,10 +220,22 @@ const ListingPage = () => {
             </h3>
             <ul className="space-y-3">
               {categories.map((cat) => (
-                <li key={cat.name} className="flex items-center justify-between group cursor-pointer p-2.5 rounded-xl hover:bg-emerald-50 transition-all duration-300">
+                <li 
+                  key={cat.name} 
+                  onClick={() => handleCategoryClick(cat.name)}
+                  className={`flex items-center justify-between group cursor-pointer p-2.5 rounded-xl transition-all duration-300 ${
+                    selectedCategory === cat.name.toLowerCase() 
+                      ? 'bg-emerald-100 text-emerald-700' 
+                      : 'hover:bg-emerald-50'
+                  }`}
+                >
                   <div className="flex items-center gap-3 text-gray-800 font-medium">
-                    <span className="text-emerald-500 group-hover:scale-110 transition-transform">{cat.icon}</span>
-                    <span className="text-[14px] group-hover:text-emerald-600 font-semibold">{cat.name}</span>
+                    <span className={`group-hover:scale-110 transition-transform ${
+                      selectedCategory === cat.name.toLowerCase() ? 'text-emerald-600' : 'text-emerald-500'
+                    }`}>{cat.icon}</span>
+                    <span className={`text-[14px] font-semibold ${
+                      selectedCategory === cat.name.toLowerCase() ? 'text-emerald-700' : 'group-hover:text-emerald-600'
+                    }`}>{cat.name}</span>
                   </div>
                   <span className="bg-emerald-100 text-emerald-700 text-[11px] font-bold px-2.5 py-1 rounded-full">
                     {cat.count}
@@ -106,7 +251,6 @@ const ListingPage = () => {
               <span className="absolute bottom-[-6px] left-0 w-10 h-1 bg-emerald-100 rounded-full"></span>
             </h3>
             
-            {/* Imported DoubleSlider component */}
             <DoubleSlider
               min={0}
               max={10000}
@@ -115,7 +259,6 @@ const ListingPage = () => {
               onChange={setPriceRange}
             />
             
-            {/* Price Display */}
             <div className="flex justify-between items-center mb-6 bg-emerald-50 rounded-xl p-4 mt-6">
               <div className="text-center">
                 <label className="block text-xs font-bold text-gray-500 mb-1">Min</label>
@@ -124,7 +267,10 @@ const ListingPage = () => {
                   <input
                     type="number"
                     value={priceRange[0]}
-                    onChange={(e) => handlePriceInputChange('min', e.target.value)}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setPriceRange([val, priceRange[1]]);
+                    }}
                     className="w-20 bg-transparent border-none text-lg font-bold text-gray-800 focus:outline-none focus:ring-1 focus:ring-emerald-500 rounded px-1"
                     min={0}
                     max={priceRange[1] - 1}
@@ -139,7 +285,10 @@ const ListingPage = () => {
                   <input
                     type="number"
                     value={priceRange[1]}
-                    onChange={(e) => handlePriceInputChange('max', e.target.value)}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setPriceRange([priceRange[0], val]);
+                    }}
                     className="w-20 bg-transparent border-none text-lg font-bold text-gray-800 focus:outline-none focus:ring-1 focus:ring-emerald-500 rounded px-1"
                     min={priceRange[0] + 1}
                     max={10000}
@@ -150,15 +299,23 @@ const ListingPage = () => {
 
             <div className="space-y-4">
               <p className="text-xs font-bold uppercase text-gray-400 tracking-widest">Item Condition</p>
-              {['Brand New', 'Like New', 'Used'].map((cond) => (
+              {['New', 'Like New', 'Good', 'Fair', 'Poor'].map((cond) => (
                 <label key={cond} className="flex items-center gap-3 cursor-pointer group p-2 rounded-lg hover:bg-emerald-50">
-                  <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-emerald-500 focus:ring-emerald-500" />
+                  <input 
+                    type="checkbox" 
+                    checked={selectedConditions.includes(cond.toLowerCase())}
+                    onChange={() => handleConditionChange(cond.toLowerCase())}
+                    className="w-4 h-4 rounded border-gray-300 text-emerald-500 focus:ring-emerald-500" 
+                  />
                   <span className="text-[14px] text-gray-700 font-medium group-hover:text-emerald-600 transition-colors">{cond}</span>
                 </label>
               ))}
             </div>
             
-            <button className="w-full mt-6 bg-emerald-500 text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-emerald-600 shadow-lg shadow-emerald-100 transition-all">
+            <button 
+              onClick={handleApplyFilters}
+              className="w-full mt-6 bg-emerald-500 text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-emerald-600 shadow-lg shadow-emerald-100 transition-all"
+            >
               <Filter size={18} /> Apply Filters
             </button>
           </div>
@@ -174,15 +331,16 @@ const ListingPage = () => {
                 <input
                   type="text"
                   value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setCurrentPage(1);
-                  }}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                   placeholder="Search for books, cycles, electronics, clothing..."
                   className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-gray-700 font-medium"
                 />
               </div>
-              <button className="bg-emerald-500 text-white px-8 py-3 rounded-xl font-bold hover:bg-emerald-600 transition-colors flex items-center gap-2">
+              <button 
+                onClick={handleSearch}
+                className="bg-emerald-500 text-white px-8 py-3 rounded-xl font-bold hover:bg-emerald-600 transition-colors flex items-center gap-2"
+              >
                 <Search size={18} /> Search
               </button>
             </div>
@@ -192,80 +350,107 @@ const ListingPage = () => {
           <div className="flex justify-between items-center mb-8">
             <div>
               <p className="text-gray-500 text-[15px]">
-                Showing <span className="text-emerald-600 font-bold">{filteredListings.length}</span> of{" "}
-                <span className="text-emerald-600 font-bold">{listings.length}</span> products
-              </p>
-              <p className="text-sm text-gray-400 mt-1">
-                Price range: ₹{priceRange[0]} - ₹{priceRange[1]}
+                Showing <span className="text-emerald-600 font-bold">{listings.length}</span> of{" "}
+                <span className="text-emerald-600 font-bold">{totalListings}</span> products
               </p>
             </div>
             <div className="flex gap-4">
-              <div className="bg-white px-5 py-3 rounded-2xl shadow-sm text-sm font-medium text-gray-600 flex items-center gap-2 cursor-pointer">
-                Sort by: <span className="text-gray-900 font-bold">Featured</span> <ChevronDown size={14} />
-              </div>
+              <select 
+                onChange={(e) => handleSortChange(e.target.value)}
+                className="bg-white px-5 py-3 rounded-2xl shadow-sm text-sm font-medium text-gray-600 border-0 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+              >
+                <option value="createdAt-desc">Newest First</option>
+                <option value="price-asc">Price: Low to High</option>
+                <option value="price-desc">Price: High to Low</option>
+                <option value="views-desc">Most Popular</option>
+              </select>
             </div>
           </div>
 
           {/* Product Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 mb-12">
-            {currentListings.map((item) => (
-              <div key={item.id} className="bg-white rounded-[30px] p-6 shadow-sm hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500 group relative flex flex-col border border-transparent hover:border-emerald-100">
-                
-                {/* Image Area */}
-                <div className="relative h-56 bg-[#f2f3f4] rounded-2xl flex items-center justify-center text-7xl mb-6 overflow-hidden">
-                  <span className="group-hover:scale-125 transition-transform duration-700">{item.img}</span>
-                  
-                  {/* Absolute UI overlay */}
-                  <div className="absolute top-4 left-4 flex flex-col gap-2">
-                    <span className={`px-4 py-1.5 text-white text-[10px] font-bold rounded-full ${
-                      item.tag === 'Hot' ? 'bg-orange-400' : item.tag === 'Sale' ? 'bg-blue-400' : 'bg-emerald-500'
-                    }`}>
-                      {item.tag}
-                    </span>
-                  </div>
+          {listings.length === 0 ? (
+            <div className="text-center py-20 bg-white rounded-3xl">
+              <LayoutGrid className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-gray-700 mb-2">No listings found</h3>
+              <p className="text-gray-500">Try adjusting your filters or search terms</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 mb-12">
+              {listings.map((item) => {
+                const tag = getTagFromPrice(item.basePrice || item.price || 0);
+                return (
+                  <div 
+                    key={item._id} 
+                    onClick={() => handleViewListing(item._id)}
+                    className="bg-white rounded-[30px] p-6 shadow-sm hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500 group relative flex flex-col border border-transparent hover:border-emerald-100 cursor-pointer"
+                  >
+                    
+                    {/* Image Area */}
+                    <div className="relative h-56 bg-[#f2f3f4] rounded-2xl flex items-center justify-center text-7xl mb-6 overflow-hidden">
+                      {item.images && item.images.length > 0 ? (
+                        <img 
+                          src={item.images[0].url} 
+                          alt={item.title}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                        />
+                      ) : (
+                        <span className="text-6xl">📦</span>
+                      )}
+                      
+                      {/* Absolute UI overlay */}
+                      <div className="absolute top-4 left-4 flex flex-col gap-2">
+                        <span className={`px-4 py-1.5 text-white text-[10px] font-bold rounded-full ${tag.color}`}>
+                          {tag.text}
+                        </span>
+                        <span className={`px-4 py-1.5 ${getConditionColor(item.condition)} text-[10px] font-bold rounded-full`}>
+                          {item.condition}
+                        </span>
+                      </div>
 
-                  {/* Hover Quick Actions */}
-                  <div className="absolute inset-0 bg-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                    <button className="bg-white p-3 rounded-xl text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all shadow-md">
-                      <Heart size={18} />
-                    </button>
-                    <button className="bg-white p-3 rounded-xl text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all shadow-md">
-                      <Eye size={18} />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 flex flex-col">
-                  <span className="text-[12px] text-gray-400 font-bold uppercase tracking-widest mb-2">{item.category}</span>
-                  <h4 className="text-[17px] font-extrabold text-[#253D4E] mb-3 group-hover:text-emerald-500 transition-colors">
-                    {item.title}
-                  </h4>
-                  
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="flex items-center">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} size={14} className={`${i < Math.floor(item.rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'}`} />
-                      ))}
+                      {/* Hover Quick Actions */}
+                      <div className="absolute inset-0 bg-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                        <button className="bg-white p-3 rounded-xl text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all shadow-md">
+                          <Heart size={18} />
+                        </button>
+                        <button className="bg-white p-3 rounded-xl text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all shadow-md">
+                          <Eye size={18} />
+                        </button>
+                      </div>
                     </div>
-                    <span className="text-xs font-bold text-gray-400">({item.rating})</span>
-                  </div>
 
-                  <p className="text-sm text-gray-400 mb-6">Listed by <span className="text-emerald-500 font-bold">{item.seller}</span></p>
+                    {/* Content */}
+                    <div className="flex-1 flex flex-col">
+                      <span className="text-[12px] text-gray-400 font-bold uppercase tracking-widest mb-2">
+                        {item.category?.name || item.category || 'Uncategorized'}
+                      </span>
+                      <h4 className="text-[17px] font-extrabold text-[#253D4E] mb-3 group-hover:text-emerald-500 transition-colors line-clamp-2">
+                        {item.title}
+                      </h4>
+                      
+                      <p className="text-sm text-gray-400 mb-6 line-clamp-2">
+                        {item.description?.substring(0, 60)}...
+                      </p>
 
-                  <div className="mt-auto flex items-center justify-between pt-4 border-t border-gray-50">
-                    <div className="flex flex-col">
-                      <span className="text-2xl font-black text-emerald-500 leading-none">₹{item.price}</span>
-                      <span className="text-sm text-gray-400 line-through">₹{item.originalPrice}</span>
+                      <div className="mt-auto flex items-center justify-between pt-4 border-t border-gray-50">
+                        <div>
+                          <span className="text-2xl font-black text-emerald-500">
+                            ₹{item.basePrice || item.price || 0}
+                          </span>
+                          {item.isNegotiable && (
+                            <span className="text-xs text-gray-400 block">Negotiable</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1 text-sm text-gray-400">
+                          <Eye size={16} />
+                          <span>{item.views || 0}</span>
+                        </div>
+                      </div>
                     </div>
-                    <button className="bg-emerald-50 text-emerald-600 px-6 py-3 rounded-xl flex items-center gap-2 text-[15px] font-bold hover:bg-emerald-500 hover:text-white transition-all">
-                      <Plus size={20} /> Add
-                    </button>
                   </div>
-                </div>
-              </div>
-            ))}
-          </div>
+                );
+              })}
+            </div>
+          )}
 
           {/* Pagination */}
           {totalPages > 1 && (

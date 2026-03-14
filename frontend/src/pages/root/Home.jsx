@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Search, 
   ShoppingBag, 
@@ -6,14 +7,14 @@ import {
   Heart, 
   TrendingUp, 
   ArrowRight,
-  Zap,
   MapPin,
   Clock,
   Star,
   Plus
 } from 'lucide-react';
 
-const HomePage = ({ onNavigateToListings }) => {
+const HomePage = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   
   const categories = [
@@ -25,22 +26,36 @@ const HomePage = ({ onNavigateToListings }) => {
   ];
 
   const trendingItems = [
-    { id: 1, title: "Scientific Calculator TI-84", price: 850, originalPrice: 1200, rating: 4.5, img: "🔢", tag: "Study Essentials", seller: "John Doe", views: 42 },
-    { id: 2, title: "Campus Hoodie Navy Blue", price: 1200, originalPrice: 1800, rating: 4.2, img: "👕", tag: "Fashion", seller: "Openlake Store", views: 156 },
-    { id: 3, title: "Mountain Bike 2023", price: 5500, originalPrice: 7500, rating: 4.8, img: "🚲", tag: "Travel", seller: "Mike Ross", views: 89 },
-    { id: 4, title: "Engineering Physics Textbook", price: 240, originalPrice: 800, rating: 4.7, img: "📖", tag: "Books", seller: "Alex P.", views: 231 },
+    { id: 1, title: "Scientific Calculator TI-84", price: 850, originalPrice: 1200, rating: 4.5, image: "https://images.unsplash.com/photo-1587145820266-a5951ee6f620?w=400", tag: "Study Essentials", seller: "John Doe", views: 42 },
+    { id: 2, title: "Campus Hoodie Navy Blue", price: 1200, originalPrice: 1800, rating: 4.2, image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400", tag: "Fashion", seller: "Openlake Store", views: 156 },
+    { id: 3, title: "Mountain Bike 2023", price: 5500, originalPrice: 7500, rating: 4.8, image: "https://images.unsplash.com/photo-1576435728678-68d0fbf94e91?w=400", tag: "Travel", seller: "Mike Ross", views: 89 },
+    { id: 4, title: "Engineering Physics Textbook", price: 240, originalPrice: 800, rating: 4.7, image: "https://images.unsplash.com/photo-1532012197267-da84d127e765?w=400", tag: "Books", seller: "Alex P.", views: 231 },
   ];
 
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      onNavigateToListings();
+      navigate(`/listings?search=${encodeURIComponent(searchQuery)}`);
     }
+  };
+
+  const handleCategoryClick = (categoryId) => {
+    navigate(`/listings?category=${categoryId}`);
+  };
+
+  const handleItemClick = (itemId) => {
+    navigate(`/listings/${itemId}`);
+  };
+
+  const handleAddToWishlist = (e, itemId) => {
+    e.stopPropagation();
+    // TODO: Add to wishlist functionality
+    console.log('Add to wishlist:', itemId);
   };
 
   return (
     <div className="bg-[#f8f9fa] min-h-screen font-sans text-[#253D4E] pb-20">
-      {/* Hero Banner - Compact */}
+      {/* Hero Banner */}
       <div className="container mx-auto px-4 py-8">
         <div className="relative rounded-[30px] bg-gradient-to-r from-emerald-400 to-emerald-500 overflow-hidden p-8 lg:p-16">
           <div className="z-10 relative max-w-xl">
@@ -67,7 +82,6 @@ const HomePage = ({ onNavigateToListings }) => {
                 />
                 <button 
                   type="submit"
-                  onClick={onNavigateToListings}
                   className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm transition-colors"
                 >
                   Search
@@ -89,8 +103,8 @@ const HomePage = ({ onNavigateToListings }) => {
           {categories.map((cat) => (
             <div 
               key={cat.id}
+              onClick={() => handleCategoryClick(cat.id)}
               className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer group border border-gray-100"
-              onClick={onNavigateToListings}
             >
               <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${cat.color} flex items-center justify-center text-2xl mb-3 group-hover:scale-110 transition-transform`}>
                 {cat.icon}
@@ -110,7 +124,7 @@ const HomePage = ({ onNavigateToListings }) => {
             <h3 className="text-xl font-bold text-gray-800">Trending Near You</h3>
           </div>
           <button 
-            onClick={onNavigateToListings}
+            onClick={() => navigate('/listings')}
             className="text-emerald-600 font-bold hover:text-emerald-700 transition-colors text-sm flex items-center gap-1"
           >
             View All <ArrowRight size={14} />
@@ -121,12 +135,16 @@ const HomePage = ({ onNavigateToListings }) => {
           {trendingItems.map((item) => (
             <div 
               key={item.id}
+              onClick={() => handleItemClick(item.id)}
               className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all border border-gray-100 group cursor-pointer"
-              onClick={onNavigateToListings}
             >
               {/* Image */}
-              <div className="relative h-40 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg flex items-center justify-center text-5xl mb-4 group-hover:scale-[1.02] transition-transform">
-                {item.img}
+              <div className="relative h-40 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg overflow-hidden mb-4 group-hover:scale-[1.02] transition-transform">
+                <img 
+                  src={item.image} 
+                  alt={item.title}
+                  className="w-full h-full object-cover"
+                />
                 <div className="absolute top-2 left-2">
                   <span className="px-2 py-1 text-xs font-bold bg-emerald-500 text-white rounded">
                     {Math.round((1 - item.price / item.originalPrice) * 100)}% OFF
@@ -158,8 +176,11 @@ const HomePage = ({ onNavigateToListings }) => {
                     </div>
                     <p className="text-xs text-gray-500 mt-1">by {item.seller}</p>
                   </div>
-                  <button className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-500 hover:text-white transition-colors">
-                    <Plus size={18} />
+                  <button 
+                    onClick={(e) => handleAddToWishlist(e, item.id)}
+                    className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-500 hover:text-white transition-colors"
+                  >
+                    <Heart size={18} />
                   </button>
                 </div>
               </div>
@@ -179,13 +200,29 @@ const HomePage = ({ onNavigateToListings }) => {
               </p>
             </div>
             <button 
-              onClick={onNavigateToListings}
+              onClick={() => navigate('/listings')}
               className="bg-white text-emerald-600 px-8 py-3 rounded-xl font-bold hover:bg-emerald-50 transition-colors shadow-lg whitespace-nowrap"
             >
               Browse All Listings
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Floating Action Buttons for Mobile */}
+      <div className="fixed bottom-6 right-6 flex flex-col gap-3 lg:hidden">
+        <button 
+          onClick={() => navigate('/listings/add')}
+          className="w-14 h-14 bg-emerald-600 rounded-full shadow-lg flex items-center justify-center text-white hover:bg-emerald-700 transition-colors"
+        >
+          <Plus size={24} />
+        </button>
+        <button 
+          onClick={() => navigate('/wishlist')}
+          className="w-14 h-14 bg-white rounded-full shadow-lg flex items-center justify-center text-emerald-600 hover:bg-gray-50 transition-colors"
+        >
+          <Heart size={24} />
+        </button>
       </div>
     </div>
   );
