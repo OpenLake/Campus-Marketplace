@@ -11,7 +11,7 @@ export const useForm = (initialValues, onSubmit, validate) => {
 
   /**
    * Handle input change
-   * @param {Event} e - Input change event
+   * @param {Event} e - Iniput change event
    */
   const handleChange = (e) => {
     const { name, value } = e.target;

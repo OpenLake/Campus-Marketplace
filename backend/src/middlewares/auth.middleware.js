@@ -38,6 +38,7 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
       role: user.role,
       roles: [user.role], // array for role checks
       is_verified: user.is_verified,
+      _id: user.user_id, 
       avatar: user.avatar,
       google_id: user.google_id,
       created_at: user.created_at,

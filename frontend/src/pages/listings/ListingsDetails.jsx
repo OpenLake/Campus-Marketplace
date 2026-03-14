@@ -8,15 +8,21 @@ import {
   Tag,
   Package,
   AlertCircle,
+  DollarSign,
+  MessageCircle,
+  Heart,
+  Users
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth.js";
 import listingService from "../../services/listingService.js";
+import orderService from "../../services/orderService.js";
 import ImageGallery from "../../components/listings/ImageGallery.jsx";
 import SellerInfoCard from "../../components/listings/SellerInfoCard.jsx";
 import RelatedListings from "../../components/listings/RelatedListings.jsx";
 import ShareButtons from "../../components/ui/ShareButton.jsx";
 import Breadcrumb from "../../components/ui/Breadcrumb.jsx";
 import Button from "../../components/ui/Button.jsx";
+import InterestModal from "../../components/listings/InterestModal.jsx";
 import toast from "react-hot-toast";
 
 /**
@@ -32,6 +38,9 @@ const ListingDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [expressingInterest, setExpressingInterest] = useState(false);
+  const [showInterestModal, setShowInterestModal] = useState(false);
+  const [userInterest, setUserInterest] = useState(null);
 
   useEffect(() => {
     fetchListing();
@@ -42,13 +51,53 @@ const ListingDetail = () => {
       setLoading(true);
       setError(null);
       const response = await listingService.getListingById(id);
+      console.log("Listing details:", response.data);
       setListing(response.data);
+      
+      // Check if user has pending interest
+      if (response.data.userInterest) {
+        setUserInterest(response.data.userInterest);
+      }
     } catch (err) {
       console.error("Error fetching listing:", err);
       setError(err.response?.data?.message || "Failed to load listing");
       toast.error("Failed to load listing");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleExpressInterest = async (interestData) => {
+    try {
+      setExpressingInterest(true);
+      const response = await orderService.expressInterest(interestData);
+      toast.success("Interest expressed successfully!");
+      setShowInterestModal(false);
+      setUserInterest(response.data);
+      fetchListing(); // Refresh to update interest count
+    } catch (err) {
+      console.error("Error expressing interest:", err);
+      toast.error(err.response?.data?.message || "Failed to express interest");
+    } finally {
+      setExpressingInterest(false);
+    }
+  };
+
+  const handleWithdrawInterest = async () => {
+    if (!userInterest) return;
+    
+    if (!window.confirm("Are you sure you want to withdraw your interest?")) {
+      return;
+    }
+
+    try {
+      await orderService.withdrawInterest(userInterest._id);
+      toast.success("Interest withdrawn");
+      setUserInterest(null);
+      fetchListing(); // Refresh to update interest count
+    } catch (err) {
+      console.error("Error withdrawing interest:", err);
+      toast.error(err.response?.data?.message || "Failed to withdraw interest");
     }
   };
 
@@ -62,13 +111,16 @@ const ListingDetail = () => {
     // Open email client
     const subject = encodeURIComponent(`Interested in: ${listing.title}`);
     const body = encodeURIComponent(
-      `Hi ${listing.seller?.name},\n\nI'm interested in your listing "${listing.title}".\n\nPlease let me know if it's still available.\n\nThanks!`
+      `Hi ${listing.seller?.first_name},\n\nI'm interested in your listing "${listing.title}".\n\n` +
+      `Base Price: ₹${listing.basePrice}\n` +
+      `Condition: ${listing.condition}\n\n` +
+      `Please let me know if it's still available.\n\nThanks!`
     );
     window.location.href = `mailto:${listing.seller?.email}?subject=${subject}&body=${body}`;
   };
 
   const handleEdit = () => {
-    navigate(`/listings/${id}/edit`);
+    navigate(`/listings/edit/${id}`);
   };
 
   const handleDelete = async () => {
@@ -139,27 +191,53 @@ const ListingDetail = () => {
     );
   }
 
-  const isOwner = user?._id === listing.seller?._id;
+  const isOwner = user?._id === listing.seller?.user_id;
 
   const breadcrumbItems = [
+    { label: "Home", link: "/" },
     { label: "Listings", link: "/listings" },
-    { label: listing.category, link: `/listings?category=${listing.category}` },
+    { label: listing.category?.name || listing.category, link: `/listings?category=${listing.category?._id || listing.category}` },
     { label: listing.title },
   ];
 
   const conditionColors = {
-    "brand-new": "bg-green-100 text-green-800",
-    "like-new": "bg-blue-100 text-blue-800",
-    good: "bg-yellow-100 text-yellow-800",
-    fair: "bg-orange-100 text-orange-800",
-    poor: "bg-red-100 text-red-800",
+    "new": "bg-green-100 text-green-800",
+    "like_new": "bg-blue-100 text-blue-800",
+    "good": "bg-yellow-100 text-yellow-800",
+    "fair": "bg-orange-100 text-orange-800"
+  };
+
+  const getConditionLabel = (condition) => {
+    const labels = {
+      "new": "New",
+      "like_new": "Like New",
+      "good": "Good",
+      "fair": "Fair"
+    };
+    return labels[condition] || condition;
   };
 
   const statusColors = {
-    available: "bg-green-100 text-green-800",
-    sold: "bg-gray-100 text-gray-800",
-    reserved: "bg-yellow-100 text-yellow-800",
+    "active": "bg-green-100 text-green-800",
+    "pending_completion": "bg-yellow-100 text-yellow-800",
+    "sold": "bg-gray-100 text-gray-800",
+    "archived": "bg-gray-100 text-gray-800"
   };
+
+  const getStatusLabel = (status) => {
+    const labels = {
+      "active": "Available",
+      "pending_completion": "Pending",
+      "sold": "Sold",
+      "archived": "Archived"
+    };
+    return labels[status] || status;
+  };
+
+  const canExpressInterest = 
+    listing.status === "active" && 
+    !isOwner && 
+    !userInterest;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -188,49 +266,58 @@ const ListingDetail = () => {
                         statusColors[listing.status]
                       }`}
                     >
-                      {listing.status.charAt(0).toUpperCase() +
-                        listing.status.slice(1)}
+                      {getStatusLabel(listing.status)}
                     </span>
                     <span
                       className={`px-3 py-1 rounded-full text-sm font-medium ${
                         conditionColors[listing.condition]
                       }`}
                     >
-                      {listing.condition
-                        .split("-")
-                        .map(
-                          (word) => word.charAt(0).toUpperCase() + word.slice(1)
-                        )
-                        .join(" ")}
+                      {getConditionLabel(listing.condition)}
                     </span>
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="text-3xl font-bold text-blue-600">
-                    ₹{listing.price.toLocaleString()}
+                    ₹{listing.basePrice?.toLocaleString()}
                   </div>
                 </div>
               </div>
+
+              {/* Interest Stats */}
+              {listing.interestCount > 0 && (
+                <div className="flex items-center gap-4 bg-orange-50 p-3 rounded-lg mb-4">
+                  <Users className="h-5 w-5 text-orange-600" />
+                  <div>
+                    <p className="text-sm font-medium text-orange-800">
+                      {listing.interestCount} interested {listing.interestCount === 1 ? 'person' : 'people'}
+                    </p>
+                    {listing.highestOffer > 0 && (
+                      <p className="text-xs text-orange-600">
+                        Highest offer: ₹{listing.highestOffer.toLocaleString()}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Meta Information */}
               <div className="flex flex-wrap gap-6 py-4 border-y border-gray-200 mb-6">
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <Tag className="h-5 w-5 text-gray-400" />
-                  <span>{listing.category}</span>
+                  <span>{listing.category?.name || listing.category}</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <MapPin className="h-5 w-5 text-gray-400" />
-                  <span>{listing.location}</span>
-                </div>
+                {listing.location && (
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <MapPin className="h-5 w-5 text-gray-400" />
+                    <span>{listing.location}</span>
+                  </div>
+                )}
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <Calendar className="h-5 w-5 text-gray-400" />
                   <span>
-                    {new Date(listing.createdAt).toLocaleDateString()}
+                    Listed {new Date(listing.createdAt).toLocaleDateString()}
                   </span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Package className="h-5 w-5 text-gray-400" />
-                  <span>ID: {listing._id.slice(-8).toUpperCase()}</span>
                 </div>
               </div>
 
@@ -249,41 +336,112 @@ const ListingDetail = () => {
                 <ShareButtons listing={listing} />
               </div>
             </div>
-
-            {/* Owner Actions */}
-            {isOwner && (
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">
-                  Manage Your Listing
-                </h3>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <button
-                    onClick={() => navigate(`/listings/${id}/edit`)}
-                    className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
-                  >
-                    <Edit className="h-5 w-5" />
-                    Edit Listing
-                  </button>
-                  <Button
-                    onClick={handleDelete}
-                    disabled={deleting}
-                    className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Trash2 className="h-5 w-5" />
-                    {deleting ? "Deleting..." : "Delete Listing"}
-                  </Button>
-                </div>
-              </div>
-            )}
           </div>
 
-          {/* Right Column - Seller Info */}
+          {/* Right Column - Actions & Seller Info */}
           <div className="lg:col-span-1">
-            <div className="sticky top-8">
+            <div className="sticky top-8 space-y-6">
+              {/* Action Buttons */}
+              {!isOwner && (
+                <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Interested?
+                  </h3>
+                  
+                  {!user ? (
+                    <p className="text-sm text-gray-600 mb-4">
+                      Please login to express interest
+                    </p>
+                  ) : userInterest ? (
+                    <div className="space-y-3">
+                      <div className="bg-green-50 p-4 rounded-lg">
+                        <p className="text-sm text-green-800 font-medium mb-2">
+                          You've expressed interest!
+                        </p>
+                        <p className="text-xs text-green-600">
+                          Offered: ₹{userInterest.offeredPrice.toLocaleString()}
+                        </p>
+                      </div>
+                      <Button
+                        onClick={handleWithdrawInterest}
+                        variant="outline"
+                        className="w-full"
+                      >
+                        Withdraw Interest
+                      </Button>
+                    </div>
+                  ) : canExpressInterest ? (
+                    <>
+                      <Button
+                        onClick={() => setShowInterestModal(true)}
+                        className="w-full mb-3"
+                      >
+                        <Heart className="h-4 w-4 mr-2" />
+                        Express Interest
+                      </Button>
+                      <Button
+                        onClick={handleContact}
+                        variant="outline"
+                        className="w-full"
+                      >
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        Contact Seller
+                      </Button>
+                    </>
+                  ) : (
+                    <p className="text-sm text-gray-600">
+                      This item is no longer available
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Seller Info */}
               <SellerInfoCard
                 seller={listing.seller}
                 onContact={handleContact}
+                listingId={listing._id}
               />
+
+              {/* Owner Actions */}
+              {isOwner && (
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">
+                    Manage Your Listing
+                  </h3>
+                  
+                  {/* Interest Summary for Owner */}
+                  {listing.interestCount > 0 && (
+                    <div className="mb-4 p-3 bg-white rounded-lg">
+                      <Link 
+                        to="/incoming-interests"
+                        className="flex items-center justify-between text-sm text-blue-600 hover:text-blue-700"
+                      >
+                        <span>View {listing.interestCount} interested {listing.interestCount === 1 ? 'buyer' : 'buyers'}</span>
+                        <Users className="h-4 w-4" />
+                      </Link>
+                    </div>
+                  )}
+
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <button
+                      onClick={handleEdit}
+                      className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
+                    >
+                      <Edit className="h-5 w-5" />
+                      Edit
+                    </button>
+                    <Button
+                      onClick={handleDelete}
+                      disabled={deleting}
+                      className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Trash2 className="h-5 w-5" />
+                      {deleting ? "Deleting..." : "Delete"}
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -291,9 +449,18 @@ const ListingDetail = () => {
         {/* Related Listings */}
         <RelatedListings
           currentListingId={listing._id}
-          category={listing.category}
+          category={listing.category?._id || listing.category}
         />
       </div>
+
+      {/* Interest Modal */}
+      <InterestModal
+        isOpen={showInterestModal}
+        onClose={() => setShowInterestModal(false)}
+        listing={listing}
+        onSubmit={handleExpressInterest}
+        isSubmitting={expressingInterest}
+      />
     </div>
   );
 };
