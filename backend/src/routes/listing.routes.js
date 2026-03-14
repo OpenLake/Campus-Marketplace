@@ -1,127 +1,63 @@
 import { Router } from "express";
+import { verifyJWT } from "../middlewares/auth.middleware.js";
 import {
-  // Core CRUD operations (MVP)
+  // Create
   createListing,
-  getAllListings,
+  
+  // Read (Public)
+  getListings,
   getListingById,
-  updateListing,
-  deleteListing,
-
-  // User-specific operations (MVP)
-  getUserListings,
-  getMyListings,
-  getDashboardStats,
-  markAsSold,
-
-  // Utility operations
+  getSellerListings,
   getCategories,
-  deleteListingImage,
-  getPriceHistory,
+  
+  // Read (Private)
+  getMyListings,
+  getListingStats,
+  
+  // Update
+  updateListing,
+  toggleListingActive,
+  addListingImages,
+  removeListingImage,
+  setPrimaryImage,
+  
+  // Delete
+  deleteListing
 } from "../controllers/listing.controller.js";
-
-import {
-  verifyJWT,
-  optionalAuth,
-  verifyListingOwnershipOrAdmin,
-} from "../middlewares/auth.middleware.js";
-
-import { upload } from "../middlewares/multer.js";
 
 const listingRouter = Router();
 
-// PUBLIC ROUTES (No Authentication Required)
-listingRouter.get("/", getAllListings); // Browse all listings
-listingRouter.get("/categories", getCategories); // Get available categories
+/* ========== PUBLIC ROUTES (NO AUTH) ========== */
+// These must come BEFORE parameter routes
+listingRouter.get("/categories", getCategories);              // GET /api/listings/categories
+listingRouter.get("/seller/:sellerId", getSellerListings);    // GET /api/listings/seller/:sellerId
+listingRouter.get("/", getListings);                          // GET /api/listings
 
-// Image Upload Route (before other routes to avoid conflicts)
-listingRouter.post(
-  "/upload-image",
-  verifyJWT,
-  upload.single("image"),
-  async (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ message: "No image file provided" });
-      }
+/* ========== PROTECTED ROUTES (REQUIRE AUTH) ========== */
+// Apply auth middleware to all routes below
+listingRouter.use(verifyJWT);
 
-      // Import uploadToCloudinary and removeLocalFiles
-      const { uploadToCloudinary } = await import("../utils/upload.js");
-      const { removeLocalFiles } = await import("../middlewares/multer.js");
+// Create
+listingRouter.post("/", createListing);                       // POST /api/listings
 
-      // Upload to Cloudinary
-      const result = await uploadToCloudinary(
-        req.file.path,
-        "campus-marketplace"
-      );
+// Read (Private) - THESE MUST COME BEFORE PARAMETER ROUTES
+listingRouter.get("/my-listings", getMyListings);            // GET /api/listings/my-listings
+listingRouter.get("/stats", getListingStats);                 // GET /api/listings/stats
 
-      // Remove local file after upload
-      removeLocalFiles([req.file]);
+// Update - Parameter routes
+listingRouter.put("/:id", updateListing);                     // PUT /api/listings/:id
+listingRouter.patch("/:id/toggle-active", toggleListingActive); // PATCH /api/listings/:id/toggle-active
 
-      return res.status(200).json({
-        success: true,
-        data: {
-          url: result.secure_url,
-          publicId: result.public_id,
-        },
-      });
-    } catch (error) {
-      console.error("Image upload error:", error);
-      if (req.file) {
-        const { removeLocalFiles } = await import("../middlewares/multer.js");
-        removeLocalFiles([req.file]);
-      }
-      return res.status(500).json({
-        success: false,
-        message: "Failed to upload image",
-        error: error.message,
-      });
-    }
-  }
-);
+// Image management
+listingRouter.post("/:id/images", addListingImages);          // POST /api/listings/:id/images
+listingRouter.delete("/:id/images/:imageId", removeListingImage); // DELETE /api/listings/:id/images/:imageId
+listingRouter.patch("/:id/images/:imageId/primary", setPrimaryImage); // PATCH /api/listings/:id/images/:imageId/primary
 
-// PROTECTED ROUTES (Authentication Required)
+// Delete
+listingRouter.delete("/:id", deleteListing);                  // DELETE /api/listings/:id
 
-// User-Specific Routes (MUST come BEFORE /:id to avoid route conflicts)
-listingRouter.get("/me/listings", verifyJWT, getMyListings); // Get current user's listings
-listingRouter.get("/me/dashboard", verifyJWT, getDashboardStats); // Get seller dashboard stats
+/* ========== PUBLIC PARAMETER ROUTE (MUST BE LAST) ========== */
+// This must be LAST to avoid catching other routes
+listingRouter.get("/:id", getListingById);                    // GET /api/listings/:id
 
-// Core CRUD Operations
-listingRouter.post("/", verifyJWT, upload.array("images", 10), createListing); // Create new listing
-
-// Single Listing Operations (/:id routes - MUST come AFTER specific routes)
-listingRouter.get("/user/:userId", getUserListings); // Get listings by specific user
-
-// Price history route (MUST come BEFORE /:id to avoid route conflicts)
-listingRouter.get("/:id/price-history", getPriceHistory);
-
-// DELETE image from listing
-listingRouter.delete(
-  "/:id/images",
-  verifyJWT,
-  verifyListingOwnershipOrAdmin,
-  deleteListingImage
-);
-
-listingRouter.get("/:id", optionalAuth, getListingById); // View single listing (optional auth for tracking)
-listingRouter.put(
-  "/:id",
-  verifyJWT,
-  verifyListingOwnershipOrAdmin,
-  upload.array("images", 10),
-  updateListing
-); // Update listing (owner or admin only)
-listingRouter.delete(
-  "/:id",
-  verifyJWT,
-  verifyListingOwnershipOrAdmin,
-  deleteListing
-); // Delete listing (owner or admin only)
-
-// Status Management
-listingRouter.patch(
-  "/:id/mark-sold",
-  verifyJWT,
-  verifyListingOwnershipOrAdmin,
-  markAsSold
-); // Mark listing as sold (owner or admin only)
 export default listingRouter;
