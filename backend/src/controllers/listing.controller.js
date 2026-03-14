@@ -1,640 +1,601 @@
-import { asyncHandler } from "../utils/asyncHandler.js";
-import { Listing } from "../models/listing.model.js";
-import { removeLocalFiles } from "../middlewares/multer.js";
-import { uploadToCloudinary } from "../utils/upload.js";
+import { STListing } from "../models/st_listing.model.js";
+import { STCategory } from "../models/st_category.model.js";
+import { STInterest } from "../models/st_interest.model.js";
+import { findUserById } from "../models/users.model.js";
 import { ApiError } from "../utils/api-error.js";
 import { ApiResponse } from "../utils/api-response.js";
-import { LISTING_CATEGORIES } from "../models/index.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import mongoose from "mongoose";
 
-const ALLOWED_ROLES = [
-  "student",
-  "vendor_admin",
-  "club_admin",
-  "admin",
-  "moderator",
-];
+// Helper to get user ID 
+const getUserId = (req) => {
+  return req.user?._id || req.user?.user_id || req.user?.id;
+};
 
-// Core CRUD Operations
+/* ========== CREATE LISTING ========== */
+// In your backend controller (where createListing is)
 export const createListing = asyncHandler(async (req, res) => {
-  //1. Authorization check
-  const userRoles = req.user.roles || [];
-  const hasAllowedRole = ALLOWED_ROLES.some((role) => userRoles.includes(role));
-
-  if (!hasAllowedRole) {
-    removeLocalFiles(req.files);
-    throw new ApiError(403, "Unauthorized to create listings");
-  }
-  //2. Validate required fields
+  console.log("\n=== CREATE LISTING ===");
+  console.log("Request body:", JSON.stringify(req.body, null, 2));
+  
   const {
     title,
     description,
-    price,
-    category,
+    basePrice,
+    price, // Allow both for testing
     condition,
-    location,
-    negotiable,
-    tags,
-    brand,
-    model,
-    isUrgent,
-    originalPrice,
-    subcategory,
+    category,
+    images,
+    location
   } = req.body;
 
-  if (!title || title.trim().length < 3) {
-    removeLocalFiles(req.files);
-    throw new ApiError(400, "Title must be at least 3 characters long");
+  const sellerId = getUserId(req);
+  if (!sellerId) {
+    throw new ApiError(401, "User ID not found");
   }
 
-  if (!description || description.trim().length < 10) {
-    removeLocalFiles(req.files);
-    throw new ApiError(400, "Description must be at least 10 characters long");
+  // Use basePrice or price
+  const finalPrice = basePrice || price;
+
+  // Validate required fields
+  if (!title || !description || !finalPrice || !condition || !category) {
+    throw new ApiError(400, `Missing required fields: ${JSON.stringify({
+      title: !!title,
+      description: !!description, 
+      price: !!finalPrice,
+      condition: !!condition,
+      category: !!category
+    })}`);
   }
 
-  if (!price || isNaN(price) || price < 0) {
-    removeLocalFiles(req.files);
-    throw new ApiError(400, "Price must be a valid number");
+  // Validate category exists
+  const categoryExists = await STCategory.findById(category);
+  if (!categoryExists) {
+    throw new ApiError(400, "Invalid category");
   }
 
-  if (!category) {
-    removeLocalFiles(req.files);
-    throw new ApiError(400, "Category is required");
-  }
-
-  if (!condition) {
-    removeLocalFiles(req.files);
-    throw new ApiError(400, "Condition is required");
-  }
-
-  if (!location) {
-    removeLocalFiles(req.files);
-    throw new ApiError(400, "Location is required");
-  }
-
-  if (!req.files || req.files.length === 0) {
+  // TEMP FIX: Accept blob URLs and generate fake publicIds
+  if (!images || images.length === 0) {
     throw new ApiError(400, "At least one image is required");
   }
-  //3. Handle images: upload to Cloudinary
-  let images = [];
-  try {
-    if (req.files && req.files.length > 0) {
-      for (const [i, file] of req.files.entries()) {
-        const result = await uploadToCloudinary(
-          file.path,
-          "campus-marketplace"
-        );
-        images.push({
-          url: result.secure_url,
-          publicId: result.public_id,
-          isPrimary: i === 0, // first image is primary
-        });
-      }
-      removeLocalFiles(req.files);
-    } else {
-      throw new ApiError(400, "At least one image is required.");
+
+  // Process images - accept blob URLs temporarily
+  const processedImages = images.map((img, idx) => {
+    // If it's a blob URL or any URL, accept it
+    if (img.url) {
+      return {
+        url: img.url,
+        // Generate a temporary publicId if missing
+        publicId: img.publicId || `temp_${Date.now()}_${idx}`,
+        isCover: idx === 0
+      };
     }
-  } catch (err) {
-    removeLocalFiles(req.files);
-    throw new ApiError(500, "Image upload failed.", err.message);
-  }
-  // 4. Create listing document
-  const listing = new Listing({
-    title,
-    description,
-    price,
-    originalPrice: originalPrice || undefined,
-    category,
-    subcategory: subcategory || undefined,
-    condition,
-    brand: brand || undefined,
-    model: model || undefined,
-    negotiable: negotiable !== undefined ? negotiable : true,
-    isUrgent: isUrgent || false,
-    location: typeof location === "string" ? JSON.parse(location) : location,
-    tags: tags ? (Array.isArray(tags) ? tags : [tags]) : [],
-    images,
-    owner: req.user._id,
-    status: "active",
+    // If it's a string URL, convert to object
+    if (typeof img === 'string') {
+      return {
+        url: img,
+        publicId: `temp_${Date.now()}_${idx}`,
+        isCover: idx === 0
+      };
+    }
+    throw new ApiError(400, "Invalid image format");
   });
-  // 5. Save to DB
-  try {
-    const savedListing = await listing.save();
 
-    const response = new ApiResponse(
-      201,
-      savedListing,
-      "Listing created successfully."
-    );
-    return res.status(201).json(response);
-  } catch (err) {
-    throw new ApiError(500, "Failed to create listing.", err.message);
-  }
-}); // Create new listing with validation
+  console.log("Processed images:", processedImages);
 
-export const getAllListings = asyncHandler(async (req, res) => {
-  const {
-    page = 1,
-    limit = 20,
-    category,
+  // Create listing
+  const listingData = {
+    sellerId,
+    title: title.trim(),
+    description: description.trim(),
+    basePrice: Number(finalPrice),
     condition,
+    category,
+    images: processedImages,
+    status: "active",
+    location: location || {} // Add location if your model has it
+  };
+
+  const listing = await STListing.create(listingData);
+  
+  // Populate category for response
+  await listing.populate("category");
+
+  console.log("Listing created:", listing._id);
+
+  res.status(201).json(
+    new ApiResponse(201, listing, "Listing created successfully")
+  );
+});
+
+/* ========== READ LISTINGS ========== */
+export const getListings = asyncHandler(async (req, res) => {
+  const {
+    category,
     minPrice,
     maxPrice,
-    hostel,
+    condition,
+    sellerId,
+    search,
     sortBy = "createdAt",
     sortOrder = "desc",
-    search,
+    page = 1,
+    limit = 20
   } = req.query;
 
-  const filter = { status: "active", isAvailable: true };
+  // Base filter: only active listings
+  const filter = { status: "active" };
+
   if (category) filter.category = category;
   if (condition) filter.condition = condition;
-  if (hostel) filter["location.hostel"] = hostel;
+  if (sellerId) filter.sellerId = sellerId;
+
+  // Price range
   if (minPrice || maxPrice) {
-    filter.price = {};
-    if (minPrice) filter.price.$gte = Number(minPrice);
-    if (maxPrice) filter.price.$lte = Number(maxPrice);
+    filter.basePrice = {};
+    if (minPrice) filter.basePrice.$gte = Number(minPrice);
+    if (maxPrice) filter.basePrice.$lte = Number(maxPrice);
   }
+
+  // Text search
   if (search) {
     filter.$text = { $search: search };
   }
 
-  const sortObj = {};
-  sortObj[sortBy] = sortOrder === "asc" ? 1 : -1;
+  // Sorting
+  const sort = {};
+  sort[sortBy] = sortOrder === "desc" ? -1 : 1;
 
-  const options = {
-    page: parseInt(page),
-    limit: parseInt(limit),
-    sort: sortObj,
-    populate: { path: "owner", select: "name username profileImage roles" },
-  };
+  // Pagination
+  const skip = (Number(page) - 1) * Number(limit);
 
-  const listings = await Listing.paginate(filter, options);
+  const listings = await STListing.find(filter)
+    .populate("category", "name slug")
+    .sort(sort)
+    .skip(skip)
+    .limit(Number(limit))
+    .lean();
 
-  const response = new ApiResponse(
-    200,
-    listings,
-    "Listings fetched successfully"
+  const total = await STListing.countDocuments(filter);
+
+  // Fetch seller details from PostgreSQL for each listing
+  const listingsWithSellers = await Promise.all(
+    listings.map(async (listing) => {
+      try {
+        const seller = await findUserById(listing.sellerId);
+        return {
+          ...listing,
+          seller: seller ? {
+            user_id: seller.user_id,
+            first_name: seller.first_name,
+            
+            last_name: seller.last_name,
+            email: seller.email,           
+            phone_number: seller.phone_number, 
+
+            avatar: seller.avatar,
+            rating: seller.average_rating || 0
+          } : null
+        };
+      } catch (error) {
+        return { ...listing, seller: null };
+      }
+    })
   );
-  return res.json(response);
-}); // Browse listings with pagination & filters
+
+  res.json(
+    new ApiResponse(200, {
+      listings: listingsWithSellers,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total,
+        pages: Math.ceil(total / Number(limit))
+      }
+    }, "Listings fetched successfully")
+  );
+});
 
 export const getListingById = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const listing = await Listing.findById(id)
-    .populate(
-      "owner",
-      "name username profileImage roles hostelLocation ratingAsSeller"
-    )
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(400, "Invalid listing ID");
+  }
+
+  const listing = await STListing.findById(id)
+    .populate("category", "name slug")
     .lean();
 
   if (!listing) {
-    return new ApiError(404, "Listing not found.");
+    throw new ApiError(404, "Listing not found");
   }
 
-  // Optionally: increment views here
-  await Listing.findByIdAndUpdate(id, { $inc: { "views.total": 1 } });
+  // Get seller details from PostgreSQL
+  const seller = await findUserById(listing.sellerId);
 
-  res.json(listing);
-}); // Get detailed listing information
-
-export const updateListing = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-
-  // 1. Find the listing
-  const listing = await Listing.findById(id);
-
-  if (!listing) {
-    removeLocalFiles(req.files);
-    return res.status(404).json({ message: "Listing not found" });
-  }
-
-  // 2. Authorization check - only owner or admin/moderator can update
-  const isOwner = listing.owner.toString() === req.user._id.toString();
-  const userRoles = req.user.roles || [];
-  const isAdminOrMod =
-    userRoles.includes("admin") || userRoles.includes("moderator");
-
-  if (!isOwner && !isAdminOrMod) {
-    removeLocalFiles(req.files);
-    return res
-      .status(403)
-      .json({ message: "Unauthorized to update this listing" });
-  }
-
-  // 3. Extract and validate update fields
-  const {
-    title,
-    description,
-    price,
-    category,
-    condition,
-    location,
-    negotiable,
-    tags,
-    brand,
-    model,
-    isUrgent,
-    originalPrice,
-    subcategory,
-    isAvailable,
-    status,
-  } = req.body;
-
-  // Validate if provided
-  if (title && title.trim().length < 3) {
-    removeLocalFiles(req.files);
-    return res
-      .status(400)
-      .json({ message: "Title must be at least 3 characters long" });
-  }
-
-  if (description && description.trim().length < 10) {
-    removeLocalFiles(req.files);
-    return res
-      .status(400)
-      .json({ message: "Description must be at least 10 characters long" });
-  }
-
-  if (price !== undefined && (isNaN(price) || price < 0)) {
-    removeLocalFiles(req.files);
-    return res.status(400).json({ message: "Price must be a valid number" });
-  }
-
-  // 4. Handle new images if provided
-  let newImages = [];
-  if (req.files && req.files.length > 0) {
-    try {
-      for (const [i, file] of req.files.entries()) {
-        const result = await uploadToCloudinary(
-          file.path,
-          "campus-marketplace"
-        );
-        newImages.push({
-          url: result.secure_url,
-          publicId: result.public_id,
-          isPrimary: i === 0 && listing.images.length === 0,
-        });
-      }
-      removeLocalFiles(req.files);
-    } catch (err) {
-      removeLocalFiles(req.files);
-      return res
-        .status(500)
-        .json({ error: "Image upload failed.", details: err.message });
+  // Check if current user has pending interest (if authenticated)
+  let userInterest = null;
+  if (req.user) {
+    const userId = getUserId(req);
+    const interest = await STInterest.findOne({
+      listingId: id,
+      buyerId: userId,
+      status: "pending"
+    });
+    if (interest) {
+      userInterest = {
+        _id: interest._id,
+        offeredPrice: interest.offeredPrice,
+        status: interest.status
+      };
     }
   }
 
-  // 5. Track price history if price changed
-  if (price !== undefined && price !== listing.price) {
-    listing.priceHistory.push({
-      price: listing.price,
-      changedAt: new Date(),
-      changedBy: req.user._id,
-    });
-  }
-
-  // 6. Update fields
-  if (title) listing.title = title;
-  if (description) listing.description = description;
-  if (price !== undefined) listing.price = price;
-  if (originalPrice !== undefined) listing.originalPrice = originalPrice;
-  if (category) listing.category = category;
-  if (subcategory !== undefined) listing.subcategory = subcategory;
-  if (condition) listing.condition = condition;
-  if (brand !== undefined) listing.brand = brand;
-  if (model !== undefined) listing.model = model;
-  if (negotiable !== undefined) listing.negotiable = negotiable;
-  if (isUrgent !== undefined) listing.isUrgent = isUrgent;
-  if (isAvailable !== undefined) listing.isAvailable = isAvailable;
-  if (location)
-    listing.location =
-      typeof location === "string" ? JSON.parse(location) : location;
-  if (tags) listing.tags = Array.isArray(tags) ? tags : [tags];
-  if (newImages.length > 0) {
-    listing.images = [...listing.images, ...newImages];
-  }
-
-  // Only admin/moderator can change status
-  if (status && isAdminOrMod) {
-    listing.status = status;
-  }
-
-  listing.updatedAt = new Date();
-
-  // 7. Save updated listing
-  try {
-    const updatedListing = await listing.save();
-    return res.status(200).json({
-      message: "Listing updated successfully.",
-      listing: updatedListing,
-    });
-  } catch (err) {
-    return res
-      .status(500)
-      .json({ error: "Failed to update listing.", details: err.message });
-  }
-}); // Update listing (owner/admin only)
-
-export const deleteListing = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  const { permanent } = req.query; // ?permanent=true for hard delete
-
-  // 1. Find the listing
-  const listing = await Listing.findById(id);
-
-  if (!listing) {
-    return res.status(404).json({ message: "Listing not found" });
-  }
-
-  // 2. Authorization check - only owner or admin/moderator can delete
-  const isOwner = listing.owner.toString() === req.user._id.toString();
-  const userRoles = req.user.roles || [];
-  const isAdminOrMod =
-    userRoles.includes("admin") || userRoles.includes("moderator");
-
-  if (!isOwner && !isAdminOrMod) {
-    return res
-      .status(403)
-      .json({ message: "Unauthorized to delete this listing" });
-  }
-
-  // 3. Check if already deleted (soft delete)
-  if (listing.status === "deleted" && !permanent) {
-    return res.status(400).json({ message: "Listing is already deleted" });
-  }
-
-  try {
-    // 4. Permanent delete (admin only)
-    if (permanent === "true" && isAdminOrMod) {
-      // Optional: Delete images from cloudinary here
-      // for (const image of listing.images) {
-      //   await deleteFromCloudinary(image.publicId);
-      // }
-
-      await Listing.findByIdAndDelete(id);
-      return res.status(200).json({
-        message: "Listing permanently deleted.",
-        listingId: id,
-      });
+  // Similar listings (same category, similar price)
+  const similarListings = await STListing.find({
+    _id: { $ne: id },
+    category: listing.category,
+    status: "active",
+    basePrice: { 
+      $gte: listing.basePrice * 0.5, 
+      $lte: listing.basePrice * 1.5 
     }
+  })
+    .limit(4)
+    .populate("category", "name")
+    .lean();
 
-    // 5. Soft delete (default)
-    listing.status = "deleted";
-    listing.isAvailable = false;
-    listing.deletedAt = new Date();
-    listing.deletedBy = req.user._id;
-
-    await listing.save();
-
-    return res.status(200).json({
-      message: "Listing deleted successfully.",
-      listing: {
-        id: listing._id,
-        status: listing.status,
-        deletedAt: listing.deletedAt,
-      },
-    });
-  } catch (err) {
-    return res
-      .status(500)
-      .json({ error: "Failed to delete listing.", details: err.message });
-  }
-}); // Soft delete listing (owner/admin only)
-
-// User-Specific Operations (MVP)
-export const getUserListings = asyncHandler(async (req, res) => {
-  const { userId } = req.params;
-  const {
-    page = 1,
-    limit = 20,
-    status = "active",
-    sortBy = "createdAt",
-    sortOrder = "desc",
-  } = req.query;
-
-  // Build filter
-  const filter = { owner: userId };
-  if (status !== "all") {
-    filter.status = status;
-  }
-
-  const sortObj = {};
-  sortObj[sortBy] = sortOrder === "asc" ? 1 : -1;
-
-  const options = {
-    page: parseInt(page),
-    limit: parseInt(limit),
-    sort: sortObj,
-    populate: { path: "owner", select: "name username profileImage roles" },
-  };
-
-  try {
-    const listings = await Listing.paginate(filter, options);
-    return res.status(200).json({
-      message: "User listings retrieved successfully.",
-      data: listings,
-    });
-  } catch (err) {
-    return res
-      .status(500)
-      .json({ error: "Failed to fetch user listings.", details: err.message });
-  }
-}); // Get all listings by specific user
-
-export const getMyListings = asyncHandler(async (req, res) => {
-  const {
-    page = 1,
-    limit = 20,
-    status,
-    sortBy = "createdAt",
-    sortOrder = "desc",
-  } = req.query;
-
-  // Build filter for current user's listings
-  const filter = { owner: req.user._id };
-  if (status && status !== "all") {
-    filter.status = status;
-  }
-
-  const sortObj = {};
-  sortObj[sortBy] = sortOrder === "asc" ? 1 : -1;
-
-  const options = {
-    page: parseInt(page),
-    limit: parseInt(limit),
-    sort: sortObj,
-    populate: { path: "owner", select: "name username profileImage roles" },
-  };
-
-  try {
-    const listings = await Listing.paginate(filter, options);
-    return res.status(200).json({
-      message: "Your listings retrieved successfully.",
-      data: listings,
-    });
-  } catch (err) {
-    return res
-      .status(500)
-      .json({ error: "Failed to fetch your listings.", details: err.message });
-  }
-}); // Get current user's listings
-
-export const getDashboardStats = asyncHandler(async (req, res) => {
-  try {
-    const userId = req.user._id;
-
-    // Get counts by status
-    const [activeCount, soldCount, deletedCount, totalViews] =
-      await Promise.all([
-        Listing.countDocuments({ owner: userId, status: "active" }),
-        Listing.countDocuments({ owner: userId, status: "sold" }),
-        Listing.countDocuments({ owner: userId, status: "deleted" }),
-        Listing.aggregate([
-          { $match: { owner: userId } },
-          { $group: { _id: null, totalViews: { $sum: "$views.total" } } },
-        ]),
-      ]);
-
-    // Get recent listings
-    const recentListings = await Listing.find({ owner: userId })
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .select("title price status createdAt images views")
-      .lean();
-
-    // Get total revenue (from sold items)
-    const revenueData = await Listing.aggregate([
-      { $match: { owner: userId, status: "sold" } },
-      { $group: { _id: null, totalRevenue: { $sum: "$price" } } },
-    ]);
-
-    const stats = {
-      totalListings: activeCount + soldCount + deletedCount,
-      activeListings: activeCount,
-      soldListings: soldCount,
-      deletedListings: deletedCount,
-      totalViews: totalViews[0]?.totalViews || 0,
-      totalRevenue: revenueData[0]?.totalRevenue || 0,
-      recentListings,
-    };
-
-    return res.status(200).json({
-      message: "Dashboard stats retrieved successfully.",
-      data: stats,
-    });
-  } catch (err) {
-    return res.status(500).json({
-      error: "Failed to fetch dashboard stats.",
-      details: err.message,
-    });
-  }
-}); // Seller dashboard statistics
-
-export const markAsSold = asyncHandler(async (req, res) => {
-  const listing = await Listing.findById(req.params.id);
-
-  if (!listing) {
-    return new ApiError(404, "Listing not found");
-  }
-
-  listing.status = "sold";
-  await listing.save();
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, listing, "Listing marked as sold"));
-});
-
-// Get available categories
-export const getCategories = asyncHandler(async (req, res) => {
-  return res.status(200).json(
-    new ApiResponse(
-      200,
-      LISTING_CATEGORIES.map((cat) => ({
-        value: cat,
-        label: cat.charAt(0).toUpperCase() + cat.slice(1).replace(/-/g, " "),
-      })),
-      "Categories fetched successfully"
-    )
+  res.json(
+    new ApiResponse(200, {
+      ...listing,
+      seller: seller ? {
+        user_id: seller.user_id,
+        first_name: seller.first_name,
+        last_name: seller.last_name,
+        avatar: seller.avatar,
+        joined_date: seller.created_at,
+        rating: seller.average_rating || 0,
+        email: seller.email,           // ✅ ADD THIS
+        phone_number: seller.phone_number // ✅ ADD THIS
+      } : null,
+      userInterest,
+      similarListings,
+      interestCount: listing.interestCount,
+      highestOffer: listing.highestOffer
+    }, "Listing fetched successfully")
   );
 });
 
-export const getPriceHistory = asyncHandler(async (req, res) => {
-  const { id } = req.params;
+export const getSellerListings = asyncHandler(async (req, res) => {
+  const { sellerId } = req.params;
+  const { page = 1, limit = 10, status = "active" } = req.query;
 
-  const listing = await Listing.findById(id)
-    .select("priceHistory price")
+  const filter = { sellerId };
+  if (status !== "all") filter.status = status;
+
+  const listings = await STListing.find(filter)
+    .populate("category", "name")
+    .sort({ createdAt: -1 })
+    .skip((Number(page) - 1) * Number(limit))
+    .limit(Number(limit))
     .lean();
 
-  if (!listing) {
-    throw new ApiError(404, "Listing not found");
-  }
+  const total = await STListing.countDocuments(filter);
 
-  // If no price history exists, create one with current price
-  const history =
-    listing.priceHistory && listing.priceHistory.length > 0
-      ? listing.priceHistory
-      : [{ price: listing.price, changedAt: listing.createdAt || new Date() }];
+  // Get seller details
+  const seller = await findUserById(sellerId);
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, history, "Price history fetched successfully"));
+  res.json(
+    new ApiResponse(200, {
+      listings,
+      seller: seller ? {
+        first_name: seller.first_name,
+        last_name: seller.last_name,
+        avatar: seller.avatar
+      } : null,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total,
+        pages: Math.ceil(total / Number(limit))
+      }
+    }, "Seller listings fetched successfully")
+  );
 });
 
-export const deleteListingImage = asyncHandler(async (req, res) => {
+export const getCategories = asyncHandler(async (req, res) => {
+  const categories = await STCategory.aggregate([
+    { $match: { isActive: true } },
+    { $lookup: {
+      from: "st_listings",
+      localField: "_id",
+      foreignField: "category",
+      as: "listings"
+    }},
+    { $addFields: {
+      count: { $size: "$listings" },
+      avgPrice: { $avg: "$listings.basePrice" }
+    }},
+    { $project: { listings: 0 } },
+    { $sort: { count: -1 } }
+  ]);
+
+  res.json(
+    new ApiResponse(200, categories, "Categories fetched successfully")
+  );
+});
+
+export const getMyListings = asyncHandler(async (req, res) => {
+  const userId = getUserId(req);
+  const { page = 1, limit = 10, status = "active" } = req.query;
+
+  const filter = { sellerId: userId };
+  if (status !== "all") filter.status = status;
+
+  const listings = await STListing.find(filter)
+    .populate("category", "name")
+    .sort({ createdAt: -1 })
+    .skip((Number(page) - 1) * Number(limit))
+    .limit(Number(limit))
+    .lean();
+
+  const total = await STListing.countDocuments(filter);
+
+  res.json(
+    new ApiResponse(200, {
+      listings,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total,
+        pages: Math.ceil(total / Number(limit))
+      }
+    }, "My listings fetched successfully")
+  );
+});
+
+/* ========== UPDATE LISTINGS ========== */
+export const updateListing = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { imageUrl } = req.body;
+  const updates = req.body;
+  const userId = getUserId(req);
 
-  const listing = await Listing.findById(id);
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(400, "Invalid listing ID");
+  }
 
+  const listing = await STListing.findById(id);
   if (!listing) {
     throw new ApiError(404, "Listing not found");
   }
 
-  // Check ownership
-  if (listing.seller.toString() !== req.user._id.toString()) {
-    throw new ApiError(
-      403,
-      "You do not have permission to modify this listing"
-    );
+  if (listing.sellerId !== userId) {
+    throw new ApiError(403, "You can only update your own listings");
   }
 
-  // Remove image from array
-  listing.images = listing.images.filter((img) => img !== imageUrl);
+  // Prevent updating certain fields
+  delete updates.sellerId;
+  delete updates.interestCount;
+  delete updates.highestOffer;
+  delete updates.status; // status should be changed via toggle/sold endpoints
+
+  // If category is being updated, validate it
+  if (updates.category) {
+    const categoryExists = await STCategory.findById(updates.category);
+    if (!categoryExists) {
+      throw new ApiError(400, "Invalid category");
+    }
+  }
+
+  const updatedListing = await STListing.findByIdAndUpdate(
+    id,
+    { $set: updates },
+    { new: true, runValidators: true }
+  ).populate("category");
+
+  res.json(
+    new ApiResponse(200, updatedListing, "Listing updated successfully")
+  );
+});
+
+export const toggleListingActive = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const userId = getUserId(req);
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(400, "Invalid listing ID");
+  }
+
+  const listing = await STListing.findById(id);
+  if (!listing) {
+    throw new ApiError(404, "Listing not found");
+  }
+
+  if (listing.sellerId !== userId) {
+    throw new ApiError(403, "Unauthorized");
+  }
+
+  // Can only toggle if not sold
+  if (listing.status === "sold") {
+    throw new ApiError(400, "Cannot toggle a sold item");
+  }
+
+  listing.status = listing.status === "active" ? "archived" : "active";
   await listing.save();
 
-  // Note: In production, also delete from Cloudinary
-  // await cloudinary.uploader.destroy(publicId);
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, listing, "Image deleted successfully"));
+  res.json(
+    new ApiResponse(200, listing, `Listing ${listing.status === "active" ? "activated" : "archived"} successfully`)
+  );
 });
-// Future Features (Commented out - implement as needed)
 
-// Search & Discovery
+// Image management functions (similar to before, but using STListing)
+export const addListingImages = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { images } = req.body;
+  const userId = getUserId(req);
 
-// export const searchListings = asyncHandler(async (req, res) => {}); // Advanced search with multiple filters
-// export const getPopularListings = asyncHandler(async (req, res) => {}); // Trending and popular items
-// export const getSimilarListings = asyncHandler(async (req, res) => {}); // Related/similar listings
-// export const getRecommendations = asyncHandler(async (req, res) => {}); // Personalized recommendations
+  if (!images || !Array.isArray(images) || images.length === 0) {
+    throw new ApiError(400, "Images array is required");
+  }
 
-// Engagement Features
+  const listing = await STListing.findById(id);
+  if (!listing) {
+    throw new ApiError(404, "Listing not found");
+  }
 
-// export const toggleLike = asyncHandler(async (req, res) => {}); // Like/unlike listing
-// export const addToWatchlist = asyncHandler(async (req, res) => {}); // Add to user's watchlist
-// export const removeFromWatchlist = asyncHandler(async (req, res) => {}); // Remove from watchlist
-// export const incrementViews = asyncHandler(async (req, res) => {}); // Track listing views
+  if (listing.sellerId !== userId) {
+    throw new ApiError(403, "Unauthorized");
+  }
 
-// Status Management (Additional)
+  listing.images.push(...images);
+  await listing.save();
 
-// export const toggleListingStatus = asyncHandler(async (req, res) => {}); // Activate/deactivate listing
-// export const reserveListing = asyncHandler(async (req, res) => {}); // Reserve for specific buyer
-// export const bumpListing = asyncHandler(async (req, res) => {}); // Refresh listing position
+  res.json(
+    new ApiResponse(200, listing.images, "Images added successfully")
+  );
+});
 
-// Analytics & Reporting
+export const removeListingImage = asyncHandler(async (req, res) => {
+  const { id, imageId } = req.params;
+  const userId = getUserId(req);
 
-// export const getListingAnalytics = asyncHandler(async (req, res) => {}); // Detailed listing performance
-// export const getViewHistory = asyncHandler(async (req, res) => {}); // View tracking data
-// export const getPriceHistory = asyncHandler(async (req, res) => {}); // Price change history
-// export const generateReport = asyncHandler(async (req, res) => {}); // Admin reporting functions
+  const listing = await STListing.findById(id);
+  if (!listing) {
+    throw new ApiError(404, "Listing not found");
+  }
+
+  if (listing.sellerId !== userId) {
+    throw new ApiError(403, "Unauthorized");
+  }
+
+  listing.images = listing.images.filter(img => img._id.toString() !== imageId);
+
+  // Ensure at least one cover image
+  if (listing.images.length > 0 && !listing.images.some(img => img.isCover)) {
+    listing.images[0].isCover = true;
+  }
+
+  await listing.save();
+
+  res.json(
+    new ApiResponse(200, listing.images, "Image removed successfully")
+  );
+});
+
+export const setPrimaryImage = asyncHandler(async (req, res) => {
+  const { id, imageId } = req.params;
+  const userId = getUserId(req);
+
+  const listing = await STListing.findById(id);
+  if (!listing) {
+    throw new ApiError(404, "Listing not found");
+  }
+
+  if (listing.sellerId !== userId) {
+    throw new ApiError(403, "Unauthorized");
+  }
+
+  listing.images.forEach(img => {
+    img.isCover = img._id.toString() === imageId;
+  });
+
+  await listing.save();
+
+  res.json(
+    new ApiResponse(200, listing.images, "Primary image updated")
+  );
+});
+
+/* ========== DELETE LISTINGS ========== */
+export const deleteListing = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const userId = getUserId(req);
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(400, "Invalid listing ID");
+  }
+
+  const listing = await STListing.findById(id);
+  if (!listing) {
+    throw new ApiError(404, "Listing not found");
+  }
+
+  if (listing.sellerId !== userId) {
+    throw new ApiError(403, "You can only delete your own listings");
+  }
+
+  // Check for pending interests
+  const pendingInterest = await STInterest.findOne({
+    listingId: id,
+    status: "pending"
+  });
+
+  if (pendingInterest) {
+    throw new ApiError(400, "Cannot delete listing with pending interests");
+  }
+
+  await listing.deleteOne();
+
+  res.json(
+    new ApiResponse(200, null, "Listing deleted successfully")
+  );
+});
+
+/* ========== STATS ========== */
+export const getListingStats = asyncHandler(async (req, res) => {
+  const userId = getUserId(req);
+
+  const stats = await STListing.aggregate([
+    { $match: { sellerId: userId } },
+    { $group: {
+      _id: null,
+      totalListings: { $sum: 1 },
+      activeListings: { $sum: { $cond: [{ $eq: ["$status", "active"] }, 1, 0] } },
+      soldListings: { $sum: { $cond: [{ $eq: ["$status", "sold"] }, 1, 0] } },
+      archivedListings: { $sum: { $cond: [{ $eq: ["$status", "archived"] }, 1, 0] } },
+      pendingCompletion: { $sum: { $cond: [{ $eq: ["$status", "pending_completion"] }, 1, 0] } },
+      averagePrice: { $avg: "$basePrice" }
+      // views if you add them later
+    }}
+  ]);
+
+  // Category breakdown
+  const categoryBreakdown = await STListing.aggregate([
+    { $match: { sellerId: userId } },
+    { $group: {
+      _id: "$category",
+      count: { $sum: 1 },
+      active: { $sum: { $cond: [{ $eq: ["$status", "active"] }, 1, 0] } },
+      sold: { $sum: { $cond: [{ $eq: ["$status", "sold"] }, 1, 0] } }
+    }},
+    { $lookup: {
+      from: "st_categories",
+      localField: "_id",
+      foreignField: "_id",
+      as: "categoryInfo"
+    }},
+    { $unwind: "$categoryInfo" },
+    { $project: {
+      categoryName: "$categoryInfo.name",
+      count: 1,
+      active: 1,
+      sold: 1
+    }},
+    { $sort: { count: -1 } }
+  ]);
+
+  res.json(
+    new ApiResponse(200, {
+      overview: stats[0] || {
+        totalListings: 0,
+        activeListings: 0,
+        soldListings: 0,
+        archivedListings: 0,
+        pendingCompletion: 0,
+        averagePrice: 0
+      },
+      categoryBreakdown
+    }, "Stats fetched successfully")
+  );
+});
