@@ -8,13 +8,13 @@ export const validators = {
 email: (email) => {
     if (!email) return "Email is required";
     
-    // Normalize input to prevent errors from uppercase or stray spaces
-    const normalizedEmail = email.trim().toLowerCase();
+    // // Normalize input to prevent errors from uppercase or stray spaces
+    // const normalizedEmail = email.trim().toLowerCase();
     
-    const emailRegex = /^[^\s@]+@iitbhilai\.ac\.in$/;
-    if (!emailRegex.test(normalizedEmail)) {
-      return "Email must be an @iitbhilai.ac.in address";
-    }
+    // const emailRegex = /^[^\s@]+@iitbhilai\.ac\.in$/;
+    // if (!emailRegex.test(normalizedEmail)) {
+    //   return "Email must be an @iitbhilai.ac.in address";
+    // }
     return null;
 },
   /**
