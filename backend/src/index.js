@@ -1,44 +1,58 @@
- 
-// src/index.js
 import app from "./app.js";
 import dotenv from "dotenv";
-import connectMongoDB from "./db/dbConnect.js";  
-import { connectPostgres } from "./db/pgConnect.js"; 
+import connectMongoDB from "./db/dbConnect.js";
+import { connectPostgres } from "./db/pgConnect.js";
 
-console.log("🚀 Server file is starting ...");
+// Load environment variables
+dotenv.config();
 
-dotenv.config({ quiet: true });
-const PORT = process.env.PORT || 4000;
+// Cache for database connections (optional but recommended for serverless)
+let pgPool = null;
+let mongoConnection = null;
 
-// Initialize both databases
-const startServer = async () => {
-  try {
-    // 1. Connect to PostgreSQL  
-    console.log(" Connecting to PostgreSQL...");
-    await connectPostgres();
-    
-    // 2. Connect to MongoDB  
-    console.log(" Connecting to MongoDB...");
-    await connectMongoDB();
-    
-    // 3. Start the Express server
-    app.listen(PORT, () => {
-      console.log(` Server is running on port ${PORT}`);
-      console.log(` Environment: ${process.env.NODE_ENV || 'development'}`);
-    });
-    
-  } catch (error) {
-    console.error(" Failed to start server:", error);
-    process.exit(1);
+/**
+ * Initialize PostgreSQL connection (with caching)
+ */
+async function initPostgres() {
+  if (!pgPool) {
+    console.log("🔄 Initializing PostgreSQL connection...");
+    pgPool = await connectPostgres(); // assuming connectPostgres returns a pool
+    console.log("✅ PostgreSQL connected");
   }
-};
+  return pgPool;
+}
 
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err) => {
-  console.log(' UNHANDLED REJECTION! Shutting down...');
-  console.error(err);
-  process.exit(1);
-});
+/**
+ * Initialize MongoDB connection (with caching)
+ */
+async function initMongoDB() {
+  if (!mongoConnection) {
+    console.log("🔄 Initializing MongoDB connection...");
+    mongoConnection = await connectMongoDB(); // assuming connectMongoDB returns a connection
+    console.log("✅ MongoDB connected");
+  }
+  return mongoConnection;
+}
 
-// Start the server
-startServer();
+/**
+ * Initialize both databases – runs once per cold start.
+ * Errors are logged but do not prevent the function from exporting.
+ */
+async function initializeDatabases() {
+  try {
+    await Promise.all([initPostgres(), initMongoDB()]);
+    console.log("✅ All databases initialized");
+  } catch (error) {
+    console.error("❌ Database initialization failed:", error);
+    // In serverless, we may still export the app; requests will fail until connections succeed.
+    // Consider implementing a health check or retry logic.
+  }
+}
+
+// Start database initialization (non‑blocking)
+initializeDatabases();
+
+// =====================================================
+// Vercel requires the Express app to be exported as default
+// =====================================================
+export default app;
