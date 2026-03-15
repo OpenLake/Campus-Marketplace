@@ -13,7 +13,6 @@ const listingService = {
   getAllListings: async (params = {}) => {
     try {
       const response = await api.get("/listings", { params });
-      console.log("API Response:", response.data);
       return response.data;
     } catch (error) {
       console.error("Listing Service Error:", error);
@@ -70,7 +69,6 @@ const listingService = {
     try {
       
       const response = await api.get(`/listings/my-listings?page=${page}&status=${status}`);
-      console.log("My listings response:", response.data);
       return response.data;
     } catch (error) {
       console.error("Error fetching my listings:", error);
@@ -123,7 +121,6 @@ const listingService = {
   // In listingService.js
 createListing: async (listingData) => {
   try {
-    console.log("Original listing data:", listingData);
     
     // Process images to ensure correct format
     let processedImages = [];
@@ -173,7 +170,6 @@ createListing: async (listingData) => {
       }
     };
 
-    console.log("Sending to API:", payload);
     
     const token = localStorage.getItem('accessToken');
     const response = await api.post("/listings", payload, {
@@ -183,7 +179,6 @@ createListing: async (listingData) => {
       }
     });
     
-    console.log("API Response:", response.data);
     return response.data;
   } catch (error) {
     console.error("Create listing error details:", {
@@ -233,7 +228,6 @@ createListing: async (listingData) => {
    getCategories: async () => {
     try {
       const response = await api.get("/listings/categories");
-      console.log("Categories:", response.data);
       return response.data;
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -257,7 +251,6 @@ createListing: async (listingData) => {
   toggleActive: async (id) => {
     try {
       const response = await api.patch(`/listings/${id}/toggle-active`);
-      console.log("Toggle active response:", response.data);
       return response.data;
     } catch (error) {
       console.error("Error toggling listing:", error);
@@ -272,7 +265,6 @@ createListing: async (listingData) => {
   getStats: async () => {
     try {
       const response = await api.get("/listings/stats");
-      console.log("Stats response:", response.data);
       return response.data;
     } catch (error) {
       console.error("Error fetching stats:", error);

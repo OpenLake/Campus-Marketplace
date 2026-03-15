@@ -62,7 +62,7 @@ const authService = {
   getCurrentUser: async () => {
     try {
       const response = await api.get("/users/me");
-      console.log('Get current user response:', response.data);
+
       return response.data; // { data: user, ... }
     } catch (error) {
       console.error('Get current user error:', error.response?.data || error.message);

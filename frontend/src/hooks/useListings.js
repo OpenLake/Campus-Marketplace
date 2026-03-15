@@ -52,11 +52,9 @@ export const useListings = (initialFilters = {}) => {
       if (filters.location) params.location = filters.location;
       if (filters.search) params.search = filters.search;
 
-      console.log("Fetching listings with params:", params);
 
       const response = await listingService.getAllListings(params);
 
-      console.log("Listings response:", response);
 
       // Handle different response formats from backend
       let listingsData = [];

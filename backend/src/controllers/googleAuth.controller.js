@@ -8,8 +8,7 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 export const googleSignIn = async (req, res) => {
   try {
     const { credential } = req.body;
-    console.log("BODY RECEIVED:", req.body);
-
+ 
     if (!credential) {
       return res.status(400).json({ message: "Google token required" });
     }

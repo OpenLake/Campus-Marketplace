@@ -27,7 +27,6 @@ export const AuthProvider = ({ children } = {}) => {
       }
 
       const response = await authService.getCurrentUser();
-      console.log("Auth check response:", response);
 
       if (response?.success && response?.user) {
         setUser(response.user);
@@ -43,7 +42,6 @@ export const AuthProvider = ({ children } = {}) => {
         tokenManager.clearAuth();
       }
     } catch (error) {
-      console.log("Not authenticated:", error.message);
       setUser(null);
       setIsAuthenticated(false);
       tokenManager.clearAuth();
@@ -55,7 +53,6 @@ export const AuthProvider = ({ children } = {}) => {
   const handleGoogleSignIn = async (credential) => {
     try {
       const data = await authService.googleSignIn(credential);
-      console.log("Google sign-in response:", data);
       
       if (data.requiresDetails) {
         setTempToken(data.tempToken);
@@ -78,7 +75,6 @@ export const AuthProvider = ({ children } = {}) => {
   const completeRegistration = async (userDetails) => {
     try {
       const data = await authService.completeRegistration(tempToken, userDetails);
-      console.log("Complete registration response:", data);
       
       const userData = data.user || data.data?.user || data.data;
       tokenManager.setUser(userData);
@@ -97,7 +93,6 @@ export const AuthProvider = ({ children } = {}) => {
   const login = async (credentials) => {
     try {
       const response = await authService.login(credentials);
-      console.log("Login response:", response);
       
       const userData = response.data?.user || response.data?.data || response.data;
       tokenManager.setUser(userData);
@@ -114,7 +109,6 @@ export const AuthProvider = ({ children } = {}) => {
   const register = async (userData) => {
     try {
       const response = await authService.register(userData);
-      console.log("Register response:", response);
       
       const newUser = response.data?.user || response.data?.data || response.data;
       tokenManager.setUser(newUser);
@@ -155,7 +149,6 @@ export const AuthProvider = ({ children } = {}) => {
   const refreshUser = async () => {
     try {
       const response = await authService.getCurrentUser();
-      console.log("Refresh user response:", response);
       
       const userData = response.user || response.data?.user || response.data;
       setUser(userData);

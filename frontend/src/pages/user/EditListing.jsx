@@ -43,7 +43,6 @@ const EditListing = () => {
   const fetchCategories = async () => {
     try {
       const response = await listingService.getCategories();
-      console.log("Categories loaded:", response.data);
       setCategories(response.data || []);
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -54,20 +53,13 @@ const EditListing = () => {
   const fetchListing = async () => {
     try {
       setLoading(true);
-      console.log("=== EDIT LISTING DEBUG ===");
-      console.log("1. Listing ID from URL:", id);
-      console.log("2. Current user from auth:", user);
       
       const response = await listingService.getListingById(id);
-      console.log("3. Full API Response:", response);
       
       const listing = response.data;
-      console.log("4. Listing data:", listing);
       
       // Check if user is the seller
       const currentUserId = user?._id || user?.user_id || user?.id;
-      console.log("5. Listing sellerId:", listing.sellerId || listing.seller?.user_id);
-      console.log("6. Current user ID:", currentUserId);
       
       const sellerId = listing.sellerId || listing.seller?.user_id;
       
@@ -79,7 +71,6 @@ const EditListing = () => {
       }
       
       // Map the listing data to form fields
-      console.log("7. Mapping listing data to form...");
       
       // Handle category - could be object or string
       let categoryId = listing.category;
@@ -102,7 +93,6 @@ const EditListing = () => {
         isNegotiable: listing.isNegotiable || false
       });
       
-      console.log("8. Form data set:", formData);
       
     } catch (error) {
       console.error("Error fetching listing:", error);
@@ -156,10 +146,8 @@ const EditListing = () => {
         isNegotiable: formData.isNegotiable
       };
       
-      console.log("Submitting update:", updateData);
       
       const response = await listingService.updateListing(id, updateData);
-      console.log("Update response:", response);
       
       toast.success("Listing updated successfully");
       navigate(`/listings/${id}`);

@@ -50,7 +50,6 @@ const HomePage = () => {
   const handleAddToWishlist = (e, itemId) => {
     e.stopPropagation();
     // TODO: Add to wishlist functionality
-    console.log('Add to wishlist:', itemId);
   };
 
   return (
