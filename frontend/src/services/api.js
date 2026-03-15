@@ -61,11 +61,9 @@ api.interceptors.response.use(
     isRefreshing = true;
 
     try {
-      console.log("Attempting to refresh token...");
       const refreshResponse = await api.post("/users/refresh-token");
       
       if (refreshResponse.data.success) {
-        console.log("Token refreshed successfully");
         processQueue(null);
         return api(originalRequest);
       } else {

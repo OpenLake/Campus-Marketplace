@@ -51,7 +51,6 @@ const ListingDetail = () => {
       setLoading(true);
       setError(null);
       const response = await listingService.getListingById(id);
-      console.log("Listing details:", response.data);
       setListing(response.data);
       
       // Check if user has pending interest

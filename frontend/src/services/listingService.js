@@ -13,10 +13,8 @@ const listingService = {
   getAllListings: async (params = {}) => {
     try {
       const response = await api.get("/listings", { params });
-      console.log("API Response:", response.data);
       return response.data;
     } catch (error) {
-      console.error("Listing Service Error:", error);
       throw error;
     }
   },
@@ -39,7 +37,6 @@ const listingService = {
       // Transform response if needed
       return response.data;
     } catch (error) {
-      console.error("Error fetching listing:", error);
       throw error;
     }
   },
@@ -55,7 +52,6 @@ const listingService = {
       const response = await api.get(`/listings/user/${userId}`, { params });
       return response.data;
     } catch (error) {
-      console.error("Error fetching user listings:", error);
       throw error;
     }
   },
@@ -70,10 +66,8 @@ const listingService = {
     try {
       
       const response = await api.get(`/listings/my-listings?page=${page}&status=${status}`);
-      console.log("My listings response:", response.data);
       return response.data;
     } catch (error) {
-      console.error("Error fetching my listings:", error);
       throw error;
     }
   },
@@ -91,7 +85,6 @@ const listingService = {
       });
       return response.data;
     } catch (error) {
-      console.error("Error searching listings:", error);
       throw error;
     }
   },
@@ -110,7 +103,6 @@ const listingService = {
       });
       return response.data;
     } catch (error) {
-      console.error("Error uploading image:", error);
       throw error;
     }
   },
@@ -123,7 +115,6 @@ const listingService = {
   // In listingService.js
 createListing: async (listingData) => {
   try {
-    console.log("Original listing data:", listingData);
     
     // Process images to ensure correct format
     let processedImages = [];
@@ -173,7 +164,6 @@ createListing: async (listingData) => {
       }
     };
 
-    console.log("Sending to API:", payload);
     
     const token = localStorage.getItem('accessToken');
     const response = await api.post("/listings", payload, {
@@ -183,10 +173,8 @@ createListing: async (listingData) => {
       }
     });
     
-    console.log("API Response:", response.data);
     return response.data;
   } catch (error) {
-    console.error("Create listing error details:", {
       status: error.response?.status,
       data: error.response?.data,
       message: error.message
@@ -206,7 +194,6 @@ createListing: async (listingData) => {
       const response = await api.put(`/listings/${id}`, updateData);
       return response.data;
     } catch (error) {
-      console.error("Error updating listing:", error);
       throw error;
     }
   },
@@ -221,7 +208,6 @@ createListing: async (listingData) => {
       const response = await api.delete(`/listings/${id}`);
       return response.data;
     } catch (error) {
-      console.error("Error deleting listing:", error);
       throw error;
     }
   },
@@ -233,10 +219,8 @@ createListing: async (listingData) => {
    getCategories: async () => {
     try {
       const response = await api.get("/listings/categories");
-      console.log("Categories:", response.data);
       return response.data;
     } catch (error) {
-      console.error("Error fetching categories:", error);
       throw error;
     }
   },
@@ -245,7 +229,6 @@ createListing: async (listingData) => {
       const response = await api.get(`/listings/${id}?includeInterest=true`);
       return response.data;
     } catch (error) {
-      console.error("Error fetching listing with interest:", error);
       throw error;
     }
   },
@@ -257,10 +240,8 @@ createListing: async (listingData) => {
   toggleActive: async (id) => {
     try {
       const response = await api.patch(`/listings/${id}/toggle-active`);
-      console.log("Toggle active response:", response.data);
       return response.data;
     } catch (error) {
-      console.error("Error toggling listing:", error);
       throw error;
     }
   },
@@ -272,10 +253,8 @@ createListing: async (listingData) => {
   getStats: async () => {
     try {
       const response = await api.get("/listings/stats");
-      console.log("Stats response:", response.data);
       return response.data;
     } catch (error) {
-      console.error("Error fetching stats:", error);
       throw error;
     }
   },
@@ -290,7 +269,6 @@ createListing: async (listingData) => {
       const response = await api.get(`/listings/${id}`);
       return response.data;
     } catch (error) {
-      console.error("Error fetching listing for edit:", error);
       throw error;
     }
   },
@@ -308,7 +286,6 @@ createListing: async (listingData) => {
       });
       return response.data;
     } catch (error) {
-      console.error("Error deleting image:", error);
       throw error;
     }
   },
@@ -323,7 +300,6 @@ createListing: async (listingData) => {
       const response = await api.get(`/listings/${listingId}/price-history`);
       return response.data;
     } catch (error) {
-      console.error("Error fetching price history:", error);
       throw error;
     }
   },
@@ -338,7 +314,6 @@ createListing: async (listingData) => {
       const response = await api.patch(`/listings/${id}/sold`);
       return response.data;
     } catch (error) {
-      console.error("Error marking as sold:", error);
       throw error;
     }
   },
@@ -347,7 +322,6 @@ createListing: async (listingData) => {
     const response = await api.post("/orders/st/interest", data);
     return response.data;
   } catch (error) {
-    console.error("Error expressing interest:", error);
     throw error.response?.data || error;
   }
 }

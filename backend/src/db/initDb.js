@@ -235,42 +235,28 @@ const initDatabase = async () => {
   console.log('🚀 Initializing database...');
   
   try {
-    // 1. Check if application database exists, create if not
-    const dbName = process.env.PG_DATABASE || 'campus_pg';
-    
-    const checkDb = await adminPool.query(
-      "SELECT 1 FROM pg_database WHERE datname = $1",
-      [dbName]
-    );
-    
-    if (checkDb.rowCount === 0) {
-      console.log(`📦 Creating database: ${dbName}`);
-      await adminPool.query(`CREATE DATABASE ${dbName}`);
-      console.log('✅ Database created successfully');
-    } else {
-      console.log(`✅ Database ${dbName} already exists`);
-    }
-    
-    // Close admin connection
-    await adminPool.end();
-    
-    // 2. Now connect to the application database
+    // 1. Connect directly to PostgreSQL using the provided credentials
     appPool = new Pool({
-      host: process.env.PG_HOST || 'localhost',
+      host: process.env.PG_HOST,
       port: process.env.PG_PORT || 5432,
-      user: process.env.PG_USER || 'postgres',
-      password: process.env.PG_PASSWORD || 'postgres',
-      database: dbName,
+      user: process.env.PG_USER,
+      password: process.env.PG_PASSWORD,
+      database: process.env.PG_DATABASE,
+      ssl: process.env.PG_SSL === 'true' ? { rejectUnauthorized: false } : false,
     });
-    
-    // 3. Read and execute the schema SQL file
+
+    // 2. Test PostgreSQL connection
+    const testResult = await appPool.query('SELECT NOW()');
+    console.log(`🕐 PostgreSQL time: ${testResult.rows[0].now}`);
+    console.log('📊 PostgreSQL connected successfully');
+
+    // 3. Execute schema SQL (create tables if not exist)
     console.log('📝 Creating/updating tables...');
     const schemaSQL = fs.readFileSync(
       path.join(__dirname, 'init.sql'),
       'utf8'
     );
     
-    // Split SQL into individual statements and execute
     const statements = schemaSQL
       .split(';')
       .filter(statement => statement.trim() !== '');
@@ -283,20 +269,13 @@ const initDatabase = async () => {
     
     console.log('✅ Tables created/verified successfully');
     
-    // 4. Test PostgreSQL connection
-    const testResult = await appPool.query('SELECT NOW()');
-    console.log(`🕐 PostgreSQL time: ${testResult.rows[0].now}`);
-    console.log('📊 PostgreSQL connected successfully');
-    
-    // 5. Connect to MongoDB
-    console.log(' Connecting to MongoDB...');
+    // 4. Connect to MongoDB
+    console.log('🔌 Connecting to MongoDB...');
     await mongoose.connect(process.env.MONGO_URI);
-    console.log(' MongoDb connected ✅');
+    console.log('✅ MongoDB connected successfully');
     
-    // 6. Seed categories in MongoDB
+    // 5. Seed categories
     await seedCategories();
-    
-    // 7. Optional: Seed sub-categories
     await seedSubCategories();
     
     return appPool;
@@ -306,5 +285,4 @@ const initDatabase = async () => {
     process.exit(1);
   }
 };
-
 export { initDatabase, appPool };

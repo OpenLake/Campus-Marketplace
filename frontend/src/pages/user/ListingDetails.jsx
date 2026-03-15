@@ -48,7 +48,6 @@ const ListingDetails = () => {
     try {
       setLoading(true);
       const response = await listingService.getListingById(id);
-      console.log("Listing details:", response.data);
       setListing(response.data);
       // Capture user's pending interest if present
       if (response.data.userInterest) {
@@ -212,7 +211,6 @@ const ListingDetails = () => {
       </div>
     );
   }
-console.log(listing.seller)
 const isOwner = user && listing.seller && (user._id === listing.seller.user_id);
   const statusBadge = getStatusBadge();
   const isAvailable = listing.status === 'active'; 

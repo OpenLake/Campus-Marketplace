@@ -74,10 +74,8 @@ const ListingPage = () => {
         filters.condition = selectedConditions.join(',');
       }
       
-      console.log("Fetching with filters:", filters);
       
       const response = await listingService.getAllListings(filters);
-      console.log("API Response:", response);
       
       setListings(response.data.listings || []);
       setTotalListings(response.data.pagination?.total || 0);
@@ -93,7 +91,6 @@ const ListingPage = () => {
   const fetchCategories = async () => {
     try {
       const response = await listingService.getCategories();
-      console.log("Categories API Response:", response);
       
       // Transform API categories to match your UI format
       const categoryIcons = {
@@ -122,7 +119,6 @@ const ListingPage = () => {
         icon: categoryIcons[cat._id?.toLowerCase()] || <LayoutGrid size={18} />
       }));
       
-      console.log("Formatted categories:", formattedCategories);
       setCategories(formattedCategories);
       
     } catch (error) {

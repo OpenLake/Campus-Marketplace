@@ -26,10 +26,8 @@ const MyListings = () => {
   const fetchMyListings = async () => {
     try {
       setLoading(true);
-      console.log(`Fetching ${activeTab} listings, page ${currentPage}...`);
       
       const response = await listingService.getMyListings(currentPage, activeTab);
-      console.log("My listings response:", response);
       
       // Handle different response structures
       if (response.data?.listings) {
@@ -58,7 +56,6 @@ const MyListings = () => {
   const fetchStats = async () => {
     try {
       const response = await listingService.getStats();
-      console.log("Stats response:", response);
       
       // Handle different response structures
       if (response.data) {

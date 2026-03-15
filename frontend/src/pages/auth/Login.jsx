@@ -16,14 +16,12 @@ const Login = () => {
   setError('');
   
   const result = await handleGoogleSignIn(response.credential);
-  console.log("Result from handleGoogleSignIn:", result); // 👈 Add this log
   
   if (result.error) {
     setError(result.error);
     setLoading(false);
   } else if (result.requiresDetails) {
     // This should trigger navigation to /register/details
-    console.log("Redirecting to registration page...");
     navigate('/register/details');
   } else {
     navigate('/dashboard');
