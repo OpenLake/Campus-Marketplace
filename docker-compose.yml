@@ -32,6 +32,9 @@ services:
   backend:
     build: ./backend
     container_name: campus-backend
+    dns:
+      - 1.1.1.1  # Cloudflare
+      - 8.8.8.8  # Google
     ports:
       - "5000:5000"
     env_file:
