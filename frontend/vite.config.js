@@ -12,7 +12,8 @@ export default defineConfig({
       usePolling: true,
     },
     proxy:{
-      '/api':'http://localhost:5000'
+      "source": "/api/:path*",
+      "destination": "https://campus-marketplace-backend.vercel.app/api/:path*"
     }
   },
 });
