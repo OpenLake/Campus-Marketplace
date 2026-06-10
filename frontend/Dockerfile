@@ -10,7 +10,7 @@ RUN npm install
 # Copy source
 COPY . .
 
-# Vite dev server runs on 5173 by default
+# Vite dev server runs on 4173 by default
 EXPOSE 4173
 
 # Run dev server

@@ -8,6 +8,24 @@ import { findUserById } from "../models/users.model.js"; // add this import
 
 export const verifyJWT = asyncHandler(async (req, res, next) => {
   try {
+    // DEV MODE BYPASS: If APP_MODE is 'dev', bypass JWT verification and provide a mock admin user
+    if (process.env.APP_MODE === "dev") {
+      req.user = {
+        _id: "dev-admin-id",
+        email: "dev-admin@campus.com",
+        first_name: "Dev",
+        last_name: "Admin",
+        phone_number: "0000000000",
+        role: "admin",
+        roles: ["admin"],
+        is_verified: true,
+        avatar: "https://via.placeholder.com/150",
+        google_id: "dev-google-id",
+        created_at: new Date().toISOString(),
+      };
+      return next();
+    }
+
     // Defensive check for req.cookies
     const token =
       req.cookies?.accessToken ||

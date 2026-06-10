@@ -3,56 +3,58 @@ import dotenv from "dotenv";
 import connectMongoDB from "./db/dbConnect.js";
 import { connectPostgres } from "./db/pgConnect.js";
 
-// Load environment variables
-dotenv.config();
+console.log("🚀 Server file is starting ...");
+console.log("Current directory:", process.cwd());
+console.log("Node version:", process.version);
 
-// Cache for database connections (optional but recommended for serverless)
-let pgPool = null;
-let mongoConnection = null;
+dotenv.config({ quiet: true });
+const PORT = process.env.PORT || 4000;
+console.log("PORT from env:", PORT);
 
-/**
- * Initialize PostgreSQL connection (with caching)
- */
-async function initPostgres() {
-  if (!pgPool) {
-    console.log("🔄 Initializing PostgreSQL connection...");
-    pgPool = await connectPostgres(); // assuming connectPostgres returns a pool
-    console.log("✅ PostgreSQL connected");
-  }
-  return pgPool;
-}
-
-/**
- * Initialize MongoDB connection (with caching)
- */
-async function initMongoDB() {
-  if (!mongoConnection) {
-    console.log("🔄 Initializing MongoDB connection...");
-    mongoConnection = await connectMongoDB(); // assuming connectMongoDB returns a connection
-    console.log("✅ MongoDB connected");
-  }
-  return mongoConnection;
-}
-
-/**
- * Initialize both databases – runs once per cold start.
- * Errors are logged but do not prevent the function from exporting.
- */
-async function initializeDatabases() {
+// Initialize both databases
+const startServer = async () => {
   try {
-    await Promise.all([initPostgres(), initMongoDB()]);
-    console.log("✅ All databases initialized");
+    // 1. Connect to PostgreSQL  
+    console.log("📊 Connecting to PostgreSQL...");
+    await connectPostgres();
+    console.log("✅ PostgreSQL connected");
+    
+    // 2. Connect to MongoDB  
+    console.log("🍃 Connecting to MongoDB...");
+    await connectMongoDB();
+    console.log("✅ MongoDB connected");
+    
+    // 3. Start the Express server
+    const server = app.listen(PORT, '0.0.0.0', () => {
+      console.log(`🚀 Server is running on port ${PORT}`);
+      console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`📡 Listening on: http://0.0.0.0:${PORT}`);
+    });
+
+    server.on('error', (error) => {
+      console.error('❌ Server error:', error);
+    });
+
   } catch (error) {
-    console.error("❌ Database initialization failed:", error);
-    // In serverless, we may still export the app; requests will fail until connections succeed.
-    // Consider implementing a health check or retry logic.
+    console.error("❌ Failed to start server:", error);
+    console.error("Error stack:", error.stack);
+    process.exit(1);
   }
-}
+};
 
-// Start database initialization (non‑blocking)
-initializeDatabases();
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err) => {
+  console.log('💥 UNHANDLED REJECTION! Shutting down...');
+  console.error(err);
+  process.exit(1);
+});
 
-// =====================================================
-// Vercel requires the Express app to be exported as default
-// =====================================================
-export default app;
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.log('💥 UNCAUGHT EXCEPTION! Shutting down...');
+  console.error(err);
+  process.exit(1);
+});
+
+// Start the server
+startServer();

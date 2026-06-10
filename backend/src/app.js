@@ -11,7 +11,7 @@ import cookieParser from "cookie-parser";
 
 const app = express();
 app.use(cors({
-  origin: ['http://localhost:4173', 'http://172.19.0.5:4173','https://marketplace.openlake.in'], // Your frontend URLs
+  origin: ['http://localhost:4173', 'http://172.19.0.5:4173', process.env.CORS_ORIGIN], // Your frontend URLs
   credentials: true, // Important for cookies/authentication
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS','PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
@@ -28,7 +28,7 @@ app.use(cookieParser());
 // app.use("/api/healthcheck", heathcheckRouter);
 app.use("/api/users", userRouter);
 app.use("/api/listings", listingRouter);
- app.use("/api/orders", orderRouter);
+app.use("/api/orders", orderRouter);
 
 // app.use(errorHandler);
 
