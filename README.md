@@ -23,13 +23,15 @@
     <img src="https://img.shields.io/badge/PRs-Welcome-00ACC1?style=for-the-badge&logo=git&logoColor=white" alt="PRs Welcome" />
   </p>
 
-  <p align="center">
-    <img src="https://img.shields.io/github/issues-pr-closed/OpenLake/Campus-Marketplace?color=6A1B9A&label=Pull%20Requests&style=flat-square" alt="Pull Requests Merged" />
-    <img src="https://img.shields.io/github/issues/OpenLake/Campus-Marketplace?color=EF6C00&label=Open%20Issues&style=flat-square" alt="Open Issues" />
-    <img src="https://img.shields.io/github/contributors/OpenLake/Campus-Marketplace?color=2E7D32&label=Contributors&style=flat-square" alt="Contributors" />
-    <img src="https://img.shields.io/github/stars/OpenLake/Campus-Marketplace?style=flat-square&label=Stars&color=FFB300" alt="Stars" />
-    <img src="https://img.shields.io/github/forks/OpenLake/Campus-Marketplace?style=flat-square&label=Forks&color=0288D1" alt="Forks" />
-  </p>
+<p align="center">
+  <img src="https://img.shields.io/github/issues-pr-closed/OpenLake/Campus-Marketplace?color=6A1B9A&label=Pull%20Requests&style=flat-square" alt="Pull Requests Merged" />
+  <img src="https://img.shields.io/github/issues/OpenLake/Campus-Marketplace?color=EF6C00&label=Open%20Issues&style=flat-square" alt="Open Issues" />
+  <img src="https://img.shields.io/github/contributors/OpenLake/Campus-Marketplace?color=2E7D32&label=Contributors&style=flat-square" alt="Contributors" />
+  <img src="https://img.shields.io/github/stars/OpenLake/Campus-Marketplace?style=flat-square&label=Stars&color=FFB300" alt="Stars" />
+  <img src="https://img.shields.io/github/forks/OpenLake/Campus-Marketplace?style=flat-square&label=Forks&color=0288D1" alt="Forks" />
+</p>
+
+ 
 
   <!-- Repository Links -->
   <p align="center">
@@ -41,24 +43,51 @@
 
 <br />
 
----
+ 
 
 ## Table of Contents
 <div align="center">
 
-| Section | Description |
-|:-------:|:------------|
-| [About](#about-the-project) | Overview, features, and tech stack |
-| [Docker Setup](#docker-setup) | One-command containerized deployment | 
-| [Getting Started](#getting-started) | Manual development setup (no Docker) |
-| [Usage](#usage) | How to navigate and use the platform | 
-| [Contributing](#contributing) | Guidelines for contributors |
-| [Maintainers](#maintainers) | Core team | 
+  <table width="100%">
+    <tr>
+      <td width="50%" valign="top">
+        <table align="center">
+          <tr>
+            <td align="center"><a href="#about-the-project">About</a></td>
+            <td align="center">Overview, features, and tech stack</td>
+          </tr>
+          <tr>
+            <td align="center"><a href="#docker-setup">Docker Setup</a></td>
+            <td align="center">One-command containerized deployment</td>
+          </tr>
+          <tr>
+            <td align="center"><a href="#getting-started">Getting Started</a></td>
+            <td align="center">Manual development setup (no Docker)</td>
+          </tr>
+          <tr>
+            <td align="center"><a href="#usage">Usage</a></td>
+            <td align="center">How to navigate and use the platform</td>
+          </tr>
+          <tr>
+            <td align="center"><a href="#contributing">Contributing</a></td>
+            <td align="center">Guidelines for contributors</td>
+          </tr>
+          <tr>
+            <td align="center"><a href="#maintainers">Maintainers</a></td>
+            <td align="center">Core team</td>
+          </tr>
+        </table>
+      </td>
+      <td width="50%" align="center">
+        <img src="https://github.com/user-attachments/assets/a3d6b8c0-cba9-406e-be10-f36d9e0f8999" 
+             alt="Campus Marketplace Preview" 
+             style="border-radius: 10%; width: 90%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);" />
+      </td>
+    </tr>
+  </table>
 
 </div>
-<br />
-
----
+<br /> 
 
 ## About the Project
 
@@ -76,8 +105,7 @@ This project provides a dedicated intranet marketplace for the IIT Bhilai commun
 </div>
 
 <br />
-
----
+ 
 
 ## Docker Setup
 
@@ -123,15 +151,13 @@ This project is fully containerized. Run the entire stack with a single command.
 > **Important:** For local Docker development, `VITE_API_URL` must point to **host port 5000** (`http://localhost:5000/api`), not the container service name. The browser cannot resolve `backend:5000`.
 
 <br />
-
----
-
+ 
 ## Environment Variables
 
 Create a `.env` file inside `backend/` and `frontend/` respectively.
  
 
----
+ 
 
 ## Getting Started
 
@@ -174,7 +200,7 @@ For local development **without** Docker, follow these manual steps.
 
 <br />
 
----
+ 
 
 ## Usage
 
@@ -282,8 +308,7 @@ See [MAINTAINERS.md](MAINTAINERS.md) for the full list.
 
 <br />
 
----
-
+ 
 ## License
 
 Distributed under the **MIT License**.  
@@ -301,6 +326,6 @@ in the Software without restriction...
 
 <br />
 
----
+ 
 
 Built with ❤️ by Harshit Kandpal @ OpenLake
