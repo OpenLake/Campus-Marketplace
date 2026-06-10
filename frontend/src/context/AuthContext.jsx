@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 
 export const AuthContext = createContext(null);
 
-const TESTING_MODE = false;
+const IS_DEV_MODE = import.meta.env.VITE_APP_MODE === "dev";
 
 export const AuthProvider = ({ children } = {}) => {
   const [user, setUser] = useState(null);
@@ -21,7 +21,18 @@ export const AuthProvider = ({ children } = {}) => {
 
   const checkAuth = async () => {
     try {
-      if (TESTING_MODE) {
+      if (IS_DEV_MODE) {
+        setUser({
+          _id: "dev-admin-id",
+          email: "dev-admin@campus.com",
+          first_name: "Dev",
+          last_name: "Admin",
+          role: "admin",
+          roles: ["admin"],
+          is_verified: true,
+          avatar: "https://via.placeholder.com/150",
+        });
+        setIsAuthenticated(true);
         setLoading(false);
         return;
       }
@@ -185,6 +196,7 @@ export const AuthProvider = ({ children } = {}) => {
     checkAuth,
     hasRole,
     hasAnyRole,
+    isTestMode: IS_DEV_MODE,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

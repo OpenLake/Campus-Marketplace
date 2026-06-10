@@ -41,7 +41,7 @@ services:
       - ./backend/.env
     environment:
       # Force development mode so npm installs devDependencies (nodemon)
-      - NODE_ENV=production 
+      - NODE_ENV=development 
     volumes:
       - ./backend:/app
       - /app/node_modules # Critical: Prevents local folder from wiping container modules
@@ -58,6 +58,8 @@ services:
       - "4173:4173" # Matches your Vite log: "Local: http://localhost:4173/"
     env_file:
       - ./frontend/.env
+    environment:
+      - VITE_APP_MODE=dev
     volumes:
       - ./frontend:/app
       - /app/node_modules # Critical: Ensures @react-oauth/google stays available
