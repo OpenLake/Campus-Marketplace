@@ -181,14 +181,23 @@ const CreateListing = () => {
   const uploadImages = async () => {
     const uploadedUrls = [];
 
-    for (const image of formData.images) {
+    for (let i = 0; i < formData.images.length; i++) {
+      const image = formData.images[i];
       try {
         const formDataToSend = new FormData();
         formDataToSend.append("image", image.file);
 
         const response = await listingService.uploadImage(formDataToSend);
-        // FIX: Use response.data.data.url for Cloudinary image URL
-        uploadedUrls.push(response.data.data.url);
+        
+        // Handle response layout robustly:
+        const url = response.data?.url || response.data?.data?.url || response.url;
+        const publicId = response.data?.publicId || response.data?.data?.publicId || response.publicId || `cloudinary_${Date.now()}_${i}`;
+
+        uploadedUrls.push({
+          url,
+          publicId,
+          isCover: i === 0
+        });
       } catch (error) {
         console.error("Error uploading image:", error);
         throw new Error("Failed to upload images");
