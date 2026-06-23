@@ -23,7 +23,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../context/ThemeContext';
 
 const Header = () => {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, loading } = useAuth();
   const navigate = useNavigate();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -143,7 +143,12 @@ const Header = () => {
             <span className="text-xs hidden xl:block group-hover:text-emerald-600">Wishlist</span>
           </Link>
 
-          {isAuthenticated ? (
+          {loading ? (
+            <div className="flex items-center gap-3 animate-pulse">
+              <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+              <div className="w-16 h-4 bg-gray-200 dark:bg-gray-700 rounded hidden xl:block"></div>
+            </div>
+          ) : isAuthenticated ? (
             <>
               {/* Profile Dropdown */}
               <div className="relative">
@@ -362,7 +367,11 @@ const Header = () => {
                 </button>
               </div>
 
-              {isAuthenticated ? (
+              {loading ? (
+                <div className="flex flex-col gap-2 mt-4 animate-pulse px-4 py-3">
+                  <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded-lg w-full"></div>
+                </div>
+              ) : isAuthenticated ? (
                 <>
                   <div className="border-t border-gray-100 pt-2 mt-2">
                     <p className="px-4 py-2 text-xs font-bold text-gray-400 uppercase">Account</p>
