@@ -1,11 +1,16 @@
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import os from "os";
 
-// Set up local storage for uploads (e.g., /uploads/)
-const UPLOADS_FOLDER = path.join(process.cwd(), "uploads");
+// Set up local storage for uploads (use /tmp on Vercel/serverless)
+const isProduction = process.env.NODE_ENV === "production" || process.env.VERCEL;
+const UPLOADS_FOLDER = isProduction 
+  ? path.join(os.tmpdir(), "uploads")
+  : path.join(process.cwd(), "uploads");
+
 if (!fs.existsSync(UPLOADS_FOLDER)) {
-  fs.mkdirSync(UPLOADS_FOLDER);
+  fs.mkdirSync(UPLOADS_FOLDER, { recursive: true });
 }
 
 const storage = multer.diskStorage({

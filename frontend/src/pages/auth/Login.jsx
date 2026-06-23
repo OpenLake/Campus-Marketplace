@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import GoogleButton from './GoogleButton';
@@ -9,28 +9,24 @@ const Login = () => {
   const navigate = useNavigate();
   const { handleGoogleSignIn } = useContext(AuthContext);
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
 
-  const handleGoogleSuccess = async (response) => {
-  setLoading(true);
-  setError('');
-  
-  const result = await handleGoogleSignIn(response.credential);
-  
-  if (result.error) {
-    setError(result.error);
-    setLoading(false);
-  } else if (result.requiresDetails) {
-    // This should trigger navigation to /register/details
-    navigate('/register/details');
-  } else {
-    navigate('/dashboard');
-  }
-};
+  const handleGoogleSuccess = useCallback(async (response) => {
+    setError('');
+    
+    const result = await handleGoogleSignIn(response.credential);
+    
+    if (result.error) {
+      setError(result.error);
+    } else if (result.requiresDetails) {
+      navigate('/register/details');
+    } else {
+      navigate('/dashboard');
+    }
+  }, [handleGoogleSignIn, navigate]);
 
-  const handleGoogleFailure = () => {
+  const handleGoogleFailure = useCallback(() => {
     setError('Google Sign-In failed. Please try again.');
-  };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-white flex items-center justify-center p-4">
@@ -54,7 +50,6 @@ const Login = () => {
           <GoogleButton
             onSuccess={handleGoogleSuccess}
             onFailure={handleGoogleFailure}
-            disabled={loading}
           />
 
           <div className="relative my-6">
