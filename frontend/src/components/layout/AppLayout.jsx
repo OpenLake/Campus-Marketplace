@@ -27,7 +27,9 @@ const AppLayout = () => {
         </main>
       </div>
 
-      <Footer />
+      <div className={location.pathname.startsWith('/dashboard') ? 'lg:ml-64' : ''}>
+        <Footer />
+      </div>
     </div>
   );
 };

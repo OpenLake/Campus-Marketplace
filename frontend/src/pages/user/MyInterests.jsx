@@ -43,25 +43,25 @@ const MyInterests = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+        <div className="animate-spin rounded-none h-12 w-12 border-b-2 border-emerald-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">My Interests</h1>
+    <div className="container mx-auto px-4 py-8 bg-transparent text-gray-900 dark:text-gray-100">
+      <h1 className="text-3xl font-bold mb-6 text-gray-900 dark:text-gray-100">My Interests</h1>
 
       {/* Filter Tabs */}
-      <div className="flex gap-2 mb-6 border-b">
+      <div className="flex gap-2 mb-6 border-b border-gray-200 dark:border-gray-800">
         {['pending', 'accepted', 'rejected', 'withdrawn', 'all'].map(status => (
           <button
             key={status}
             onClick={() => setFilter(status)}
-            className={`px-4 py-2 capitalize ${
+            className={`px-4 py-2 capitalize transition ${
               filter === status
-                ? 'border-b-2 border-emerald-600 text-emerald-600 font-medium'
-                : 'text-gray-600'
+                ? 'border-b-2 border-emerald-600 text-emerald-600 dark:text-emerald-500 font-semibold'
+                : 'text-gray-500 dark:text-gray-450 hover:text-gray-700 dark:hover:text-gray-300'
             }`}
           >
             {status}
@@ -70,10 +70,10 @@ const MyInterests = () => {
       </div>
 
       {interests.length === 0 ? (
-        <div className="text-center py-12 bg-gray-50 rounded-lg">
+        <div className="text-center py-12 bg-gray-50 dark:bg-gray-900 rounded-none border border-gray-200 dark:border-gray-800">
           <MessageCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900">No interests found</h3>
-          <p className="text-gray-600">
+          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">No interests found</h3>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
             {filter === 'pending' 
               ? "You haven't expressed interest in any items yet"
               : `No ${filter} interests`}
@@ -82,21 +82,12 @@ const MyInterests = () => {
       ) : (
         <div className="space-y-4">
           {interests.map(interest => (
-            <div key={interest._id} className="bg-white rounded-lg shadow p-4">
-              <InterestCard 
-                interest={interest}
-                isSeller={false}
-                onWithdraw={handleWithdraw}
-              />
-              {interest.status === 'pending' && (
-                <button
-                  onClick={() => handleWithdraw(interest._id)}
-                  className="mt-2 text-sm text-red-600 hover:text-red-700"
-                >
-                  Withdraw Interest
-                </button>
-              )}
-            </div>
+            <InterestCard 
+              key={interest._id}
+              interest={interest}
+              isSeller={false}
+              onWithdraw={handleWithdraw}
+            />
           ))}
         </div>
       )}

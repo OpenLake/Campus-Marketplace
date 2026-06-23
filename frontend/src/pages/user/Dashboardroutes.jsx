@@ -14,9 +14,9 @@ import IncomingInterests from './IncomingInterests';
 
 const DashboardLayout = ({ children }) => {
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors">
       <DashboardSidebar />
-      <main className="flex-1 ml-64 p-8"> {/* Add margin-left to account for fixed sidebar */}
+      <main className="flex-1 ml-64 p-8 bg-transparent"> {/* Add margin-left to account for fixed sidebar */}
         {children}
       </main>
     </div>
