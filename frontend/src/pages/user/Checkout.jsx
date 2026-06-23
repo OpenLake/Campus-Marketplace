@@ -35,9 +35,9 @@ const CheckoutPage = () => {
               <div className="h-6 w-px bg-gray-300"></div>
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">O</span>
+                  <span className="text-white font-bold text-sm">CM</span>
                 </div>
-                <span className="font-bold text-lg hidden sm:block">Openlake</span>
+                <span className="font-bold text-lg hidden sm:block">Campus Marketplace</span>
               </div>
             </div>
             <div className="flex items-center gap-2 text-sm">

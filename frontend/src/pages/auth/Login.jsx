@@ -41,7 +41,7 @@ const Login = () => {
             <GraduationCap className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900">Campus Marketplace</h1>
-          <p className="text-emerald-600 font-medium">Openlake</p>
+          <p className="text-emerald-600 font-medium">IIT Bhilai</p>
         </div>
 
         {/* Card */}

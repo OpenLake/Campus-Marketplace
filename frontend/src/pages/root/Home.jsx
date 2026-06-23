@@ -1,228 +1,178 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Search, 
-  ShoppingBag, 
-  User, 
-  Heart, 
-  TrendingUp, 
+import {
+  Search,
+  ShoppingBag,
+  User,
+  Heart,
+  TrendingUp,
   ArrowRight,
   MapPin,
   Clock,
   Star,
-  Plus
+  Plus,
+  Mail
 } from 'lucide-react';
 
 const HomePage = () => {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
-  
-  const categories = [
-    { id: 'books', name: 'Books', count: 124, icon: '📚', color: 'from-blue-400 to-blue-500' },
-    { id: 'cycles', name: 'Cycles', count: 42, icon: '🚲', color: 'from-green-400 to-green-500' },
-    { id: 'electronics', name: 'Electronics', count: 89, icon: '💻', color: 'from-purple-400 to-purple-500' },
-    { id: 'clothing', name: 'Clothing', count: 65, icon: '👕', color: 'from-pink-400 to-pink-500' },
-    { id: 'dorm', name: 'Dorm Essentials', count: 31, icon: '💡', color: 'from-amber-400 to-amber-500' },
-  ];
-
-  const trendingItems = [
-    { id: 1, title: "Scientific Calculator TI-84", price: 850, originalPrice: 1200, rating: 4.5, image: "https://images.unsplash.com/photo-1587145820266-a5951ee6f620?w=400", tag: "Study Essentials", seller: "John Doe", views: 42 },
-    { id: 2, title: "Campus Hoodie Navy Blue", price: 1200, originalPrice: 1800, rating: 4.2, image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400", tag: "Fashion", seller: "Openlake Store", views: 156 },
-    { id: 3, title: "Mountain Bike 2023", price: 5500, originalPrice: 7500, rating: 4.8, image: "https://images.unsplash.com/photo-1576435728678-68d0fbf94e91?w=400", tag: "Travel", seller: "Mike Ross", views: 89 },
-    { id: 4, title: "Engineering Physics Textbook", price: 240, originalPrice: 800, rating: 4.7, image: "https://images.unsplash.com/photo-1532012197267-da84d127e765?w=400", tag: "Books", seller: "Alex P.", views: 231 },
-  ];
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/listings?search=${encodeURIComponent(searchQuery)}`);
-    }
-  };
-
-  const handleCategoryClick = (categoryId) => {
-    navigate(`/listings?category=${categoryId}`);
-  };
 
   const handleItemClick = (itemId) => {
     navigate(`/listings/${itemId}`);
   };
 
-  const handleAddToWishlist = (e, itemId) => {
-    e.stopPropagation();
-    // TODO: Add to wishlist functionality
-  };
+  const trendingProducts = [
+    { id: 1, title: "Scientific Calculator TI-84", price: 850, originalPrice: 1200, rating: 4.5, image: "https://images.unsplash.com/photo-1587145820266-a5951ee6f620?w=400", tag: "Study Essentials", seller: "John Doe", views: 42 },
+    { id: 2, title: "Campus Hoodie Navy Blue", price: 1200, originalPrice: 1800, rating: 4.2, image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400", tag: "Fashion", seller: "Campus Store", views: 156 },
+    { id: 3, title: "Mountain Bike 2023", price: 5500, originalPrice: 7500, rating: 4.8, image: "https://images.unsplash.com/photo-1576435728678-68d0fbf94e91?w=400", tag: "Travel", seller: "Mike Ross", views: 89 },
+    { id: 4, title: "Engineering Physics Textbook", price: 240, originalPrice: 800, rating: 4.7, image: "https://images.unsplash.com/photo-1532012197267-da84d127e765?w=400", tag: "Books", seller: "Alex P.", views: 231 },
+  ];
+
+  const latestListings = [
+    { id: 5, title: "Desk Lamp with Wireless Charger", price: 250, originalPrice: 400, rating: 4.6, image: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=400" },
+    { id: 6, title: "Noise Cancelling Headphones (Used)", price: 1200, originalPrice: 1800, rating: 4.9, image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400" },
+    { id: 7, title: "Mini Fridge for Dorm", price: 900, originalPrice: 1300, rating: 4.4, image: "https://images.unsplash.com/photo-1581594549595-35f6edc7b762?w=400" },
+    { id: 8, title: "Skateboard (Well Used)", price: 400, originalPrice: 750, rating: 4.3, image: "https://images.unsplash.com/photo-1564982752979-3f7bc974d29a?w=400" },
+  ];
+
+  const ProductCard = ({ item }) => (
+    <div
+      onClick={() => handleItemClick(item.id)}
+      className="border border-gray-200 dark:border-gray-800 p-4 bg-white dark:bg-gray-900 cursor-pointer group transition-transform duration-200 hover:-translate-y-1"
+    >
+      <div className="bg-gray-100 dark:bg-gray-800 aspect-square flex items-center justify-center overflow-hidden mb-4 relative border border-gray-200 dark:border-gray-700">
+        <img
+          src={item.image}
+          alt={item.title}
+          className="w-[80%] h-[80%] object-contain mix-blend-multiply dark:mix-blend-normal transition-transform duration-300 group-hover:scale-105"
+        />
+        {item.originalPrice && (
+          <span className="absolute top-3 left-3 bg-red-100 text-red-600 text-[11px] font-bold px-2.5 py-1 border border-red-200">
+            -{Math.round((1 - item.price / item.originalPrice) * 100)}%
+          </span>
+        )}
+      </div>
+      <div>
+        <h4 className="font-bold text-[15px] mb-1 text-gray-900 dark:text-gray-100 line-clamp-1">{item.title}</h4>
+        <div className="flex items-center gap-3 mt-1">
+          <span className="text-lg font-extrabold text-emerald-600 dark:text-emerald-500">₹{item.price}</span>
+          <span className="text-gray-400 dark:text-gray-500 line-through text-sm font-medium">₹{item.originalPrice}</span>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="bg-[#f8f9fa] min-h-screen font-sans text-[#253D4E] pb-20">
-      {/* Hero Banner */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="relative rounded-[30px] bg-gradient-to-r from-emerald-400 to-emerald-500 overflow-hidden p-8 lg:p-16">
-          <div className="z-10 relative max-w-xl">
-            <span className="bg-white/90 backdrop-blur-sm text-emerald-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-4 inline-block">
-              Campus Marketplace
-            </span>
-            <h2 className="text-4xl lg:text-5xl font-black mb-4 leading-tight text-white">
-              Smart Deals for <span className="text-emerald-900">Student Life</span>
-            </h2>
-            <p className="text-emerald-50/90 text-sm mb-8 max-w-md">
-              Buy, sell, and trade textbooks, gear, and essentials with fellow students.
+    <div className="min-h-screen bg-white dark:bg-gray-950 font-sans transition-colors">
+
+      {/* ===== HERO SECTION ===== */}
+      <div className="container mx-auto px-4 pt-10 pb-20">
+        <section className="bg-emerald-50 dark:bg-emerald-900/20 rounded-3xl p-10 md:p-16 flex flex-col md:flex-row items-center gap-10 overflow-hidden relative">
+
+          <div className="flex-1 z-10 max-w-2xl">
+            <div className="inline-flex items-center gap-2 bg-white dark:bg-gray-800 px-4 py-2 rounded-full text-emerald-600 dark:text-emerald-400 font-bold text-sm mb-6 border border-emerald-100 dark:border-emerald-800">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              </span>
+              Over 500+ Students Active
+            </div>
+
+            <h1 className="text-5xl md:text-6xl lg:text-[72px] font-black text-[#1F2937] dark:text-gray-100 leading-[1.1] mb-6 tracking-tight">
+              Campus Marketplace. <br />
+              <span className="text-emerald-600 dark:text-emerald-500">for IIT Bhilai.</span>
+            </h1>
+
+            <p className="text-lg text-gray-600 dark:text-gray-300 mb-10 max-w-lg leading-relaxed font-medium">
+              The smartest way to buy and sell textbooks, electronics, and dorm essentials within your college community.
             </p>
-            
-            {/* Search */}
-            <form onSubmit={handleSearch} className="bg-white rounded-xl p-1.5 shadow-lg max-w-md">
-              <div className="flex items-center gap-2">
-                <Search size={20} className="text-gray-400 ml-3" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search textbooks, cycles, electronics..."
-                  className="flex-1 bg-transparent outline-none text-sm font-medium text-gray-800"
-                />
-                <button 
-                  type="submit"
-                  className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm transition-colors"
-                >
-                  Search
-                </button>
-              </div>
-            </form>
-          </div>
-
-          {/* Background shapes */}
-          <div className="absolute right-[-50px] top-[-50px] w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
-          <div className="absolute right-10 bottom-10 text-8xl opacity-20">🚀</div>
-        </div>
-      </div>
-
-      {/* Categories Grid */}
-      <div className="container mx-auto px-4 py-6">
-        <h3 className="text-xl font-bold text-gray-800 mb-6">Browse Categories</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {categories.map((cat) => (
-            <div 
-              key={cat.id}
-              onClick={() => handleCategoryClick(cat.id)}
-              className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer group border border-gray-100"
-            >
-              <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${cat.color} flex items-center justify-center text-2xl mb-3 group-hover:scale-110 transition-transform`}>
-                {cat.icon}
-              </div>
-              <h4 className="font-bold text-gray-800 text-sm mb-1">{cat.name}</h4>
-              <p className="text-xs text-gray-500">{cat.count} items</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Trending Items */}
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <TrendingUp size={20} className="text-emerald-500" />
-            <h3 className="text-xl font-bold text-gray-800">Trending Near You</h3>
-          </div>
-          <button 
-            onClick={() => navigate('/listings')}
-            className="text-emerald-600 font-bold hover:text-emerald-700 transition-colors text-sm flex items-center gap-1"
-          >
-            View All <ArrowRight size={14} />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {trendingItems.map((item) => (
-            <div 
-              key={item.id}
-              onClick={() => handleItemClick(item.id)}
-              className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all border border-gray-100 group cursor-pointer"
-            >
-              {/* Image */}
-              <div className="relative h-40 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg overflow-hidden mb-4 group-hover:scale-[1.02] transition-transform">
-                <img 
-                  src={item.image} 
-                  alt={item.title}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute top-2 left-2">
-                  <span className="px-2 py-1 text-xs font-bold bg-emerald-500 text-white rounded">
-                    {Math.round((1 - item.price / item.originalPrice) * 100)}% OFF
-                  </span>
-                </div>
-              </div>
-
-              {/* Content */}
-              <div>
-                <span className="text-[10px] text-emerald-500 font-bold uppercase tracking-wider mb-1 block">
-                  {item.tag}
-                </span>
-                <h4 className="font-bold text-gray-800 text-sm mb-2 line-clamp-2">
-                  {item.title}
-                </h4>
-                
-                <div className="flex items-center gap-1 mb-3">
-                  <Star size={12} className="fill-yellow-400 text-yellow-400" />
-                  <span className="text-xs font-medium text-gray-700">{item.rating}</span>
-                  <span className="text-xs text-gray-400 mx-2">•</span>
-                  <span className="text-xs text-gray-500">{item.views} views</span>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-lg font-bold text-gray-900">₹{item.price}</span>
-                      <span className="text-sm text-gray-400 line-through">₹{item.originalPrice}</span>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">by {item.seller}</p>
-                  </div>
-                  <button 
-                    onClick={(e) => handleAddToWishlist(e, item.id)}
-                    className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-500 hover:text-white transition-colors"
-                  >
-                    <Heart size={18} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Stats & CTA */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-2xl p-8 text-white">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex-1">
-              <h3 className="text-2xl font-black mb-3">Ready to find your campus essentials?</h3>
-              <p className="text-emerald-50/90 mb-0">
-                Join thousands of students saving money on textbooks, gear, and more.
-              </p>
-            </div>
-            <button 
+            <button
               onClick={() => navigate('/listings')}
-              className="bg-white text-emerald-600 px-8 py-3 rounded-xl font-bold hover:bg-emerald-50 transition-colors shadow-lg whitespace-nowrap"
+              className="inline-block bg-emerald-600 text-white px-14 py-4 font-bold text-[15px] transition-colors hover:bg-emerald-700"
             >
-              Browse All Listings
+              Shop Now
             </button>
           </div>
-        </div>
+
+          <div className="flex-1 flex justify-center items-center max-w-[620px] relative mt-10 md:mt-0">
+            <img
+              src="https://github.com/user-attachments/assets/a3d6b8c0-cba9-406e-be10-f36d9e0f8999"
+              alt="Campus Marketplace Preview"
+              className="w-full max-h-[500px] object-cover rounded-[100px]"
+            />
+          </div>
+        </section>
       </div>
 
-      {/* Floating Action Buttons for Mobile */}
-      <div className="fixed bottom-6 right-6 flex flex-col gap-3 lg:hidden">
-        <button 
-          onClick={() => navigate('/listings/add')}
-          className="w-14 h-14 bg-emerald-600 rounded-full shadow-lg flex items-center justify-center text-white hover:bg-emerald-700 transition-colors"
-        >
-          <Plus size={24} />
-        </button>
-        <button 
-          onClick={() => navigate('/wishlist')}
-          className="w-14 h-14 bg-white rounded-full shadow-lg flex items-center justify-center text-emerald-600 hover:bg-gray-50 transition-colors"
-        >
-          <Heart size={24} />
-        </button>
+      {/* ===== TRENDING SECTION ===== */}
+      <section className="py-20 border-t border-gray-100 dark:border-gray-800">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
+            <div>
+              <h2 className="text-4xl font-black text-gray-900 dark:text-gray-100 mb-4 tracking-tight uppercase">Trending Now</h2>
+              <p className="text-gray-500 dark:text-gray-400 font-medium">The most sought-after items on campus this week.</p>
+            </div>
+            <button
+              onClick={() => navigate('/listings')}
+              className="font-bold text-emerald-600 dark:text-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors flex items-center gap-1"
+            >
+              View All Trending &rarr;
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {trendingProducts.map(item => <ProductCard key={item.id} item={item} />)}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== LATEST LISTINGS ===== */}
+      <section className="py-20 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-800">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
+            <div>
+              <h2 className="text-4xl font-black text-gray-900 dark:text-gray-100 mb-4 tracking-tight uppercase">Fresh Finds</h2>
+              <p className="text-gray-500 dark:text-gray-400 font-medium">Just listed by your peers. Grab them before they're gone!</p>
+            </div>
+            <button
+              onClick={() => navigate('/listings')}
+              className="font-bold text-emerald-600 dark:text-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors flex items-center gap-1"
+            >
+              Browse All Items &rarr;
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {latestListings.map(item => <ProductCard key={item.id} item={item} />)}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== NEWSLETTER ===== */}
+      <div className="container mx-auto px-4 py-20 border-t border-gray-100 dark:border-gray-800">
+        <section className="bg-emerald-600 dark:bg-emerald-800 rounded-3xl p-10 md:p-16 flex flex-col md:flex-row items-center justify-between gap-10">
+          <div className="max-w-xl text-white">
+            <h2 className="text-4xl font-black mb-4 uppercase">Never Miss a Deal</h2>
+            <p className="text-emerald-50 text-lg font-medium">
+              Join the student newsletter to get the best deals on textbooks and dorm gear straight to your inbox.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+            <div className="flex items-center gap-2.5 bg-emerald-700/50 py-4 px-6 focus-within:border-emerald-300 transition-colors">
+              <Mail className="text-emerald-200" size={20} />
+              <input
+                type="email"
+                placeholder="Your campus email..."
+                className="border-none outline-none text-base w-full bg-transparent text-white placeholder-emerald-200 min-w-[240px]"
+              />
+            </div>
+            <button className="bg-[#111827] text-white py-4 px-8 font-bold text-base hover:bg-black transition-colors whitespace-nowrap">
+              Subscribe Now
+            </button>
+          </div>
+        </section>
       </div>
+
     </div>
   );
 };

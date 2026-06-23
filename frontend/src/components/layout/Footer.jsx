@@ -15,21 +15,21 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-white text-gray-700 font-sans border-t border-gray-100 pt-3">
+    <footer className="bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 font-sans border-t border-gray-100 dark:border-gray-800 pt-3 transition-colors">
       <div className="container mx-auto px-2">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 pb-3">
           
           {/* Column 1: Brand & Contact */}
           <div className="lg:col-span-1 space-y-6">
             <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                <span className="text-emerald-600 font-bold text-xl">O</span>
+              <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center">
+                <span className="text-emerald-600 dark:text-emerald-400 font-bold text-xl">CM</span>
               </div>
-              <span className="text-2xl font-bold text-emerald-600 tracking-tight">
-                Openlake
+              <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 tracking-tight">
+                Campus Marketplace
               </span>
             </div>
-            <p className="text-[15px] leading-relaxed text-gray-500">
+            <p className="text-[15px] leading-relaxed text-gray-500 dark:text-gray-400">
               The premier campus marketplace for students to buy, sell, and trade safely.
             </p>
             <ul className="space-y-3 text-[14px]">
@@ -39,14 +39,14 @@ const Footer = () => {
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="w-5 h-5 text-emerald-500 shrink-0" />
-                <span>Email: support@openlake.com</span>
+                <span>Email: marketplace@iitbhilai.ac.in</span>
               </li>
             </ul>
           </div>
 
           {/* Column 2: Company */}
           <div>
-            <h4 className="text-lg font-bold mb-6 text-gray-800">Company</h4>
+            <h4 className="text-lg font-bold mb-6 text-gray-800 dark:text-gray-200">Company</h4>
             <ul className="space-y-3 text-[15px]">
               <li><Link to="/about" className="hover:text-emerald-500 transition-all hover:translate-x-1 inline-block">About Us</Link></li>
               <li><Link to="/listings" className="hover:text-emerald-500 transition-all hover:translate-x-1 inline-block">Browse Listings</Link></li>
@@ -58,7 +58,7 @@ const Footer = () => {
 
           {/* Column 3: Account */}
           <div>
-            <h4 className="text-lg font-bold mb-6 text-gray-800">Account</h4>
+            <h4 className="text-lg font-bold mb-6 text-gray-800 dark:text-gray-200">Account</h4>
             <ul className="space-y-3 text-[15px]">
               <li><Link to="/signin" className="hover:text-emerald-500 transition-all hover:translate-x-1 inline-block">Sign In</Link></li>
               <li><Link to="/cart" className="hover:text-emerald-500 transition-all hover:translate-x-1 inline-block">View Cart</Link></li>
@@ -70,7 +70,7 @@ const Footer = () => {
 
           {/* Column 4: Popular Categories */}
           <div>
-            <h4 className="text-lg font-bold mb-6 text-gray-800">Popular</h4>
+            <h4 className="text-lg font-bold mb-6 text-gray-800 dark:text-gray-200">Popular</h4>
             <ul className="space-y-3 text-[15px]">
               <li><Link to="/cat/textbooks" className="hover:text-emerald-500 transition-all hover:translate-x-1 inline-block">Textbooks</Link></li>
               <li><Link to="/cat/electronics" className="hover:text-emerald-500 transition-all hover:translate-x-1 inline-block">Electronics</Link></li>
@@ -84,10 +84,10 @@ const Footer = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-gray-100 py-2">
+        <div className="border-t border-gray-100 dark:border-gray-800 py-2">
           <div className="flex flex-col lg:flex-row justify-between items-center gap-6">
-            <div className="text-sm text-gray-400">
-              © {currentYear}, <span className="text-emerald-600 font-semibold">Openlake</span> - Student Marketplace Template
+            <div className="text-sm text-gray-400 dark:text-gray-500">
+              © {currentYear}, <span className="text-emerald-600 dark:text-emerald-500 font-semibold">Campus Marketplace</span> - IIT Bhilai
               <br />All rights reserved
             </div>
 
@@ -97,7 +97,7 @@ const Footer = () => {
 
             <div className="flex flex-col items-center lg:items-end gap-2">
               <div className="flex items-center gap-3">
-                <span className="font-bold text-gray-700">Follow Us</span>
+                <span className="font-bold text-gray-700 dark:text-gray-300">Follow Us</span>
                 <div className="flex gap-2">
                   <div className="w-8 h-8 bg-emerald-500 text-white rounded-full flex items-center justify-center hover:bg-emerald-600 cursor-pointer transition-colors">
                     <Facebook size={16} />
@@ -110,7 +110,7 @@ const Footer = () => {
                   </div>
                 </div>
               </div>
-              <p className="text-xs text-gray-400">Up to 15% discount on your first trade!</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">Up to 15% discount on your first trade!</p>
             </div>
           </div>
         </div>

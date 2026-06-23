@@ -15,9 +15,12 @@ import {
   Package,
   CreditCard,
   Menu,
-  X
+  X,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { useTheme } from '../../context/ThemeContext';
 
 const Header = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -25,6 +28,7 @@ const Header = () => {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const { isDarkMode, toggleDarkMode } = useTheme();
 
   const handleLogout = async () => {
     await logout();
@@ -61,15 +65,15 @@ const Header = () => {
     : user?.first_name || 'User';
 
   return (
-    <header className="w-full bg-white font-sans sticky top-0 z-50 shadow-sm">
+    <header className="w-full bg-white dark:bg-gray-900 font-sans sticky top-0 z-50 shadow-sm transition-colors">
       {/* 1. Top Utility Bar */}
-      <div className="border-b border-gray-100 py-2 hidden lg:block bg-gray-50">
-        <div className="container mx-auto px-4 flex justify-between items-center text-[12px] text-gray-500">
+      <div className="border-b border-gray-100 dark:border-gray-800 py-2 hidden lg:block bg-gray-50 dark:bg-gray-950">
+        <div className="container mx-auto px-4 flex justify-between items-center text-[12px] text-gray-500 dark:text-gray-400">
           <div className="flex gap-4">
             <Link to="/about" className="hover:text-emerald-600 transition-colors">About Us</Link>
-            <span className="text-gray-200">|</span>
+            <span className="text-gray-200 dark:text-gray-700">|</span>
             <Link to="/contact" className="hover:text-emerald-600 transition-colors">Contact</Link>
-            <span className="text-gray-200">|</span>
+            <span className="text-gray-200 dark:text-gray-700">|</span>
             <Link to="/faq" className="hover:text-emerald-600 transition-colors">FAQ</Link>
           </div>
           
@@ -96,23 +100,23 @@ const Header = () => {
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 shrink-0 group">
           <div className="w-9 h-9 bg-emerald-600 rounded-lg flex items-center justify-center group-hover:bg-emerald-700 transition-colors shadow-md">
-            <span className="text-white font-bold text-lg">OL</span>
+            <span className="text-white font-bold text-lg">CM</span>
           </div>
           <div className="leading-none">
-            <span className="text-xl font-bold text-emerald-600 block">Openlake</span>
-            <span className="text-[9px] tracking-[0.2em] text-gray-400 uppercase font-bold">Campus Market</span>
+            <span className="text-xl font-bold text-emerald-600 block">Campus Marketplace</span>
+            <span className="text-[9px] tracking-[0.2em] text-gray-400 uppercase font-bold">IIT Bhilai</span>
           </div>
         </Link>
 
         {/* Search Bar - Desktop */}
-        <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-xl items-center border-2 border-emerald-100 rounded-lg px-3 py-1.5 gap-3 focus-within:border-emerald-400 transition-colors">
+        <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-xl items-center border-2 border-emerald-100 dark:border-gray-700 rounded-lg px-3 py-1.5 gap-3 focus-within:border-emerald-400 dark:focus-within:border-emerald-500 transition-colors bg-white dark:bg-gray-800">
           <Search size={18} className="text-gray-400" />
           <input 
             type="text" 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search for textbooks, electronics, furniture..." 
-            className="w-full outline-none text-sm text-gray-600"
+            className="w-full outline-none text-sm text-gray-600 dark:text-gray-200 bg-transparent"
           />
           <button 
             type="submit"
@@ -123,7 +127,16 @@ const Header = () => {
         </form>
 
         {/* Icons Action Row / Auth Options */}
-        <div className="flex items-center gap-4 lg:gap-6 text-gray-600">
+        <div className="flex items-center gap-4 lg:gap-6 text-gray-600 dark:text-gray-300">
+          {/* Theme Toggle */}
+          <button 
+            onClick={toggleDarkMode}
+            className="flex items-center gap-2 cursor-pointer group p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+            aria-label="Toggle dark mode"
+          >
+            {isDarkMode ? <Sun size={20} className="text-amber-500" /> : <Moon size={20} className="text-gray-600" />}
+          </button>
+
           {/* Wishlist */}
           <Link to="/wishlist" className="hidden lg:flex items-center gap-2 cursor-pointer group">
             <Heart size={22} className="group-hover:text-emerald-600 transition-colors" />
@@ -155,10 +168,10 @@ const Header = () => {
 
                 {/* Profile Dropdown Menu */}
                 {isProfileMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50">
+                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 py-1 z-50">
                     <Link 
                       to="/dashboard" 
-                      className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-600"
+                      className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-emerald-50 dark:hover:bg-gray-700 hover:text-emerald-600 dark:hover:text-emerald-400"
                       onClick={() => setIsProfileMenuOpen(false)}
                     >
                       <LayoutDashboard size={16} />
@@ -210,7 +223,7 @@ const Header = () => {
             </>
           ) : (
             <div className="flex items-center gap-3">
-              <Link to="/login" className="flex items-center gap-2 text-sm font-bold text-gray-700 hover:text-emerald-600 transition-colors px-3 py-2 rounded-lg hover:bg-gray-50">
+              <Link to="/login" className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
                 <LogIn size={18} className="text-emerald-600" />
                 <span className="hidden lg:inline">Log In</span>
               </Link>
@@ -224,7 +237,7 @@ const Header = () => {
       </div>
 
       {/* 3. Bottom Row: Categories and Nav - Desktop */}
-      <div className="border-y border-gray-100 hidden lg:block bg-white">
+      <div className="border-y border-gray-100 dark:border-gray-800 hidden lg:block bg-white dark:bg-gray-900 transition-colors">
         <div className="container mx-auto px-4 flex items-center justify-between">
           <div className="flex items-center gap-8">
             {/* Category Dropdown */}
@@ -236,25 +249,21 @@ const Header = () => {
               </button>
               
               {/* Category Dropdown Menu */}
-              <div className="absolute left-0 top-full w-48 bg-white rounded-b-lg shadow-lg border border-gray-100 py-2 hidden group-hover:block z-40">
-                <Link to="/listings?category=books" className="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-600">Books & Textbooks</Link>
-                <Link to="/listings?category=electronics" className="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-600">Electronics</Link>
-                <Link to="/listings?category=furniture" className="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-600">Furniture</Link>
-                <Link to="/listings?category=clothing" className="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-600">Clothing</Link>
-                <Link to="/listings?category=cycles" className="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-600">Cycles</Link>
-                <Link to="/listings?category=stationery" className="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-600">Stationery</Link>
-                <Link to="/listings?category=sports" className="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-600">Sports Equipment</Link>
+              <div className="absolute left-0 top-full w-48 bg-white dark:bg-gray-800 rounded-b-lg shadow-lg border border-gray-100 dark:border-gray-700 py-2 hidden group-hover:block z-40">
+                <Link to="/listings?category=books" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-gray-700 hover:text-emerald-600">Books & Textbooks</Link>
+                <Link to="/listings?category=electronics" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-gray-700 hover:text-emerald-600">Electronics</Link>
+                <Link to="/listings?category=furniture" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-gray-700 hover:text-emerald-600">Furniture</Link>
+                <Link to="/listings?category=clothing" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-gray-700 hover:text-emerald-600">Clothing</Link>
+                <Link to="/listings?category=cycles" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-gray-700 hover:text-emerald-600">Cycles</Link>
+                <Link to="/listings?category=stationery" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-gray-700 hover:text-emerald-600">Stationery</Link>
+                <Link to="/listings?category=sports" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-gray-700 hover:text-emerald-600">Sports Equipment</Link>
               </div>
             </div>
 
             {/* Navigation Links */}
             <nav className="flex items-center gap-6">
-              {/* <Link to="/listings?sort=trending" className="flex items-center gap-1 font-bold text-gray-700 hover:text-emerald-600 text-sm transition-colors">
-                <Flame size={16} className="text-orange-500" /> Hot Deals
-              </Link> */}
-              <Link to="/listings" className="font-bold text-gray-700 hover:text-emerald-600 text-sm transition-colors">All Listings</Link>
-              <Link to="/vendors" className="font-bold text-gray-700 hover:text-emerald-600 text-sm transition-colors">Vendors</Link>
-              {/* <Link to="/about" className="font-bold text-gray-700 hover:text-emerald-600 text-sm transition-colors">About</Link> */}
+              <Link to="/listings" className="font-bold text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 text-sm transition-colors">All Listings</Link>
+              <Link to="/vendors" className="font-bold text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 text-sm transition-colors">Vendors</Link>
             </nav>
           </div>
 
@@ -265,7 +274,6 @@ const Header = () => {
             </div>
             <div>
               <p className="text-emerald-600 font-bold text-md leading-none">1800-123-4567</p>
-              <p className="text-[9px] text-gray-400 font-bold text-right uppercase">24/7 Support</p>
             </div>
           </Link>
         </div>
