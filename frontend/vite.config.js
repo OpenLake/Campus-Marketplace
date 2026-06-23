@@ -11,9 +11,11 @@ export default defineConfig({
     watch: {
       usePolling: true,
     },
-    proxy:{
-      "source": "/api/:path*",
-      "destination": "https://campus-marketplace-backend.vercel.app/api/:path*"
-    }
+    proxy: {
+      "/api": {
+        target: "http://localhost:5000",
+        changeOrigin: true,
+      },
+    },
   },
 });
