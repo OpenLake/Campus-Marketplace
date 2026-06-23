@@ -230,13 +230,23 @@ const EditListing = () => {
   const uploadNewImages = async () => {
     const uploadedUrls = [];
 
-    for (const image of formData.newImages) {
+    for (let i = 0; i < formData.newImages.length; i++) {
+      const image = formData.newImages[i];
       try {
         const formDataToSend = new FormData();
         formDataToSend.append('image', image.file);
 
         const response = await listingService.uploadImage(formDataToSend);
-        uploadedUrls.push(response.data.data.url);
+        
+        // Handle response layout robustly:
+        const url = response.data?.url || response.data?.data?.url || response.url;
+        const publicId = response.data?.publicId || response.data?.data?.publicId || response.publicId || `cloudinary_${Date.now()}_${i}`;
+
+        uploadedUrls.push({
+          url,
+          publicId,
+          isCover: (formData.existingImages.length + i) === 0
+        });
       } catch (error) {
         console.error('Error uploading image:', error);
         throw new Error('Failed to upload images');

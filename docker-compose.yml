@@ -41,7 +41,10 @@ services:
       - ./backend/.env
     environment:
       # Force development mode so npm installs devDependencies (nodemon)
-      - NODE_ENV=development 
+      - NODE_ENV=development
+      - CLOUDINARY_CLOUD_NAME
+      - CLOUDINARY_API_KEY
+      - CLOUDINARY_API_SECRET 
     volumes:
       - ./backend:/app
       - /app/node_modules # Critical: Prevents local folder from wiping container modules

@@ -12,6 +12,7 @@ cloudinary.config({
 
 export const uploadToCloudinary = async (localFilePath,folder="campus-marketplace") => {
     try {
+        if (!localFilePath) return null;
         //upload to cloudinary
         const result = await cloudinary.uploader.upload(localFilePath, {
             folder: folder,
@@ -19,10 +20,16 @@ export const uploadToCloudinary = async (localFilePath,folder="campus-marketplac
         })
         //file uploaded
         console.log("file uploaded to cloudinary",result.url);
+        // remove file from local uploads folder
+        if (fs.existsSync(localFilePath)) {
+            fs.unlinkSync(localFilePath);
+        }
         return result
     } catch (error) {
         //remove file from local uploads folder
-        fs.unlinkSync(localFilePath)
+        if (fs.existsSync(localFilePath)) {
+            fs.unlinkSync(localFilePath)
+        }
         console.error("Error uploading to cloudinary",error);
         throw error
     } 

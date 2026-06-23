@@ -6,6 +6,7 @@ import { ApiError } from "../utils/api-error.js";
 import { ApiResponse } from "../utils/api-response.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import mongoose from "mongoose";
+import { uploadToCloudinary } from "../utils/upload.js";
 
 // Helper to get user ID 
 const getUserId = (req) => {
@@ -597,5 +598,28 @@ export const getListingStats = asyncHandler(async (req, res) => {
       },
       categoryBreakdown
     }, "Stats fetched successfully")
+  );
+});
+
+/* ========== UPLOAD IMAGE TO CLOUDINARY ========== */
+export const uploadImage = asyncHandler(async (req, res) => {
+  if (!req.file) {
+    throw new ApiError(400, "Image file is required");
+  }
+
+  const result = await uploadToCloudinary(req.file.path);
+  if (!result) {
+    throw new ApiError(500, "Failed to upload image to Cloudinary");
+  }
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        url: result.secure_url || result.url,
+        publicId: result.public_id
+      },
+      "Image uploaded successfully"
+    )
   );
 });

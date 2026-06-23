@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { upload } from "../middlewares/multer.js";
 import {
   // Create
   createListing,
@@ -22,7 +23,9 @@ import {
   setPrimaryImage,
   
   // Delete
-  deleteListing
+  deleteListing,
+  // Cloudinary Upload
+  uploadImage
 } from "../controllers/listing.controller.js";
 
 const listingRouter = Router();
@@ -39,6 +42,7 @@ listingRouter.use(verifyJWT);
 
 // Create
 listingRouter.post("/", createListing);                       // POST /api/listings
+listingRouter.post("/upload-image", upload.single("image"), uploadImage); // POST /api/listings/upload-image
 
 // Read (Private) - THESE MUST COME BEFORE PARAMETER ROUTES
 listingRouter.get("/my-listings", getMyListings);            // GET /api/listings/my-listings

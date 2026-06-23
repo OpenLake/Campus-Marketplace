@@ -269,47 +269,84 @@ useEffect(() => {
     });
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  const newErrors = validateForm();
-  if (Object.keys(newErrors).length > 0) {
-    setErrors(newErrors);
-    return;
-  }
-
-  try {
-    setIsSubmitting(true);
-    
-    // Ensure we send exactly what the backend 'listingData' object expects
-    const listingPayload = {
-      title: formData.title.trim(),
-      description: formData.description.trim(),
-      basePrice: Number(formData.price),
-      condition: formData.condition,
-      category: formData.category, // MUST be a 24-char MongoDB ID
-      images: formData.images.map((img, idx) => ({
-        url: img.preview, // The backend "Temp Fix" accepts this
-        publicId: `temp_${Date.now()}_${idx}`,
-        isCover: idx === 0
-      })),
-      location: {
-        hostel: formData.location.hostel,
-        roomNumber: formData.location.roomNumber || "",
-        landmark: formData.location.landmark || ""
+  const uploadImages = async () => {
+    const uploadedImages = [];
+    for (let i = 0; i < formData.images.length; i++) {
+      const img = formData.images[i];
+      if (img.file) {
+        const formDataToSend = new FormData();
+        formDataToSend.append("image", img.file);
+        
+        const response = await listingService.uploadImage(formDataToSend);
+        
+        // Handle response layout robustly:
+        const url = response.data?.url || response.data?.data?.url || response.url;
+        const publicId = response.data?.publicId || response.data?.data?.publicId || response.publicId || `cloudinary_${Date.now()}_${i}`;
+        
+        uploadedImages.push({
+          url,
+          publicId,
+          isCover: i === 0
+        });
+      } else {
+        uploadedImages.push({
+          url: img.url || img.preview,
+          publicId: img.publicId || `temp_${Date.now()}_${i}`,
+          isCover: i === 0
+        });
       }
-    };
+    }
+    return uploadedImages;
+  };
 
-    const result = await listingService.createListing(listingPayload);
-    toast.success("Product added successfully!");
-    navigate('/my-listings');
-  } catch (error) {
-    // Log the actual error response from the server
-    console.error("Backend Error:", error.response?.data);
-    toast.error(error.response?.data?.message || "Failed to add product");
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const newErrors = validateForm();
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    let loadingToast = null;
+    try {
+      setIsSubmitting(true);
+      loadingToast = toast.loading("Uploading images to Cloudinary...");
+      
+      const uploadedImages = await uploadImages();
+      
+      toast.dismiss(loadingToast);
+      loadingToast = toast.loading("Creating product listing...");
+
+      // Ensure we send exactly what the backend 'listingData' object expects
+      const listingPayload = {
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        basePrice: Number(formData.price),
+        condition: formData.condition,
+        category: formData.category, // MUST be a 24-char MongoDB ID
+        images: uploadedImages,
+        location: {
+          hostel: formData.location.hostel,
+          roomNumber: formData.location.roomNumber || "",
+          landmark: formData.location.landmark || ""
+        }
+      };
+
+      const result = await listingService.createListing(listingPayload);
+      toast.dismiss(loadingToast);
+      toast.success("Product added successfully!");
+      navigate('/my-listings');
+    } catch (error) {
+      if (loadingToast) {
+        toast.dismiss(loadingToast);
+      }
+      // Log the actual error response from the server
+      console.error("Backend Error:", error.response?.data);
+      toast.error(error.response?.data?.message || "Failed to add product");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (!isAuthenticated) {
     return null; // Will redirect via useEffect
