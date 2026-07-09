@@ -25,6 +25,7 @@ import toast from 'react-hot-toast';
 const ListingPage = () => {
   const navigate = useNavigate();
   const [priceRange, setPriceRange] = useState([0, 5000]);
+  const [tempPriceRange, setTempPriceRange] = useState([0, 5000]);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [listings, setListings] = useState([]);
@@ -148,8 +149,15 @@ const ListingPage = () => {
   };
 
   const handleApplyFilters = () => {
+    const isPriceChanged = priceRange[0] !== tempPriceRange[0] || priceRange[1] !== tempPriceRange[1];
+    const isPageChanged = currentPage !== 1;
+
     setCurrentPage(1);
-    fetchListings();
+    if (isPriceChanged) {
+      setPriceRange(tempPriceRange);
+    } else if (!isPageChanged) {
+      fetchListings();
+    }
   };
 
   const handleSortChange = (value) => {
@@ -249,12 +257,12 @@ const ListingPage = () => {
               min={0}
               max={10000}
               step={100}
-              value={priceRange}
-              onChange={setPriceRange}
+              value={tempPriceRange}
+              onChange={setTempPriceRange}
             />
             <div className="flex justify-between text-sm font-bold text-gray-500 dark:text-gray-400 mt-4">
-              <span>₹{priceRange[0]}</span>
-              <span>₹{priceRange[1]}</span>
+              <span>₹{tempPriceRange[0]}</span>
+              <span>₹{tempPriceRange[1]}</span>
             </div>
           </div>
 

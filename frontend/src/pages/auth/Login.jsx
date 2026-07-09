@@ -2,8 +2,7 @@ import React, { useContext, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import GoogleButton from './GoogleButton';
-import Alert from '../../components/ui/Alert'; // adjust path if needed
-import { GraduationCap } from 'lucide-react';
+import Alert from '../../components/ui/Alert';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -12,9 +11,7 @@ const Login = () => {
 
   const handleGoogleSuccess = useCallback(async (response) => {
     setError('');
-    
     const result = await handleGoogleSignIn(response.credential);
-    
     if (result.error) {
       setError(result.error);
     } else if (result.requiresDetails) {
@@ -29,49 +26,62 @@ const Login = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-white flex items-center justify-center p-4">
-      <div className="max-w-md w-full">
+    <div 
+      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden font-sans"
+      style={{
+        background: `
+          radial-gradient(1100px 600px at 85% -10%, rgba(16, 185, 129, 0.08), transparent 60%),
+          radial-gradient(900px 500px at -10% 20%, rgba(79, 157, 255, 0.05), transparent 55%),
+          #0a0f14
+        `
+      }}
+    >
+      <div className="w-full max-w-[420px] z-10">
         {/* Brand Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-600 rounded-2xl shadow-lg mb-4">
-            <GraduationCap className="w-8 h-8 text-white" />
+        <div className="flex items-center gap-3 justify-center mb-8">
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#10b981] to-[#0a8a63] flex items-center justify-center font-bold text-lg text-[#04140e] shadow-[0_6px_20px_-6px_rgba(16,185,129,0.55)]">
+            CM
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">Campus Marketplace</h1>
-          <p className="text-emerald-600 font-medium">IIT Bhilai</p>
+          <div>
+            <div className="font-bold text-xl tracking-tight text-white font-grotesk">Campus Marketplace</div>
+            <div className="text-[10px] text-[#5d6b7d] tracking-[1.8px] font-semibold -mt-0.5">IIT BHILAI</div>
+          </div>
         </div>
 
-        {/* Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome back</h2>
-          <p className="text-gray-500 mb-8">Sign in to continue to your campus marketplace</p>
+        {/* Login Card */}
+        <div className="bg-[#121922] border border-[#232c38] rounded-2xl p-8 md:p-9 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.8)] animate-[fadeIn_0.2s_ease] text-center">
+          <h1 className="text-2xl font-bold text-white mb-2 font-grotesk">Welcome back</h1>
+          <p className="text-sm text-[#93a2b3] mb-8">Sign in to buy, sell &amp; trade within your campus community.</p>
 
-          {error && <Alert type="error" message={error} className="mb-6" />}
+          {error && <Alert type="error" message={error} className="mb-6 text-left" />}
 
-          <GoogleButton
-            onSuccess={handleGoogleSuccess}
-            onFailure={handleGoogleFailure}
-          />
+          <div className="w-full flex justify-center py-4">
+            <GoogleButton
+              onSuccess={handleGoogleSuccess}
+              onFailure={handleGoogleFailure}
+            />
+          </div>
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
+              <div className="w-full border-t border-[#232c38]"></div>
             </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white text-gray-500">Secure campus authentication</span>
+            <div className="relative flex justify-center text-xs">
+              <span className="px-4 bg-[#121922] text-[#5d6b7d] font-medium">Secure IIT Bhilai Authentication</span>
             </div>
           </div>
 
-          <p className="text-xs text-center text-gray-400">
+          <p className="text-xs text-[#5d6b7d] leading-relaxed">
             By signing in, you agree to our{' '}
-            <a href="/terms" className="text-emerald-600 hover:underline">Terms</a> and{' '}
-            <a href="/privacy" className="text-emerald-600 hover:underline">Privacy Policy</a>
+            <a href="/terms" className="text-[#10b981] hover:underline font-semibold">Terms</a> and{' '}
+            <a href="/privacy" className="text-[#10b981] hover:underline font-semibold">Privacy Policy</a>
           </p>
         </div>
 
-        {/* Footer note */}
-        <p className="text-center mt-8 text-sm text-gray-500">
-          Powered by Google Sign-In • 100% secure
-        </p>
+        {/* Secure badge */}
+        <div className="text-center mt-6 text-xs text-[#5d6b7d] tracking-wide">
+          🔒 Powered by Google Sign-In • 100% secure
+        </div>
       </div>
     </div>
   );

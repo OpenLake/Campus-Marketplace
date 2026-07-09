@@ -15,98 +15,95 @@ const TransactionHistory = () => {
 
   const getStatusBadge = (status) => {
     const styles = {
-      completed: 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-850 rounded-none',
-      pending: 'bg-yellow-105 dark:bg-yellow-950/40 text-yellow-800 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-850 rounded-none',
-      failed: 'bg-red-105 dark:bg-red-950/40 text-red-800 dark:text-red-405 border border-red-200 dark:border-red-850 rounded-none',
+      completed: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
+      pending: 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
+      failed: 'bg-red-500/10 text-red-400 border border-red-500/20',
     };
-    return styles[status] || 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-none';
+    return styles[status] || 'bg-gray-800 text-gray-300 border border-gray-700';
   };
 
   return (
-    <div className="min-h-screen bg-transparent text-gray-900 dark:text-gray-100">
-      <div className="flex"> 
-        <main className="flex-1 p-8">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Transaction History</h1>
-            <div className="flex gap-3">
-              <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-750 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 rounded-none hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                <Calendar size={18} />
-                <span>Filter by date</span>
-              </button>
-              <button className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-none hover:bg-emerald-700 transition-colors">
-                <Filter size={18} />
-                <span>Export</span>
-              </button>
-            </div>
-          </div>
+    <div className="page animate-[fadeIn_0.2s_ease]">
+      {/* Page Actions */}
+      <div className="flex justify-end gap-3 mb-6">
+        <button className="btn-surface flex items-center gap-2">
+          <Calendar size={16} />
+          <span>Filter by date</span>
+        </button>
+        <button className="btn-brand flex items-center gap-2">
+          <Filter size={16} />
+          <span>Export</span>
+        </button>
+      </div>
 
-          {/* Stats Summary */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-white dark:bg-gray-900 p-4 rounded-none border border-gray-200 dark:border-gray-800">
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Revenue</p>
-              <p className="text-xl font-bold text-gray-900 dark:text-gray-100">₹5,010</p>
-            </div>
-            <div className="bg-white dark:bg-gray-900 p-4 rounded-none border border-gray-200 dark:border-gray-800">
-              <p className="text-sm text-gray-500 dark:text-gray-400">Completed</p>
-              <p className="text-xl font-bold text-green-600 dark:text-green-500">3</p>
-            </div>
-            <div className="bg-white dark:bg-gray-900 p-4 rounded-none border border-gray-200 dark:border-gray-800">
-              <p className="text-sm text-gray-500 dark:text-gray-400">Pending</p>
-              <p className="text-xl font-bold text-yellow-600 dark:text-yellow-500">1</p>
-            </div>
-            <div className="bg-white dark:bg-gray-900 p-4 rounded-none border border-gray-200 dark:border-gray-800">
-              <p className="text-sm text-gray-500 dark:text-gray-400">Failed</p>
-              <p className="text-xl font-bold text-red-600 dark:text-red-500">1</p>
-            </div>
-          </div>
+      {/* Stats Summary */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+        <div className="panel">
+          <div className="text-2xl font-bold text-gray-150">₹5,010</div>
+          <div className="text-xs text-gray-500 font-medium">Total Revenue</div>
+        </div>
+        <div className="panel">
+          <div className="text-2xl font-bold text-emerald-400">3</div>
+          <div className="text-xs text-gray-500 font-medium">Completed</div>
+        </div>
+        <div className="panel">
+          <div className="text-2xl font-bold text-amber-400">1</div>
+          <div className="text-xs text-gray-500 font-medium">Pending</div>
+        </div>
+        <div className="panel">
+          <div className="text-2xl font-bold text-red-400">1</div>
+          <div className="text-xs text-gray-500 font-medium">Failed</div>
+        </div>
+      </div>
 
-          {/* Transactions Table */}
-          <div className="bg-white dark:bg-gray-900 rounded-none border border-gray-200 dark:border-gray-800 overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-950 border-b border-gray-200 dark:border-gray-800">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Transaction ID</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Customer</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Amount</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Method</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Action</th>
+      {/* Transactions Table */}
+      <div className="panel p-0 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-[#232c38]">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Transaction ID</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Customer</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Date</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Amount</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Method</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#18222f]">
+              {transactions.map((tx) => (
+                <tr key={tx.id} className="hover:bg-[#121922] transition-colors">
+                  <td className="px-6 py-4 text-sm font-semibold text-gray-200">{tx.id}</td>
+                  <td className="px-6 py-4 text-sm text-gray-300">{tx.customer}</td>
+                  <td className="px-6 py-4 text-sm text-gray-500">{tx.date}</td>
+                  <td className="px-6 py-4 text-sm font-bold text-[#10b981]">₹{tx.amount}</td>
+                  <td className="px-6 py-4 text-sm text-gray-450">{tx.method}</td>
+                  <td className="px-6 py-4">
+                    <span className={`px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${getStatusBadge(tx.status)}`}>
+                      {tx.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-sm">
+                    <button className="text-[#10b981] hover:text-[#10b981]/80 font-semibold transition-colors">View</button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
-                {transactions.map((tx) => (
-                  <tr key={tx.id} className="hover:bg-gray-55 dark:hover:bg-gray-800/40">
-                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100">{tx.id}</td>
-                    <td className="px-6 py-4 text-gray-750 dark:text-gray-300">{tx.customer}</td>
-                    <td className="px-6 py-4 text-gray-500 dark:text-gray-450">{tx.date}</td>
-                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100">₹{tx.amount}</td>
-                    <td className="px-6 py-4 text-gray-500 dark:text-gray-450">{tx.method}</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-3 py-1 text-xs font-medium ${getStatusBadge(tx.status)}`}>
-                        {tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <button className="text-emerald-600 dark:text-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400 text-sm font-medium">View</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {/* Pagination */}
-            <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-950">
-              <button className="px-3 py-1 border border-gray-300 dark:border-gray-750 rounded-none bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 text-sm disabled:opacity-50">Previous</button>
-              <div className="flex gap-2">
-                <button className="w-8 h-8 rounded-none bg-emerald-600 text-white text-sm">1</button>
-                <button className="w-8 h-8 rounded-none border border-gray-300 dark:border-gray-750 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 text-sm">2</button>
-                <button className="w-8 h-8 rounded-none border border-gray-300 dark:border-gray-750 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 text-sm">3</button>
-              </div>
-              <button className="px-3 py-1 border border-gray-300 dark:border-gray-750 rounded-none bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-305 text-sm">Next</button>
-            </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        
+        {/* Pagination */}
+        <div className="px-6 py-4 border-t border-[#232c38] flex justify-between items-center bg-[#080d14]">
+          <button className="btn-surface py-1.5 px-3 text-xs disabled:opacity-50" disabled>Previous</button>
+          <div className="flex gap-1.5">
+            <button className="btn-brand w-7 h-7 flex items-center justify-center text-xs p-0">1</button>
+            <button className="btn-surface w-7 h-7 flex items-center justify-center text-xs p-0">2</button>
+            <button className="btn-surface w-7 h-7 flex items-center justify-center text-xs p-0">3</button>
           </div>
-        </main>
-      </div> 
+          <button className="btn-surface py-1.5 px-3 text-xs">Next</button>
+        </div>
+      </div>
     </div>
   );
 };

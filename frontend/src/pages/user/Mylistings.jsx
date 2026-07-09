@@ -144,119 +144,106 @@ const getStatusBadge = (listing) => {
 
   if (loading && listings.length === 0) {
     return (
-      <div className="flex justify-center items-center h-full p-8">
-        <div className="animate-spin rounded-none h-12 w-12 border-b-2 border-emerald-600"></div>
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#10b981]"></div>
       </div>
     );
   }
 
   return (
-    <div className="p-8 bg-transparent text-gray-900 dark:text-gray-100">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">My Listings</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage your items for sale</p>
-        </div>
+    <div className="page animate-[fadeIn_0.2s_ease]">
+      {/* Page Actions */}
+      <div className="flex justify-end mb-6">
         <button
           onClick={() => navigate('/dashboard/products/add')}
-          className="px-6 py-3 bg-emerald-600 text-white rounded-none hover:bg-emerald-700 transition flex items-center gap-2 font-medium"
+          className="btn-brand flex items-center gap-2"
         >
-          <Plus size={20} />
-          Add New Listing
+          <Plus size={18} />
+          Add Product
         </button>
       </div>
 
       {/* Stats Cards */}
       {stats && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white dark:bg-gray-900 p-6 rounded-none border border-gray-200 dark:border-gray-800 transition-colors">
-            <div className="flex items-center">
-              <div className="p-3 bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-none">
-                <Package className="h-6 w-6" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm text-gray-605 dark:text-gray-400">Total Listings</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.overview?.totalListings || 0}</p>
-              </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="panel flex items-center gap-4">
+            <div className="p-3 bg-[#121922] text-[#10b981] rounded-[10px]">
+              <Package className="h-6 w-6" />
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-gray-150">{stats.overview?.totalListings || 0}</div>
+              <div className="text-xs text-gray-500 font-medium">Total Listings</div>
             </div>
           </div>
           
-          <div className="bg-white dark:bg-gray-900 p-6 rounded-none border border-gray-200 dark:border-gray-800 transition-colors">
-            <div className="flex items-center">
-              <div className="p-3 bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 rounded-none">
-                <Eye className="h-6 w-6" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm text-gray-650 dark:text-gray-400">Total Views</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.overview?.totalViews || 0}</p>
-              </div>
+          <div className="panel flex items-center gap-4">
+            <div className="p-3 bg-[#121922] text-[#3b82f6] rounded-[10px]">
+              <Eye className="h-6 w-6" />
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-gray-150">{stats.overview?.totalViews || 0}</div>
+              <div className="text-xs text-gray-500 font-medium">Total Views</div>
             </div>
           </div>
           
-          <div className="bg-white dark:bg-gray-900 p-6 rounded-none border border-gray-200 dark:border-gray-800 transition-colors">
-            <div className="flex items-center">
-              <div className="p-3 bg-green-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-none">
-                <Package className="h-6 w-6" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm text-gray-650 dark:text-gray-400">Active</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.overview?.activeListings || 0}</p>
-              </div>
+          <div className="panel flex items-center gap-4">
+            <div className="p-3 bg-[#121922] text-[#10b981] rounded-[10px]">
+              <Package className="h-6 w-6" />
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-gray-150">{stats.overview?.activeListings || 0}</div>
+              <div className="text-xs text-gray-500 font-medium">Active</div>
             </div>
           </div>
           
-          <div className="bg-white dark:bg-gray-900 p-6 rounded-none border border-gray-200 dark:border-gray-800 transition-colors">
-            <div className="flex items-center">
-              <div className="p-3 bg-purple-100 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 rounded-none">
-                <Package className="h-6 w-6" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm text-gray-655 dark:text-gray-400">Sold</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.overview?.soldListings || 0}</p>
-              </div>
+          <div className="panel flex items-center gap-4">
+            <div className="p-3 bg-[#121922] text-[#a855f7] rounded-[10px]">
+              <Package className="h-6 w-6" />
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-gray-150">{stats.overview?.soldListings || 0}</div>
+              <div className="text-xs text-gray-500 font-medium">Sold</div>
             </div>
           </div>
         </div>
       )}
 
       {/* Tabs */}
-      <div className="border-b border-gray-200 dark:border-gray-800 mb-6">
-        <nav className="flex space-x-8">
-          {tabs.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => {
-                setActiveTab(tab.id);
-                setCurrentPage(1);
-              }}
-              className={`py-3 px-1 border-b-2 font-medium text-sm transition ${
-                activeTab === tab.id
-                  ? 'border-emerald-600 text-emerald-600 dark:text-emerald-500'
-                  : 'border-transparent text-gray-500 dark:text-gray-450 hover:text-gray-750 dark:hover:text-gray-350 hover:border-gray-300 dark:hover:border-gray-750'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
+      <div className="border-b border-[#232c38] mb-6 flex gap-4">
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => {
+              setActiveTab(tab.id);
+              setCurrentPage(1);
+            }}
+            className={`pb-3 px-1 font-semibold text-sm transition-colors relative ${
+              activeTab === tab.id
+                ? 'text-[#10b981] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#10b981]'
+                : 'text-gray-400 hover:text-gray-200'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {/* Listings Grid */}
       {listings.length === 0 ? (
-        <div className="text-center py-16 bg-gray-50 dark:bg-gray-900 rounded-none border-2 border-dashed border-gray-200 dark:border-gray-800">
-          <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No listings found</h3>
-          <p className="text-gray-600 dark:text-gray-450 mb-6">
-            {activeTab === 'active' && "You haven't created any active listings yet"}
-            {activeTab === 'sold' && "No items sold yet"}
-            {activeTab === 'inactive' && "No inactive listings"}
+        <div className="panel text-center py-16 flex flex-col items-center justify-center">
+          <Package className="h-12 w-12 text-[#5d6b7d] mb-4" />
+          <h3 className="text-lg font-semibold text-gray-200 mb-1">No listings found</h3>
+          <p className="text-sm text-gray-500 mb-6">
+            {activeTab === 'active' && "You don't have any active listings yet."}
+            {activeTab === 'sold' && "You haven't marked any listings as sold yet."}
+            {activeTab === 'inactive' && "You don't have any deactivated listings."}
           </p>
           <button
             onClick={() => navigate('/dashboard/products/add')}
-            className="px-6 py-3 bg-emerald-600 text-white rounded-none hover:bg-emerald-700 transition inline-flex items-center gap-2"
+            className="btn-brand flex items-center gap-2"
           >
-            <Plus size={20} />
-            Create Your First Listing
+            <Plus size={18} />
+            Create Listing
           </button>
         </div>
       ) : (
@@ -265,38 +252,38 @@ const getStatusBadge = (listing) => {
             {listings.map((listing) => {
               const status = getStatusBadge(listing);
               return (
-                <div key={listing._id} className="bg-white dark:bg-gray-900 rounded-none border border-gray-205 dark:border-gray-800 overflow-hidden transition-all duration-200 hover:-translate-y-1">
-                  <div className="relative h-48 bg-gray-100 dark:bg-gray-800">
+                <div key={listing._id} className="panel p-0 overflow-hidden flex flex-col border border-[#232c38] hover:border-[#10b981]/40 transition-colors">
+                  <div className="relative h-44 bg-[#0d1218] overflow-hidden">
                     <img
                       src={listing.images?.[0]?.url || 'https://via.placeholder.com/300x200?text=No+Image'}
                       alt={listing.title}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                     />
-                    <div className={`absolute top-3 right-3 px-3 py-1 rounded-none text-xs font-bold uppercase tracking-wider border ${status.color}`}>
+                    <div className={`absolute top-3 right-3 px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${status.color}`}>
                       {status.text}
                     </div>
                   </div>
                   
-                  <div className="p-4">
-                    <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100 mb-1 truncate">{listing.title}</h3>
-                    <p className="text-emerald-600 dark:text-emerald-500 font-bold text-xl mb-2">₹{listing.price}</p>
+                  <div className="p-4 flex flex-col flex-1">
+                    <h3 className="font-semibold text-base text-gray-200 mb-1 truncate">{listing.title}</h3>
+                    <p className="text-[#10b981] font-bold text-lg mb-2">₹{listing.price || listing.basePrice}</p>
                     
-                    <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-4">
-                      <Eye className="h-4 w-4 mr-1" />
+                    <div className="flex items-center text-xs text-gray-500 mb-4">
+                      <Eye className="h-3.5 w-3.5 mr-1" />
                       <span>{listing.views || 0} views</span>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-2 mt-auto">
                       <button
                         onClick={() => handleView(listing._id)}
-                        className="px-3 py-2 border border-gray-300 dark:border-gray-750 bg-transparent text-gray-700 dark:text-gray-300 rounded-none text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                        className="btn-surface py-2 text-xs"
                       >
                         View
                       </button>
                       
                       <button
                         onClick={() => handleEdit(listing._id)}
-                        className="px-3 py-2 bg-blue-600 text-white rounded-none text-sm hover:bg-blue-700 transition"
+                        className="btn-surface py-2 text-xs hover:border-blue-500/40 hover:text-blue-400"
                       >
                         Edit
                       </button>
@@ -304,10 +291,10 @@ const getStatusBadge = (listing) => {
                       {!listing.isSold && (
                         <button
                           onClick={() => handleToggleActive(listing._id, listing.isActive)}
-                          className={`px-3 py-2 rounded-none text-sm transition ${
+                          className={`py-2 text-xs font-semibold rounded-[8px] border transition-colors ${
                             listing.isActive
-                              ? 'bg-yellow-600 text-white hover:bg-yellow-700'
-                              : 'bg-green-600 text-white hover:bg-green-700'
+                              ? 'border-amber-500/20 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20'
+                              : 'border-emerald-500/20 bg-emerald-500/10 text-[#10b981] hover:bg-emerald-500/20'
                           }`}
                         >
                           {listing.isActive ? 'Deactivate' : 'Activate'}
@@ -316,7 +303,7 @@ const getStatusBadge = (listing) => {
                       
                       <button
                         onClick={() => handleDelete(listing._id)}
-                        className="px-3 py-2 bg-red-600 text-white rounded-none text-sm hover:bg-red-700 transition"
+                        className="py-2 text-xs font-semibold rounded-[8px] border border-red-500/20 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
                       >
                         Delete
                       </button>
@@ -333,21 +320,21 @@ const getStatusBadge = (listing) => {
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-750 rounded-none bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-850 transition"
+                className="btn-surface p-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <ChevronLeft className="h-5 w-5" />
+                <ChevronLeft className="h-4 w-4" />
               </button>
               
-              <span className="text-gray-700 dark:text-gray-350">
+              <span className="text-sm text-gray-400">
                 Page {currentPage} of {totalPages}
               </span>
               
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-750 rounded-none bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-850 transition"
+                className="btn-surface p-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <ChevronRight className="h-5 w-5" />
+                <ChevronRight className="h-4 w-4" />
               </button>
             </div>
           )}

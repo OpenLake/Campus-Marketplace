@@ -17,68 +17,64 @@ const InterestModal = ({ isOpen, onClose, listing, onSubmit, isSubmitting }) => 
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl max-w-md w-full p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Express Interest</h2>
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded">
+    <div className="fixed inset-0 bg-[#000000]/80 flex items-center justify-center z-50 p-4 animate-[fadeIn_0.2s_ease]">
+      <div className="bg-[#111827] border border-[#1f2937] rounded-[12px] max-w-md w-full p-6 shadow-2xl">
+        <div className="flex justify-between items-center mb-5">
+          <h2 className="text-lg font-bold text-gray-200">Express Interest</h2>
+          <button onClick={onClose} className="p-1 hover:bg-[#1f2937] text-gray-400 hover:text-gray-200 rounded-full transition-colors">
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-          <p className="font-medium">{listing?.title}</p>
-          <p className="text-sm text-gray-600">Base Price: ₹{listing?.basePrice}</p>
+        <div className="mb-5 p-4 bg-[#030712] border border-[#1f2937]/60 rounded-[8px]">
+          <p className="font-semibold text-gray-200 text-sm">{listing?.title}</p>
+          <p className="text-xs text-gray-505 mt-1">Base Price: <span className="text-[#10b981] font-semibold">₹{listing?.basePrice}</span></p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Your Offer (₹) *
+            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
+              Your Offer (₹) <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="number"
                 value={offeredPrice}
                 onChange={(e) => setOfferedPrice(Number(e.target.value))}
                 min={1}
-                className="pl-8 w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"
                 required
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
               Message to Seller
             </label>
             <div className="relative">
-              <MessageCircle className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 rows={3}
-                className="pl-8 w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"
                 placeholder="Tell the seller why you're interested..."
                 maxLength={500}
               />
             </div>
-            <p className="text-xs text-gray-500 mt-1">{message.length}/500 characters</p>
+            <p className="text-[10px] text-gray-500 mt-1 text-right">{message.length}/500 characters</p>
           </div>
 
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50"
+              className="btn-surface flex-1 py-2"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50"
+              className="btn-brand flex-1 py-2"
             >
               {isSubmitting ? 'Submitting...' : 'Submit Interest'}
             </button>
