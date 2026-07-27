@@ -1,6 +1,7 @@
 import { STListing } from "../models/st_listing.model.js";
 import { STCategory } from "../models/st_category.model.js";
-import { STInterest } from "../models/st_interest.model.js";
+import { STRequest } from "../models/st_request.model.js";
+import { STOrder } from "../models/st_order.model.js";
 import { findUserById } from "../models/users.model.js";
 import { ApiError } from "../utils/api-error.js";
 import { ApiResponse } from "../utils/api-response.js";
@@ -27,7 +28,10 @@ export const createListing = asyncHandler(async (req, res) => {
     condition,
     category,
     images,
-    location
+    location,
+    hostel,
+    roomNumber,
+    additionalNotes
   } = req.body;
 
   const sellerId = getUserId(req);
@@ -84,6 +88,11 @@ export const createListing = asyncHandler(async (req, res) => {
 
   console.log("Processed images:", processedImages);
 
+  // Resolve flat location fields — support both flat (hostel) and nested (location.hostel) payloads
+  const resolvedHostel = hostel || (location && typeof location === 'object' ? location.hostel : '') || '';
+  const resolvedRoomNumber = roomNumber || (location && typeof location === 'object' ? location.roomNumber : '') || '';
+  const resolvedAdditionalNotes = additionalNotes || (location && typeof location === 'object' ? (location.landmark || location.additionalNotes) : '') || '';
+
   // Create listing
   const listingData = {
     sellerId,
@@ -94,7 +103,10 @@ export const createListing = asyncHandler(async (req, res) => {
     category,
     images: processedImages,
     status: "active",
-    location: location || {} // Add location if your model has it
+    location: "",           // STListing.location is String — keep empty, use flat fields below
+    hostel: resolvedHostel,
+    roomNumber: resolvedRoomNumber,
+    additionalNotes: resolvedAdditionalNotes
   };
 
   const listing = await STListing.create(listingData);
@@ -215,21 +227,27 @@ export const getListingById = asyncHandler(async (req, res) => {
   // Get seller details from PostgreSQL
   const seller = await findUserById(listing.sellerId);
 
-  // Check if current user has pending interest (if authenticated)
-  let userInterest = null;
+  // Check if current user has pending/accepted request (if authenticated)
+  let userRequest = null;
   if (req.user) {
     const userId = getUserId(req);
-    const interest = await STInterest.findOne({
+    const request = await STRequest.findOne({
       listingId: id,
       buyerId: userId,
-      status: "pending"
+      status: { $in: ["pending", "accepted"] }
     });
-    if (interest) {
-      userInterest = {
-        _id: interest._id,
-        offeredPrice: interest.offeredPrice,
-        status: interest.status
+    if (request) {
+      userRequest = {
+        _id: request._id,
+        offeredPrice: request.offeredPrice,
+        status: request.status
       };
+      if (request.status === "accepted") {
+        const order = await STOrder.findOne({ requestId: request._id });
+        if (order) {
+          userRequest.orderId = order._id;
+        }
+      }
     }
   }
 
@@ -260,9 +278,9 @@ export const getListingById = asyncHandler(async (req, res) => {
         email: seller.email,           // ✅ ADD THIS
         phone_number: seller.phone_number // ✅ ADD THIS
       } : null,
-      userInterest,
+      userRequest,
       similarListings,
-      interestCount: listing.interestCount,
+      requestCount: listing.requestCount,
       highestOffer: listing.highestOffer
     }, "Listing fetched successfully")
   );
@@ -375,11 +393,22 @@ export const updateListing = asyncHandler(async (req, res) => {
     throw new ApiError(403, "You can only update your own listings");
   }
 
-  // Prevent updating certain fields
+  // Prevent updating restricted fields
   delete updates.sellerId;
-  delete updates.interestCount;
+  delete updates.requestCount;
   delete updates.highestOffer;
   delete updates.status; // status should be changed via toggle/sold endpoints
+  delete updates.acceptedRequestId;
+  delete updates.lockedByOrderId;
+
+  // STListing stores location as flat fields — strip any nested location object
+  // and promote its fields to top-level if accidentally sent
+  if (updates.location && typeof updates.location === 'object') {
+    if (updates.location.hostel !== undefined) updates.hostel = updates.location.hostel;
+    if (updates.location.roomNumber !== undefined) updates.roomNumber = updates.location.roomNumber;
+    if (updates.location.landmark !== undefined) updates.additionalNotes = updates.location.landmark;
+    delete updates.location;
+  }
 
   // If category is being updated, validate it
   if (updates.category) {
@@ -389,11 +418,17 @@ export const updateListing = asyncHandler(async (req, res) => {
     }
   }
 
+  console.log("Updating listing with data:", JSON.stringify(updates, null, 2));
+
   const updatedListing = await STListing.findByIdAndUpdate(
     id,
     { $set: updates },
     { new: true, runValidators: true }
   ).populate("category");
+
+  if (!updatedListing) {
+    throw new ApiError(404, "Listing not found after update");
+  }
 
   res.json(
     new ApiResponse(200, updatedListing, "Listing updated successfully")
@@ -526,14 +561,14 @@ export const deleteListing = asyncHandler(async (req, res) => {
     throw new ApiError(403, "You can only delete your own listings");
   }
 
-  // Check for pending interests
-  const pendingInterest = await STInterest.findOne({
+  // Check for pending requests
+  const pendingRequest = await STRequest.findOne({
     listingId: id,
     status: "pending"
   });
 
-  if (pendingInterest) {
-    throw new ApiError(400, "Cannot delete listing with pending interests");
+  if (pendingRequest) {
+    throw new ApiError(400, "Cannot delete listing with pending requests");
   }
 
   await listing.deleteOne();

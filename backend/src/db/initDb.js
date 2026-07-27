@@ -291,6 +291,15 @@ const initDatabase = async () => {
     await mongoose.connect(process.env.MONGO_URI);
     console.log('✅ MongoDB connected successfully');
     
+    // Drop old strict unique index to prevent index rebuild error with partial unique index
+    try {
+      const db = mongoose.connection.db;
+      await db.collection('st_requests').dropIndex('listingId_1_buyerId_1');
+      console.log('🧹 Dropped old unique index listingId_1_buyerId_1 from st_requests');
+    } catch (e) {
+      console.log('ℹ️ listingId_1_buyerId_1 index drop skipped or already dropped:', e.message);
+    }
+    
     // 5. Seed categories if empty
     const categoryCount = await STCategory.countDocuments();
     if (categoryCount === 0) {

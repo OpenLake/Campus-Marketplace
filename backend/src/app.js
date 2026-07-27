@@ -39,7 +39,7 @@ app.use(cors({
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Idempotency-Key"]
 }));
 import orderRouter from "./routes/order.routes.js"; 
 // --- 1. Global Middleware (Order matters!) ---
