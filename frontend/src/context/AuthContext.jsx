@@ -14,6 +14,28 @@ export const AuthProvider = ({ children } = {}) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [tempToken, setTempToken] = useState(null);
 
+  const normalizeUser = (userData) => {
+    if (!userData) return null;
+    const id = userData._id || userData.user_id || userData.id;
+    return {
+      ...userData,
+      _id: id,
+      user_id: id,
+      id: id,
+      roles: userData.roles || (userData.role ? [userData.role] : [])
+    };
+  };
+
+  const setUserAndToken = (userData) => {
+    const normalized = normalizeUser(userData);
+    setUser(normalized);
+    if (normalized) {
+      tokenManager.setUser(normalized);
+    } else {
+      tokenManager.clearAuth();
+    }
+  };
+
   // Only check auth once when app loads
   useEffect(() => {
     checkAuth();
@@ -21,8 +43,22 @@ export const AuthProvider = ({ children } = {}) => {
 
   const checkAuth = async () => {
     try {
+      // 1. Try to fetch the real current user first to preserve logged-in sessions across reloads
+      try {
+        const response = await authService.getCurrentUser();
+        const userData = response?.user || response?.data?.user || response?.data;
+        if (userData) {
+          setUserAndToken(userData);
+          setIsAuthenticated(true);
+          return;
+        }
+      } catch (err) {
+        console.log("No active real session found, checking dev mode fallback...");
+      }
+
+      // 2. If no real session, check dev mode fallback
       if (IS_DEV_MODE) {
-        setUser({
+        setUserAndToken({
           _id: "dev-admin-id",
           email: "dev-admin@campus.com",
           first_name: "Dev",
@@ -33,29 +69,14 @@ export const AuthProvider = ({ children } = {}) => {
           avatar: "https://via.placeholder.com/150",
         });
         setIsAuthenticated(true);
-        setLoading(false);
         return;
       }
 
-      const response = await authService.getCurrentUser();
-
-      if (response?.success && response?.user) {
-        setUser(response.user);
-        setIsAuthenticated(true);
-        tokenManager.setUser(response.user);
-      } else if (response?.user) {
-        setUser(response.user);
-        setIsAuthenticated(true);
-        tokenManager.setUser(response.user);
-      } else {
-        setUser(null);
-        setIsAuthenticated(false);
-        tokenManager.clearAuth();
-      }
-    } catch (error) {
-      setUser(null);
+      setUserAndToken(null);
       setIsAuthenticated(false);
-      tokenManager.clearAuth();
+    } catch (error) {
+      setUserAndToken(null);
+      setIsAuthenticated(false);
     } finally {
       setLoading(false);
     }
@@ -64,14 +85,13 @@ export const AuthProvider = ({ children } = {}) => {
   const handleGoogleSignIn = async (credential) => {
     try {
       const data = await authService.googleSignIn(credential);
-      
+
       if (data.requiresDetails) {
         setTempToken(data.tempToken);
         return { requiresDetails: true };
       } else {
         const userData = data.user || data.data?.user || data.data;
-        tokenManager.setUser(userData);
-        setUser(userData);
+        setUserAndToken(userData);
         setIsAuthenticated(true);
         toast.success(`Welcome back, ${userData.first_name || "User"}!`);
         return { success: true, user: userData };
@@ -86,10 +106,9 @@ export const AuthProvider = ({ children } = {}) => {
   const completeRegistration = async (userDetails) => {
     try {
       const data = await authService.completeRegistration(tempToken, userDetails);
-      
+
       const userData = data.user || data.data?.user || data.data;
-      tokenManager.setUser(userData);
-      setUser(userData);
+      setUserAndToken(userData);
       setIsAuthenticated(true);
       setTempToken(null);
       toast.success("Registration complete!");
@@ -104,10 +123,9 @@ export const AuthProvider = ({ children } = {}) => {
   const login = async (credentials) => {
     try {
       const response = await authService.login(credentials);
-      
-      const userData = response.data?.user || response.data?.data || response.data;
-      tokenManager.setUser(userData);
-      setUser(userData);
+
+      const userData = response.user || response.data?.user || response.data?.data || response.data || response;
+      setUserAndToken(userData);
       setIsAuthenticated(true);
       toast.success("Login successful!");
       return response;
@@ -120,10 +138,9 @@ export const AuthProvider = ({ children } = {}) => {
   const register = async (userData) => {
     try {
       const response = await authService.register(userData);
-      
-      const newUser = response.data?.user || response.data?.data || response.data;
-      tokenManager.setUser(newUser);
-      setUser(newUser);
+
+      const newUser = response.user || response.data?.user || response.data?.data || response.data || response;
+      setUserAndToken(newUser);
       setIsAuthenticated(true);
       toast.success("Registration successful!");
       return response;
@@ -135,35 +152,33 @@ export const AuthProvider = ({ children } = {}) => {
 
   const logout = async () => {
     try {
-      if (!TESTING_MODE) {
+      if (!IS_DEV_MODE) {
         await authService.logout();
       }
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
       tokenManager.clearAuth();
-      setUser(null);
+      setUserAndToken(null);
       setIsAuthenticated(false);
       setTempToken(null);
       toast.success("Logged out");
-      
+
       // Redirect to login
       window.location.href = '/login';
     }
   };
 
   const updateUser = (userData) => {
-    setUser(userData);
-    tokenManager.setUser(userData);
+    setUserAndToken(userData);
   };
 
   const refreshUser = async () => {
     try {
       const response = await authService.getCurrentUser();
-      
+
       const userData = response.user || response.data?.user || response.data;
-      setUser(userData);
-      tokenManager.setUser(userData);
+      setUserAndToken(userData);
       return userData;
     } catch (error) {
       console.error("Refresh user failed:", error);
@@ -175,7 +190,7 @@ export const AuthProvider = ({ children } = {}) => {
     if (!user) return false;
     return user.role === role || user.roles?.includes(role) || false;
   }, [user]);
-  
+
   const hasAnyRole = useCallback((roles) => {
     if (!user) return false;
     return roles.some(role => user.role === role || user.roles?.includes(role));

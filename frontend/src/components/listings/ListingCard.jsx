@@ -11,9 +11,13 @@ const ListingCard = ({ listing }) => {
     _id = "",
     title = "Untitled Listing",
     price = 0,
+    basePrice = 0,
     images = [],
     condition = "good",
-    location = "Location not specified",
+    location = "",
+    hostel = "",
+    roomNumber = "",
+    additionalNotes = "",
     category = "other",
     createdAt = new Date().toISOString(),
     status = "active",
@@ -45,22 +49,15 @@ const ListingCard = ({ listing }) => {
     return "/placeholder-image.jpg";
   };
 
-  // Extract location string safely
+  // Extract location string from top-level fields (hostel, roomNumber)
   const getLocationString = () => {
-    if (!location) return "Location not specified";
-
-    // If location is a string, return it
-    if (typeof location === "string") return location;
-
-    // If location is an object
-    if (typeof location === "object") {
-      const parts = [];
-      if (location.hostel) parts.push(location.hostel);
-      if (location.pickupPoint) parts.push(location.pickupPoint);
-      return parts.length > 0 ? parts.join(", ") : "Location not specified";
-    }
-
-    return "Location not specified";
+    const parts = [];
+    if (hostel) parts.push(hostel);
+    if (roomNumber) parts.push(`Room ${roomNumber}`);
+    if (parts.length > 0) return parts.join(", ");
+    // Fallback: if legacy location string field has a value
+    if (location && typeof location === "string" && location.trim()) return location.trim();
+    return null;
   };
 
   return (
@@ -96,10 +93,12 @@ const ListingCard = ({ listing }) => {
             </h3>
           </div>
 
-          <div className="flex items-center gap-2 text-[13px] text-gray-500 mb-2 mt-auto">
-            <MapPin className="h-3.5 w-3.5 shrink-0" />
-            <span className="line-clamp-1">{getLocationString()}</span>
-          </div>
+          {getLocationString() && (
+            <div className="flex items-center gap-2 text-[13px] text-gray-500 mb-2 mt-auto">
+              <MapPin className="h-3.5 w-3.5 shrink-0" />
+              <span className="line-clamp-1">{getLocationString()}</span>
+            </div>
+          )}
 
           <div className="flex items-center gap-2.5 mt-1">
             <div className="text-[20px] font-extrabold text-black">

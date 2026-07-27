@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { 
-  Search, 
-  User, 
-  Heart, 
-  LayoutGrid, 
+import {
+  Search,
+  User,
+  Heart,
+  LayoutGrid,
   Headphones,
   ChevronDown,
   Flame,
@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../context/ThemeContext';
+import siteLogo from '../../assets/site_logo.png';
 
 const Header = () => {
   const { user, isAuthenticated, logout, loading } = useAuth();
@@ -60,36 +61,19 @@ const Header = () => {
   };
 
   // Get full name for welcome message
-  const fullName = user?.first_name && user?.last_name 
+  const fullName = user?.first_name && user?.last_name
     ? `${user.first_name} ${user.last_name}`
     : user?.first_name || 'User';
 
   return (
     <header className="w-full bg-white dark:bg-gray-900 font-sans sticky top-0 z-50 shadow-sm transition-colors">
       {/* 1. Top Utility Bar */}
-      <div className="border-b border-gray-100 dark:border-gray-800 py-2 hidden lg:block bg-gray-50 dark:bg-gray-950">
-        <div className="container mx-auto px-4 flex justify-between items-center text-[12px] text-gray-500 dark:text-gray-400">
-          <div className="flex gap-4">
-            <Link to="/about" className="hover:text-emerald-600 transition-colors">About Us</Link>
-            <span className="text-gray-200 dark:text-gray-700">|</span>
-            <Link to="/contact" className="hover:text-emerald-600 transition-colors">Contact</Link>
-            <span className="text-gray-200 dark:text-gray-700">|</span>
-            <Link to="/faq" className="hover:text-emerald-600 transition-colors">FAQ</Link>
-          </div>
-          
-          {/* Welcome message for authenticated users */}
-          {isAuthenticated && (
-            <div className="bg-emerald-600 text-white px-4 py-1 rounded-full text-xs font-medium">
-              Welcome back, {fullName}!
-            </div>
-          )}
-        </div>
-      </div>
+
 
       {/* 2. Middle Row: Logo, Search, Actions */}
       <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-4 lg:gap-8">
         {/* Mobile Menu Button */}
-        <button 
+        <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
           aria-label="Toggle menu"
@@ -99,9 +83,7 @@ const Header = () => {
 
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 shrink-0 group">
-          <div className="w-9 h-9 bg-emerald-600 rounded-lg flex items-center justify-center group-hover:bg-emerald-700 transition-colors shadow-md">
-            <span className="text-white font-bold text-lg">CM</span>
-          </div>
+          <img src={siteLogo} alt="Campus Marketplace Logo" className="w-9 h-9 object-contain" />
           <div className="leading-none">
             <span className="text-xl font-bold text-emerald-600 block">Campus Marketplace</span>
             <span className="text-[9px] tracking-[0.2em] text-gray-400 uppercase font-bold">IIT Bhilai</span>
@@ -111,14 +93,14 @@ const Header = () => {
         {/* Search Bar - Desktop */}
         <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-xl items-center border-2 border-emerald-100 dark:border-gray-700 rounded-lg px-3 py-1.5 gap-3 focus-within:border-emerald-400 dark:focus-within:border-emerald-500 transition-colors bg-white dark:bg-gray-800">
           <Search size={18} className="text-gray-400" />
-          <input 
-            type="text" 
+          <input
+            type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search for textbooks, electronics, furniture..." 
+            placeholder="Search for textbooks, electronics, furniture..."
             className="w-full outline-none text-sm text-gray-600 dark:text-gray-200 bg-transparent"
           />
-          <button 
+          <button
             type="submit"
             className="bg-emerald-600 text-white px-5 py-1.5 rounded-md text-sm font-bold hover:bg-emerald-700 transition-colors shadow-sm"
           >
@@ -129,7 +111,7 @@ const Header = () => {
         {/* Icons Action Row / Auth Options */}
         <div className="flex items-center gap-4 lg:gap-6 text-gray-600 dark:text-gray-300">
           {/* Theme Toggle */}
-          <button 
+          <button
             onClick={toggleDarkMode}
             className="flex items-center gap-2 cursor-pointer group p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
             aria-label="Toggle dark mode"
@@ -137,11 +119,7 @@ const Header = () => {
             {isDarkMode ? <Sun size={20} className="text-amber-500" /> : <Moon size={20} className="text-gray-600" />}
           </button>
 
-          {/* Wishlist */}
-          <Link to="/wishlist" className="hidden lg:flex items-center gap-2 cursor-pointer group">
-            <Heart size={22} className="group-hover:text-emerald-600 transition-colors" />
-            <span className="text-xs hidden xl:block group-hover:text-emerald-600">Wishlist</span>
-          </Link>
+
 
           {loading ? (
             <div className="flex items-center gap-3 animate-pulse">
@@ -152,7 +130,7 @@ const Header = () => {
             <>
               {/* Profile Dropdown */}
               <div className="relative">
-                <button 
+                <button
                   onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
                   className="flex items-center gap-2 cursor-pointer group focus:outline-none"
                   aria-expanded={isProfileMenuOpen}
@@ -174,48 +152,40 @@ const Header = () => {
                 {/* Profile Dropdown Menu */}
                 {isProfileMenuOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 py-1 z-50">
-                    <Link 
-                      to="/dashboard" 
+                    <Link
+                      to="/dashboard"
                       className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-emerald-50 dark:hover:bg-gray-700 hover:text-emerald-600 dark:hover:text-emerald-400"
                       onClick={() => setIsProfileMenuOpen(false)}
                     >
                       <LayoutDashboard size={16} />
                       Dashboard
                     </Link>
-                    <Link 
-                      to="/dashboard/profile" 
+                    <Link
+                      to="/dashboard/profile"
                       className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-600"
                       onClick={() => setIsProfileMenuOpen(false)}
                     >
                       <User size={16} />
                       Profile
                     </Link>
-                    <Link 
-                      to="/dashboard/products/add" 
+                    <Link
+                      to="/dashboard/products/add"
                       className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-600"
                       onClick={() => setIsProfileMenuOpen(false)}
                     >
                       <Package size={16} />
                       Add Product
                     </Link>
-                    <Link 
-                      to="/dashboard/my-listings" 
+                    <Link
+                      to="/dashboard/my-listings"
                       className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-600"
                       onClick={() => setIsProfileMenuOpen(false)}
                     >
                       <Package size={16} />
                       My Listings
                     </Link>
-                    <Link 
-                      to="/dashboard/transactions" 
-                      className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-600"
-                      onClick={() => setIsProfileMenuOpen(false)}
-                    >
-                      <CreditCard size={16} />
-                      Transactions
-                    </Link>
                     <hr className="my-1 border-gray-100" />
-                    <button 
+                    <button
                       onClick={handleLogout}
                       className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
                     >
@@ -247,14 +217,16 @@ const Header = () => {
           <div className="flex items-center gap-8">
             {/* Category Dropdown */}
             <div className="relative group">
-              <button className="bg-emerald-600 text-white px-5 py-2.5 flex items-center gap-2 rounded-t-lg font-bold text-sm hover:bg-emerald-700 transition-colors shadow-sm">
-                <LayoutGrid size={16} />
-                Browse Categories
+              <button className="bg-emerald-600 text-white w-52 px-4 py-2.5 flex items-center justify-between rounded-t-lg font-bold text-sm hover:bg-emerald-700 transition-colors shadow-sm">
+                <div className="flex items-center gap-2">
+                  <LayoutGrid size={16} />
+                  Browse Categories
+                </div>
                 <ChevronDown size={14} />
               </button>
-              
+
               {/* Category Dropdown Menu */}
-              <div className="absolute left-0 top-full w-48 bg-white dark:bg-gray-800 rounded-b-lg shadow-lg border border-gray-100 dark:border-gray-700 py-2 hidden group-hover:block z-40">
+              <div className="absolute left-0 top-full w-full bg-white dark:bg-gray-800 rounded-b-lg shadow-lg border border-gray-100 dark:border-gray-700 py-2 hidden group-hover:block z-40">
                 <Link to="/listings?category=books" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-gray-700 hover:text-emerald-600">Books & Textbooks</Link>
                 <Link to="/listings?category=electronics" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-gray-700 hover:text-emerald-600">Electronics</Link>
                 <Link to="/listings?category=furniture" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-gray-700 hover:text-emerald-600">Furniture</Link>
@@ -272,15 +244,7 @@ const Header = () => {
             </nav>
           </div>
 
-          {/* Support Phone */}
-          <Link to="/support" className="flex items-center gap-2 hover:opacity-80 transition-opacity group">
-            <div className="bg-emerald-100 p-2 rounded-full group-hover:bg-emerald-200 transition-colors">
-              <Headphones size={20} className="text-emerald-600" />
-            </div>
-            <div>
-              <p className="text-emerald-600 font-bold text-md leading-none">1800-123-4567</p>
-            </div>
-          </Link>
+
         </div>
       </div>
 
@@ -288,15 +252,15 @@ const Header = () => {
       <div className="lg:hidden container mx-auto px-4 pb-3">
         <div className="flex items-center border-2 border-emerald-100 rounded-lg px-3 py-2 gap-2">
           <Search size={18} className="text-gray-400" />
-          <input 
-            type="text" 
+          <input
+            type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search items..." 
+            placeholder="Search items..."
             className="w-full outline-none text-sm text-gray-600"
             onKeyPress={(e) => e.key === 'Enter' && handleMobileSearch()}
           />
-          <button 
+          <button
             onClick={handleMobileSearch}
             className="bg-emerald-600 text-white px-4 py-1 rounded-md text-sm font-bold whitespace-nowrap"
           >
@@ -307,61 +271,61 @@ const Header = () => {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden absolute top-full left-0 w-full bg-white border-t border-gray-100 shadow-lg z-50">
+        <div className="lg:hidden absolute top-full left-0 w-full bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 shadow-lg z-50">
           <div className="container mx-auto px-4 py-4">
             <nav className="flex flex-col gap-2">
-              <Link 
-                to="/listings" 
-                className="px-4 py-3 text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg font-medium"
+              <Link
+                to="/listings"
+                className="px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-lg font-medium"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 All Listings
               </Link>
-              <Link 
-                to="/listings?sort=trending" 
-                className="px-4 py-3 text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg font-medium flex items-center gap-2"
+              <Link
+                to="/listings?sort=trending"
+                className="px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-lg font-medium flex items-center gap-2"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <Flame size={18} className="text-orange-500" />
                 Hot Deals
               </Link>
-              
+
               {/* Mobile Categories */}
-              <div className="border-t border-gray-100 pt-2 mt-2">
+              <div className="border-t border-gray-100 dark:border-gray-800 pt-2 mt-2">
                 <p className="px-4 py-2 text-xs font-bold text-gray-400 uppercase">Categories</p>
-                <button 
+                <button
                   onClick={() => handleCategoryClick('books')}
-                  className="block w-full text-left px-4 py-3 text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg"
+                  className="block w-full text-left px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-lg"
                 >
                   Books & Textbooks
                 </button>
-                <button 
+                <button
                   onClick={() => handleCategoryClick('electronics')}
-                  className="block w-full text-left px-4 py-3 text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg"
+                  className="block w-full text-left px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-lg"
                 >
                   Electronics
                 </button>
-                <button 
+                <button
                   onClick={() => handleCategoryClick('furniture')}
-                  className="block w-full text-left px-4 py-3 text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg"
+                  className="block w-full text-left px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-lg"
                 >
                   Furniture
                 </button>
-                <button 
+                <button
                   onClick={() => handleCategoryClick('clothing')}
-                  className="block w-full text-left px-4 py-3 text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg"
+                  className="block w-full text-left px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-lg"
                 >
                   Clothing
                 </button>
-                <button 
+                <button
                   onClick={() => handleCategoryClick('cycles')}
-                  className="block w-full text-left px-4 py-3 text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg"
+                  className="block w-full text-left px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-lg"
                 >
                   Cycles
                 </button>
-                <button 
+                <button
                   onClick={() => handleCategoryClick('stationery')}
-                  className="block w-full text-left px-4 py-3 text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg"
+                  className="block w-full text-left px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-lg"
                 >
                   Stationery
                 </button>
@@ -373,37 +337,30 @@ const Header = () => {
                 </div>
               ) : isAuthenticated ? (
                 <>
-                  <div className="border-t border-gray-100 pt-2 mt-2">
+                  <div className="border-t border-gray-100 dark:border-gray-800 pt-2 mt-2">
                     <p className="px-4 py-2 text-xs font-bold text-gray-400 uppercase">Account</p>
-                    <Link 
-                      to="/dashboard" 
-                      className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg"
+                    <Link
+                      to="/dashboard"
+                      className="flex items-center gap-2 px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-lg"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       <LayoutDashboard size={18} />
                       Dashboard
                     </Link>
-                    <Link 
-                      to="/dashboard/profile" 
-                      className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg"
+                    <Link
+                      to="/dashboard/profile"
+                      className="flex items-center gap-2 px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-lg"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       <User size={18} />
                       Profile
                     </Link>
-                    <Link 
-                      to="/wishlist" 
-                      className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <Heart size={18} />
-                      Wishlist
-                    </Link>
+
                   </div>
-                  
-                  <button 
+
+                  <button
                     onClick={handleLogout}
-                    className="flex items-center gap-2 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg mt-2"
+                    className="flex items-center gap-2 px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg mt-2"
                   >
                     <LogOut size={18} />
                     Logout
@@ -411,15 +368,15 @@ const Header = () => {
                 </>
               ) : (
                 <div className="flex flex-col gap-2 mt-4">
-                  <Link 
-                    to="/login" 
+                  <Link
+                    to="/login"
                     className="px-4 py-3 bg-emerald-600 text-white rounded-lg font-medium text-center"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Log In
                   </Link>
-                  <Link 
-                    to="/register" 
+                  <Link
+                    to="/register"
                     className="px-4 py-3 border-2 border-emerald-600 text-emerald-600 rounded-lg font-medium text-center"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >

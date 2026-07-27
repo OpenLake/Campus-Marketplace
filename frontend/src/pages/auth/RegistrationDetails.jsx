@@ -2,6 +2,7 @@ import React, { useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import Alert from '../../components/ui/Alert';
+import siteLogo from '../../assets/site_logo.png';
 
 const shopCategories = [
   { value: 'books', label: 'Books' },
@@ -106,9 +107,7 @@ const RegisterDetails = () => {
       <div className="w-full max-w-[550px] z-10 my-8">
         {/* Brand Header */}
         <div className="flex items-center gap-3 justify-center mb-8">
-          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#10b981] to-[#0a8a63] flex items-center justify-center font-bold text-lg text-[#04140e] shadow-[0_6px_20px_-6px_rgba(16,185,129,0.55)]">
-            CM
-          </div>
+          <img src={siteLogo} alt="Logo" className="w-11 h-11 object-contain" />
           <div>
             <div className="font-bold text-xl tracking-tight text-white font-grotesk">Campus Marketplace</div>
             <div className="text-[10px] text-[#5d6b7d] tracking-[1.8px] font-semibold -mt-0.5">IIT BHILAI</div>

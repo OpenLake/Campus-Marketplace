@@ -21,6 +21,7 @@ import DoubleSlider from '../../components/ui/DoubleSlider';
 import listingService from '../../services/listingService';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import Breadcrumb from '../../components/ui/Breadcrumb.jsx';
 
 const ListingPage = () => {
   const navigate = useNavigate();
@@ -209,15 +210,9 @@ const ListingPage = () => {
       {/* HEADER SECTION */}
       <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 mb-8 transition-colors">
         <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-4">
-            <span className="cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400">Home</span>
-            <ChevronRight size={14} />
-            <span className="text-gray-900 dark:text-gray-100 font-medium">Listings</span>
-          </div>
+          <Breadcrumb items={[{ label: 'Listings' }]} />
           <h1 className="text-3xl font-black text-gray-900 dark:text-gray-100 mb-2">
-            {selectedCategory === 'all' 
-              ? 'All Campus Listings' 
-              : `${categories.find(c => c.name.toLowerCase() === selectedCategory)?.name || 'Category'} Listings`}
+            All Campus Listings
           </h1>
           <p className="text-gray-500 dark:text-gray-400">Showing {listings.length} items from your campus community</p>
         </div>
@@ -232,22 +227,7 @@ const ListingPage = () => {
             <Filter size={18} className="text-gray-400 dark:text-gray-500" />
           </div>
 
-          <div className="mb-6 pb-6 border-b-[1.5px] border-gray-200 dark:border-gray-800">
-            <ul className="space-y-3">
-              {categories.map((cat) => (
-                <li 
-                  key={cat.name} 
-                  onClick={() => handleCategoryClick(cat.name)}
-                  className={`flex justify-between items-center font-medium cursor-pointer transition-colors ${
-                    selectedCategory === cat.name.toLowerCase() ? 'text-emerald-600 dark:text-emerald-500' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                  }`}
-                >
-                  <span className="text-[15px]">{cat.name}</span>
-                  <span className="text-lg leading-none text-gray-400 dark:text-gray-600">›</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+
 
           <div className="mb-6 pb-6 border-b-[1.5px] border-gray-200 dark:border-gray-800">
             <h4 className="flex justify-between items-center text-[16px] font-bold mb-4 text-gray-900 dark:text-gray-100">
@@ -380,9 +360,6 @@ const ListingPage = () => {
 
                     {/* Content */}
                     <div className="py-4">
-                      <span className="text-[12px] text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest mb-1 block">
-                        {item.category?.name || item.category || 'Uncategorized'}
-                      </span>
                       <h4 className="font-bold text-[15px] mb-1 text-gray-900 dark:text-gray-100 line-clamp-1">
                         {item.title}
                       </h4>

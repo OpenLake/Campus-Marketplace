@@ -24,7 +24,7 @@ const Profile = () => {
         <div className="space-y-6">
           <div className="panel text-center flex flex-col items-center">
             <div className="relative inline-block mb-4">
-              <div className="w-24 h-24 rounded-full border-2 border-[#10b981]/40 p-1 bg-[#0d1218] overflow-hidden">
+              <div className="w-24 h-24 rounded-full border-2 border-[#10b981]/40 p-1 bg-[var(--surface)] overflow-hidden">
                 <img 
                   src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`} 
                   alt="avatar" 
@@ -32,13 +32,13 @@ const Profile = () => {
                 />
               </div>
               {user.role === 'vendor' && (
-                <div className="absolute bottom-0 right-0 bg-[#10b981] p-1.5 rounded-full border-2 border-[#090d14]">
-                  <Store size={14} className="text-[#090d14]" />
+                <div className="absolute bottom-0 right-0 bg-[#10b981] p-1.5 rounded-full border-2 border-[var(--bg)]">
+                  <Store size={14} className="text-[var(--bg)]" />
                 </div>
               )}
             </div>
             
-            <h3 className="font-bold text-lg text-gray-200">{`${user.first_name} ${user.last_name}`}</h3>
+            <h3 className="font-bold text-lg text-[var(--text-main)]">{`${user.first_name} ${user.last_name}`}</h3>
             <p className="text-sm text-[#10b981] mt-1 font-medium capitalize">
               {user.role === 'student' ? '🎓 Student' : user.role === 'vendor' ? '🛍️ Vendor' : '👤 User'} • IIT Bhilai
             </p>
@@ -53,28 +53,28 @@ const Profile = () => {
           {/* Role-specific quick stats */}
           {user.role === 'vendor' && (
             <div className="panel">
-              <h4 className="font-semibold text-gray-200 mb-4 flex items-center gap-2">
+              <h4 className="font-semibold text-[var(--text-main)] mb-4 flex items-center gap-2">
                 <ShoppingBag size={18} className="text-[#10b981]" />
                 Vendor Stats
               </h4>
               <div className="space-y-3">
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-400">Total Products</span>
-                  <span className="font-bold text-gray-200">24</span>
+                  <span className="text-[var(--text-faint)]">Total Products</span>
+                  <span className="font-bold text-[var(--text-main)]">24</span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-400">Active Listings</span>
-                  <span className="font-bold text-gray-200">18</span>
+                  <span className="text-[var(--text-faint)]">Active Listings</span>
+                  <span className="font-bold text-[var(--text-main)]">18</span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-400">Total Orders</span>
-                  <span className="font-bold text-gray-200">47</span>
+                  <span className="text-[var(--text-faint)]">Total Orders</span>
+                  <span className="font-bold text-[var(--text-main)]">47</span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-400">Rating</span>
-                  <span className="flex items-center gap-1 font-bold text-gray-200">
+                  <span className="text-[var(--text-faint)]">Rating</span>
+                  <span className="flex items-center gap-1 font-bold text-[var(--text-main)]">
                     <Star size={16} className="fill-amber-400 text-amber-400" />
-                    4.5
+                    4.8
                   </span>
                 </div>
               </div>
@@ -85,7 +85,7 @@ const Profile = () => {
         {/* Right Column - Profile Details */}
         <div className="lg:col-span-2">
           <div className="panel">
-            <h2 className="text-lg font-bold mb-6 text-gray-200 flex items-center gap-2 pb-3 border-b border-[#232c38]">
+            <h2 className="text-lg font-bold mb-6 text-[var(--text-main)] flex items-center gap-2 pb-3 border-b border-[var(--border)]">
               {user.role === 'vendor' ? <Store size={20} className="text-[#10b981]" /> : <User size={20} className="text-[#10b981]" />}
               {user.role === 'vendor' ? 'Vendor Information' : 'Profile Information'}
             </h2>
@@ -94,46 +94,46 @@ const Profile = () => {
               {/* Common fields for all users */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">First Name</label>
-                  <p className="text-gray-200 font-semibold bg-[#0d1218] px-4 py-2.5 rounded-[8px] border border-[#232c38]">{user.first_name || '-'}</p>
+                  <label className="block text-xs font-semibold text-[var(--text-faint)] uppercase tracking-wider mb-1">First Name</label>
+                  <p className="text-[var(--text-main)] font-semibold bg-[var(--input-bg)] px-4 py-2.5 rounded-[8px] border border-[var(--input-border)]">{user.first_name || '-'}</p>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Last Name</label>
-                  <p className="text-gray-200 font-semibold bg-[#0d1218] px-4 py-2.5 rounded-[8px] border border-[#232c38]">{user.last_name || '-'}</p>
+                  <label className="block text-xs font-semibold text-[var(--text-faint)] uppercase tracking-wider mb-1">Last Name</label>
+                  <p className="text-[var(--text-main)] font-semibold bg-[var(--input-bg)] px-4 py-2.5 rounded-[8px] border border-[var(--input-border)]">{user.last_name || '-'}</p>
                 </div>
               </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Email Address</label>
-                <p className="text-gray-200 font-semibold bg-[#0d1218] px-4 py-2.5 rounded-[8px] border border-[#232c38]">{user.email}</p>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Phone Number</label>
-                <p className="text-gray-200 font-semibold bg-[#0d1218] px-4 py-2.5 rounded-[8px] border border-[#232c38]">{user.phone_number || 'Not provided'}</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--text-faint)] uppercase tracking-wider mb-1">Email Address</label>
+                  <p className="text-[var(--text-main)] font-semibold bg-[var(--input-bg)] px-4 py-2.5 rounded-[8px] border border-[var(--input-border)]">{user.email}</p>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--text-faint)] uppercase tracking-wider mb-1">Phone Number</label>
+                  <p className="text-[var(--text-main)] font-semibold bg-[var(--input-bg)] px-4 py-2.5 rounded-[8px] border border-[var(--input-border)]">{user.phone_number || 'Not provided'}</p>
+                </div>
               </div>
 
               {/* Student-specific fields */}
               {user.role === 'student' && (
-                <div className="pt-4 border-t border-[#232c38]">
-                  <h3 className="font-semibold text-gray-200 mb-4">Student Details</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Student ID</label>
-                      <p className="text-gray-200 font-semibold bg-[#0d1218] px-4 py-2.5 rounded-[8px] border border-[#232c38]">BTH{Math.floor(Math.random() * 10000)}</p>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Program</label>
-                      <p className="text-gray-200 font-semibold bg-[#0d1218] px-4 py-2.5 rounded-[8px] border border-[#232c38]">B.Tech CSE</p>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Year</label>
-                      <p className="text-gray-200 font-semibold bg-[#0d1218] px-4 py-2.5 rounded-[8px] border border-[#232c38]">3rd Year</p>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Hostel</label>
-                      <p className="text-gray-200 font-semibold bg-[#0d1218] px-4 py-2.5 rounded-[8px] border border-[#232c38]">Hostel A • Room 101</p>
-                    </div>
+                <div className="pt-4 border-t border-[var(--border)]">
+                <h3 className="font-semibold text-[var(--text-main)] mb-4">Student Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-xs font-semibold text-[var(--text-faint)] uppercase tracking-wider mb-1">Roll Number</label>
+                    <p className="text-[var(--text-main)] font-semibold bg-[var(--input-bg)] px-4 py-2.5 rounded-[8px] border border-[var(--input-border)]">{user.roll_number || 'Not provided'}</p>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[var(--text-faint)] uppercase tracking-wider mb-1">Program</label>
+                    <p className="text-[var(--text-main)] font-semibold bg-[var(--input-bg)] px-4 py-2.5 rounded-[8px] border border-[var(--input-border)]">{user.program || 'Not provided'}</p>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[var(--text-faint)] uppercase tracking-wider mb-1">Branch</label>
+                    <p className="text-[var(--text-main)] font-semibold bg-[var(--input-bg)] px-4 py-2.5 rounded-[8px] border border-[var(--input-border)]">{user.branch || 'Not provided'}</p>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[var(--text-faint)] uppercase tracking-wider mb-1">Batch Year</label>
+                    <p className="text-[var(--text-main)] font-semibold bg-[var(--input-bg)] px-4 py-2.5 rounded-[8px] border border-[var(--input-border)]">{user.batch_year || 'Not provided'}</p>
+                  </div>
                   </div>
                 </div>
               )}

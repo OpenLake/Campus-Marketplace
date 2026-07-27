@@ -92,11 +92,11 @@ export const completeGoogleSignup = async (req, res) => {
     }
 
   //  Validate student email
-    if (role === 'student' && !googleData.email.endsWith('@iitbhilai.ac.in')) {
-      return res.status(400).json({ 
-        message: "Students must use @iitbhilai.ac.in email" 
-      });
-    }
+  //  if (role === 'student' && !googleData.email.endsWith('@iitbhilai.ac.in')) {
+  //    return res.status(400).json({ 
+  //      message: "Students must use @iitbhilai.ac.in email" 
+  //    });
+  //  }
 
     // Create user in PostgreSQL
     const newUser = await createUser({

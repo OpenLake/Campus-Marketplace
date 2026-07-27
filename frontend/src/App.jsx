@@ -27,15 +27,14 @@ import Listings from "./pages/root/Listings.jsx";
 import Cart from "./pages/user/Cart.jsx";
 import Checkout from "./pages/user/Checkout.jsx";
 import AddProduct from "./pages/user/AddProduct.jsx";
-import TransactionHistory from "./pages/user/TransactionHistory.jsx";
 import Profile from "./pages/user/Profile.jsx";
 import Dashboard from "./pages/user/Dashboard.jsx";
 import EditListing from "./pages/user/EditListing.jsx";
 import ListingDetails from "./pages/user/ListingDetails.jsx";
 import MyListings from "./pages/user/Mylistings.jsx";
 import DashboardRoutes from "./pages/user/Dashboardroutes.jsx";
-import MyInterests from "./pages/user/MyInterests.jsx";
-import IncomingInterests from "./pages/user/IncomingInterests.jsx";
+import MyRequests from "./pages/user/MyRequests.jsx";
+import IncomingRequests from "./pages/user/IncomingRequests.jsx";
 
 // Temporary placeholder pages
 const Unauthorized = () => (
@@ -104,21 +103,21 @@ function App() {
               <Route path="/listings/:id" element={<ListingDetails />} />
               {/* Protected Routes - Require Authentication */}
               <Route element={<ProtectedRoute />}>
-                <Route path="/my-listings" element={<MyListings />} />
-                <Route path="/listings/edit/:id" element={<EditListing />} />
+                <Route path="/my-listings" element={<Navigate to="/dashboard/my-listings" replace />} />
+                <Route path="/listings/edit/:id" element={<Navigate to="/dashboard/listings/edit/:id" replace />} />
                 <Route path="/checkout" element={<Checkout />} />
-                <Route path="/products/add" element={<AddProduct />} />
+                <Route path="/products/add" element={<Navigate to="/dashboard/products/add" replace />} />
                 <Route path="/dashboard/*" element={<DashboardRoutes />} />
-                <Route path="/transactions" element={<TransactionHistory />} />
-                <Route path="/profile" element={<Profile />} />
+
+                <Route path="/profile" element={<Navigate to="/dashboard/profile" replace />} />
                 <Route
                   path="/settings"
-                  element={<Navigate to="/profile" replace />}
+                  element={<Navigate to="/dashboard/profile" replace />}
                 />
-                <Route path="/my-interests" element={<MyInterests />} />
+                <Route path="/my-requests" element={<Navigate to="/dashboard/my-requests" replace />} />
                 <Route
-                  path="/incoming-interests"
-                  element={<IncomingInterests />}
+                  path="/incoming-requests"
+                  element={<Navigate to="/dashboard/incoming-requests" replace />}
                 />
               </Route>
 
