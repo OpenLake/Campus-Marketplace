@@ -79,9 +79,9 @@
         </table>
       </td>
       <td width="50%" align="center">
-        <img src="https://github.com/user-attachments/assets/a3d6b8c0-cba9-406e-be10-f36d9e0f8999" 
-             alt="Campus Marketplace Preview" 
-             style="border-radius: 10%; width: 90%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);" />
+        <img src="frontend/src/assets/site_logo.png" 
+             alt="Campus Marketplace" 
+             style="border-radius: 10%; width: 70%; max-width: 300px;" />
       </td>
     </tr>
   </table>
