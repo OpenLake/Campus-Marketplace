@@ -284,7 +284,7 @@ const CreateListing = () => {
 
       toast.dismiss();
       toast.success("Draft saved successfully!");
-      navigate("/my-listings?tab=drafts");
+      navigate("/dashboard/my-listings?tab=drafts");
     } catch (error) {
       console.error("Error saving draft:", error);
       toast.dismiss();

@@ -21,6 +21,7 @@ import {
   Store,
   Info
 } from 'lucide-react';
+import Breadcrumb from '../../components/ui/Breadcrumb.jsx';
  
 const CartPage = ({ user }) => {
   // Mock cart data with campus-specific items
@@ -149,19 +150,18 @@ const CartPage = ({ user }) => {
     .filter(item => selectedItems.includes(item.id))
     .reduce((acc, item) => acc + (item.price * item.quantity), 0);
 
+  const breadcrumbItems = [
+    { label: "Cart", link: "/cart" },
+    { label: `${cartItems.length} items` }
+  ];
+
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
      
       
       <main className="container mx-auto px-4 py-8">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-          <Link to="/" className="hover:text-emerald-600">Home</Link>
-          <ChevronRight size={14} />
-          <Link to="/cart" className="hover:text-emerald-600">Cart</Link>
-          <ChevronRight size={14} />
-          <span className="text-gray-900 font-medium">{cartItems.length} items</span>
-        </div>
+        <Breadcrumb items={breadcrumbItems} />
 
         {/* Header with Progress */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
@@ -424,7 +424,7 @@ const CartPage = ({ user }) => {
                   />
                   <button 
                     onClick={applyPromo}
-                    className="px-4 py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition"
+                    className="px-4 py-3 bg-[var(--surface-alt)] border border-[var(--border)] text-[var(--text-main)] font-medium rounded-lg hover:bg-[var(--surface-hover)] transition"
                   >
                     Apply
                   </button>

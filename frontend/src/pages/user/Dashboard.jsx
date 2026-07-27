@@ -10,8 +10,8 @@ const Dashboard = () => {
   const { user } = useAuth();
   const [listingStats, setListingStats] = useState(null);
   const [orderStats, setOrderStats] = useState(null);
-  const [incomingInterests, setIncomingInterests] = useState([]);
-  const [myInterests, setMyInterests] = useState([]);
+  const [incomingRequests, setIncomingRequests] = useState([]);
+  const [myRequests, setMyRequests] = useState([]);
   const [recentOrders, setRecentOrders] = useState([]);
   const [activeListingsList, setActiveListingsList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -32,13 +32,13 @@ const Dashboard = () => {
       const orderStatsRes = await orderService.getOrderStats().catch(() => null);
       setOrderStats(orderStatsRes?.data || orderStatsRes);
 
-      // Fetch incoming interests (as seller)
-      const incomingRes = await orderService.getIncomingInterests(1, 'pending').catch(() => null);
-      setIncomingInterests(incomingRes?.data?.interests || []);
+      // Fetch incoming requests (as seller)
+      const incomingRes = await orderService.getIncomingRequests(1, 'pending').catch(() => null);
+      setIncomingRequests(incomingRes?.data?.requests || []);
 
-      // Fetch my interests (as buyer)
-      const myInterestsRes = await orderService.getMyInterests(1, 'pending').catch(() => null);
-      setMyInterests(myInterestsRes?.data?.interests || []);
+      // Fetch my requests (as buyer)
+      const myRequestsRes = await orderService.getMyRequests(1, 'pending').catch(() => null);
+      setMyRequests(myRequestsRes?.data?.requests || []);
 
       // Fetch active listings
       const listingsRes = await listingService.getMyListings(1, 'active').catch(() => null);
@@ -191,10 +191,9 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Recent Activity: Orders + Interests */}
+      {/* Recent Activity: Orders + Requests */}
       <div className="section-title">
         <h2>Recent activity</h2>
-        <Link to="/dashboard/transactions" className="link">Transaction history →</Link>
       </div>
       <div className="two-col">
         <div className="panel">
@@ -258,43 +257,43 @@ const Dashboard = () => {
 
         <div className="panel">
           <div className="panel-head">
-            <h3>Pending interests</h3>
-            <span className="meta">{incomingInterests.length + myInterests.length} pending</span>
+            <h3>Pending requests</h3>
+            <span className="meta">{incomingRequests.length + myRequests.length} pending</span>
           </div>
           <div className="activity-list">
-            {incomingInterests.slice(0, 3).map(interest => (
-              <div key={interest._id} className="activity-item">
+            {incomingRequests.slice(0, 3).map(request => (
+              <div key={request._id} className="activity-item">
                 <span className="a-icon ic-pink">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.6z"/></svg>
                 </span>
                 <div className="a-body">
                   <div className="msg">
-                    <b>{interest.buyerId?.first_name || 'Someone'}</b> is interested in your <b>{interest.listingId?.title || 'Item'}</b> — offered ₹{interest.offeredPrice}.
+                    <b>{request.buyerId?.first_name || 'Someone'}</b> requested your <b>{request.listingId?.title || 'Item'}</b> — offered ₹{request.offeredPrice}.
                   </div>
-                  <div className="time">{new Date(interest.createdAt).toLocaleDateString()}</div>
+                  <div className="time">{new Date(request.createdAt).toLocaleDateString()}</div>
                 </div>
               </div>
             ))}
-            {myInterests.slice(0, 2).map(interest => (
-              <div key={interest._id} className="activity-item">
+            {myRequests.slice(0, 2).map(request => (
+              <div key={request._id} className="activity-item">
                 <span className="a-icon ic-blue">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.6z" /></svg>
                 </span>
                 <div className="a-body">
                   <div className="msg">
-                    You expressed interest in <b>{interest.listingId?.title || 'Item'}</b> — offered ₹{interest.offeredPrice}.
+                    You requested <b>{request.listingId?.title || 'Item'}</b> — offered ₹{request.offeredPrice}.
                   </div>
-                  <div className="time">{new Date(interest.createdAt).toLocaleDateString()}</div>
+                  <div className="time">{new Date(request.createdAt).toLocaleDateString()}</div>
                 </div>
               </div>
             ))}
-            {incomingInterests.length === 0 && myInterests.length === 0 && (
-              <div style={{ color: 'var(--text-faint)', fontSize: '13px', padding: '10px 0', textAlign: 'center' }}>No pending interests.</div>
+            {incomingRequests.length === 0 && myRequests.length === 0 && (
+              <div style={{ color: 'var(--text-faint)', fontSize: '13px', padding: '10px 0', textAlign: 'center' }}>No pending requests.</div>
             )}
           </div>
         </div>
       </div>
-      <div className="foot-note">Campus Marketplace · IIT Bhilai — buy, sell & trade within your campus community.</div>
+      <div className="foot-note">Campus Marketplace · IIT Bhilai</div>
     </div>
   );
 };

@@ -15,11 +15,10 @@ const AddProduct = () => {
     price: "",
     category: "",
     condition: "good",
-    location: {
-      hostel: "",
-      roomNumber: "",
-      landmark: ""
-    },
+    // Flat fields matching STListing schema
+    hostel: "",
+    roomNumber: "",
+    additionalNotes: "",
     isNegotiable: false,
     images: []
   });
@@ -49,12 +48,12 @@ useEffect(() => {
   fetchCategories();
 }, []);
 
+  // Must exactly match STListing schema enum: ["new", "like_new", "good", "fair"]
   const conditions = [
     { value: "new", label: "New (Never used)" },
-    { value: "like-new", label: "Like New (Used but perfect)" },
+    { value: "like_new", label: "Like New (Used but perfect)" },
     { value: "good", label: "Good (Minor wear)" },
-    { value: "fair", label: "Fair (Visible wear)" },
-    { value: "poor", label: "Poor (Functional but beat up)" }
+    { value: "fair", label: "Fair (Visible wear)" }
   ];
 
   const hostels = [
@@ -70,7 +69,7 @@ useEffect(() => {
   useEffect(() => {
     if (!isAuthenticated) {
       toast.error("Please login to add products");
-      navigate("/login", { state: { from: "/products/add" } });
+      navigate("/login", { state: { from: "/dashboard/products/add" } });
     }
   }, [isAuthenticated, navigate]);
 
@@ -234,8 +233,8 @@ useEffect(() => {
       newErrors.category = "Category is required";
     }
     
-    if (!formData.location.hostel) {
-      newErrors['location.hostel'] = "Hostel is required";
+    if (!formData.hostel) {
+      newErrors['hostel'] = "Hostel is required";
     }
     
     if (formData.images.length === 0) {
@@ -317,25 +316,23 @@ useEffect(() => {
       toast.dismiss(loadingToast);
       loadingToast = toast.loading("Creating product listing...");
 
-      // Ensure we send exactly what the backend 'listingData' object expects
+      // Send flat fields matching STListing schema
       const listingPayload = {
         title: formData.title.trim(),
         description: formData.description.trim(),
         basePrice: Number(formData.price),
         condition: formData.condition,
-        category: formData.category, // MUST be a 24-char MongoDB ID
+        category: formData.category,
         images: uploadedImages,
-        location: {
-          hostel: formData.location.hostel,
-          roomNumber: formData.location.roomNumber || "",
-          landmark: formData.location.landmark || ""
-        }
+        hostel: formData.hostel,
+        roomNumber: formData.roomNumber || "",
+        additionalNotes: formData.additionalNotes || ""
       };
 
       const result = await listingService.createListing(listingPayload);
       toast.dismiss(loadingToast);
       toast.success("Product added successfully!");
-      navigate('/my-listings');
+      navigate('/dashboard/my-listings');
     } catch (error) {
       if (loadingToast) {
         toast.dismiss(loadingToast);
@@ -354,7 +351,7 @@ useEffect(() => {
     <div className="page animate-[fadeIn_0.2s_ease]">
 
 
-      <div className="panel max-w-3xl">
+      <div className="panel max-w-[1400px] mx-auto">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Title */}
           <div>
@@ -488,11 +485,11 @@ useEffect(() => {
                   Hostel *
                 </label>
                 <select
-                  id="location.hostel"
-                  name="location.hostel"
-                  value={formData.location.hostel}
+                  id="hostel"
+                  name="hostel"
+                  value={formData.hostel}
                   onChange={handleChange}
-                  className={`w-full ${errors['location.hostel'] ? "border-red-500" : ""}`}
+                  className={`w-full ${errors['hostel'] ? "border-red-500" : ""}`}
                 >
                   <option value="">Select hostel</option>
                   {hostels.map((hostel) => (
@@ -501,8 +498,8 @@ useEffect(() => {
                     </option>
                   ))}
                 </select>
-                {errors['location.hostel'] && (
-                  <p className="mt-1 text-sm text-[#ff5c72]">{errors['location.hostel']}</p>
+                {errors['hostel'] && (
+                  <p className="mt-1 text-sm text-[#ff5c72]">{errors['hostel']}</p>
                 )}
               </div>
 
@@ -512,9 +509,9 @@ useEffect(() => {
                 </label>
                 <input
                   type="text"
-                  id="location.roomNumber"
-                  name="location.roomNumber"
-                  value={formData.location.roomNumber}
+                  id="roomNumber"
+                  name="roomNumber"
+                  value={formData.roomNumber}
                   onChange={handleChange}
                   className="w-full"
                   placeholder="e.g., A-201"
@@ -524,14 +521,14 @@ useEffect(() => {
 
             {/* Landmark */}
             <div className="mt-4">
-              <label htmlFor="location.landmark" className="block text-sm font-medium text-gray-300 mb-1">
-                Landmark (Optional)
+              <label htmlFor="additionalNotes" className="block text-sm font-medium text-gray-300 mb-1">
+                Additional Notes (Optional)
               </label>
               <input
                 type="text"
-                id="location.landmark"
-                name="location.landmark"
-                value={formData.location.landmark}
+                id="additionalNotes"
+                name="additionalNotes"
+                value={formData.additionalNotes}
                 onChange={handleChange}
                 className="w-full"
                 placeholder="e.g., Near the mess, Ground floor"
@@ -548,7 +545,7 @@ useEffect(() => {
             {/* Upload Progress */}
             {uploadProgress > 0 && uploadProgress < 100 && (
               <div className="mb-4">
-                <div className="w-full bg-[#0d1218] rounded-[20px] h-2">
+                <div className="w-full bg-[var(--input-border)] rounded-[20px] h-2">
                   <div 
                     className="bg-[#10b981] h-2 rounded-[20px] transition-all duration-300"
                     style={{ width: `${uploadProgress}%` }}
@@ -562,7 +559,7 @@ useEffect(() => {
             {imagePreviews.length > 0 && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                 {imagePreviews.map((preview, index) => (
-                  <div key={index} className="relative group border border-[#232c38] p-1 bg-[#0d1218] rounded-[10px] overflow-hidden">
+                  <div key={index} className="relative group border border-[var(--input-border)] p-1 bg-[var(--input-bg)] rounded-[10px] overflow-hidden">
                     <img
                       src={preview}
                       alt={`Preview ${index + 1}`}
@@ -590,14 +587,14 @@ useEffect(() => {
               <div className="flex items-center justify-center w-full">
                 <label
                   htmlFor="image-upload"
-                  className="flex flex-col items-center justify-center w-full h-32 border-2 border-[#232c38] border-dashed rounded-[10px] cursor-pointer bg-[#0d1218] hover:bg-[#121922] transition-colors"
+                  className="flex flex-col items-center justify-center w-full h-32 border-2 border-[var(--input-border)] border-dashed rounded-[10px] cursor-pointer bg-[var(--input-bg)] hover:bg-[var(--surface-hover)] transition-colors"
                 >
                   <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    <Upload className="w-8 h-8 mb-2 text-[#5d6b7d]" />
-                    <p className="mb-1 text-sm text-gray-450">
+                    <Upload className="w-8 h-8 mb-2 text-[var(--text-faint)]" />
+                    <p className="mb-1 text-sm text-[var(--text-dim)]">
                       <span className="font-semibold text-[#10b981]">Click to upload</span> or drag and drop
                     </p>
-                    <p className="text-xs text-[#5d6b7d]">
+                    <p className="text-xs text-[var(--text-faint)]">
                       PNG, JPG, JPEG (Max 5MB each)
                     </p>
                   </div>
@@ -625,10 +622,10 @@ useEffect(() => {
               name="isNegotiable"
               checked={formData.isNegotiable}
               onChange={handleChange}
-              className="h-4 w-4 text-[#10b981] border-[#232c38] bg-[#0d1218] rounded focus:ring-0"
+              className="h-4 w-4 text-[#10b981] border-[var(--input-border)] bg-[var(--input-bg)] rounded focus:ring-0"
               style={{ width: 'auto', background: 'transparent' }}
             />
-            <label htmlFor="isNegotiable" className="ml-2 block text-sm text-gray-300 font-medium">
+            <label htmlFor="isNegotiable" className="ml-2 block text-sm text-[var(--text-main)] font-medium">
               Price is negotiable
             </label>
           </div>

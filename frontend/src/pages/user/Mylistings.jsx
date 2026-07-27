@@ -252,8 +252,8 @@ const getStatusBadge = (listing) => {
             {listings.map((listing) => {
               const status = getStatusBadge(listing);
               return (
-                <div key={listing._id} className="panel p-0 overflow-hidden flex flex-col border border-[#232c38] hover:border-[#10b981]/40 transition-colors">
-                  <div className="relative h-44 bg-[#0d1218] overflow-hidden">
+                <div key={listing._id} className="panel p-0 overflow-hidden flex flex-col border border-[var(--border)] hover:border-[#10b981]/40 transition-colors">
+                  <div className="relative h-44 bg-[var(--surface-hover)] overflow-hidden">
                     <img
                       src={listing.images?.[0]?.url || 'https://via.placeholder.com/300x200?text=No+Image'}
                       alt={listing.title}

@@ -1,19 +1,42 @@
 /* Dashboard.css - Custom Dashboard Styling */
 
+/* Light mode (default) */
 .dashboard-shell {
-  --bg: #030712;
-  --surface: #111827;
-  --border: #1f2937;
-  --text-dim: #9ca3af;
+  --bg: #fcfbf9;
+  /* soft cream */
+  --surface: #ffffff;
+  --border: #e5e7eb;
+  --text-main: #222222;
+  --text-dim: #4b5563;
   --text-faint: #6b7280;
   --brand: #10b981;
   --brand-glow: rgba(16, 185, 129, 0.12);
   --radius: 16px;
 
+  --surface-hover: #f3f4f6;
+  --surface-alt: #f9fafb;
+  --input-bg: #ffffff;
+  --input-border: #d1d5db;
+
   background: var(--bg) !important;
-  color: #f3f4f6 !important;
+  color: var(--text-main) !important;
   min-height: 100vh;
   width: 100%;
+}
+
+/* Dark mode overrides */
+.dark .dashboard-shell {
+  --bg: #030712;
+  --surface: #111827;
+  --border: #1f2937;
+  --text-main: #f3f4f6;
+  --text-dim: #9ca3af;
+  --text-faint: #6b7280;
+
+  --surface-hover: #1a222c;
+  --surface-alt: #171f2a;
+  --input-bg: #0d1218;
+  --input-border: #232c38;
 }
 
 .dashboard-shell * {
@@ -31,9 +54,41 @@
 }
 
 /* sidebar */
+.dashboard-sidebar-shell {
+  position: fixed;
+  top: 20%;
+  left: 0;
+  width: 280px;
+  height: 100vh;
+  padding: 16px;
+  overflow-y: auto;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-in-out;
+  z-index: 50;
+}
+
+.dashboard-sidebar-shell.is-open {
+  transform: translateX(0);
+}
+
+@media (min-width: 1024px) {
+  .dashboard-sidebar-shell {
+    position: sticky;
+    top: calc(var(--navbar-height, 80px) + 1rem);
+    width: 260px;
+    height: fit-content;
+    max-height: calc(100vh - var(--navbar-height, 80px) - 2rem);
+    padding: 0;
+    overflow-y: auto;
+    transform: none;
+    z-index: 30;
+    align-self: flex-start;
+    flex-shrink: 0;
+  }
+}
+
 .dashboard-sidebar {
-  position: sticky;
-  top: 24px;
+  position: static;
   padding: 22px 14px 32px;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -42,17 +97,40 @@
   flex-direction: column;
   gap: 18px;
   height: fit-content;
-  max-height: calc(100vh - 48px);
-  overflow-y: auto;
+  max-height: 80%;
+  min-height: 70%;
+  overflow: visible;
   width: 100%;
-  max-width: 100%;
+  max-width: none;
+}
+
+/* The layout wrapper owns positioning and the mobile slide-in animation. */
+@media (max-width: 1024px) {
+  .dashboard-sidebar {
+    height: 100%;
+    background: var(--surface);
+  }
+
+  .sidebar-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--brand);
+    color: #04140e;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+  }
 }
 
 @media (min-width: 1024px) {
   .dashboard-sidebar {
     width: 260px;
     flex-shrink: 0;
-    min-height: calc(100vh - 220px);
+    height: fit-content;
+    min-height: 0;
+    max-height: none;
+    overflow: visible;
   }
 }
 
@@ -106,8 +184,8 @@
 }
 
 .dashboard-shell .nav-item:hover {
-  background: #1a222c;
-  color: #eef2f6;
+  background: var(--surface-hover);
+  color: var(--text-main);
 }
 
 .dashboard-shell .nav-item.active {
@@ -129,7 +207,7 @@
 
 .dashboard-shell .nav-item .count {
   margin-left: auto;
-  background: #171f2a;
+  background: var(--surface-alt);
   color: var(--text-dim);
   font-family: 'JetBrains Mono', monospace;
   font-size: 10.5px;
@@ -157,7 +235,7 @@
   font-size: 30px;
   font-weight: 900;
   letter-spacing: -0.025em;
-  color: #f3f4f6;
+  color: var(--text-main);
 }
 
 .dashboard-shell .page-head .accent {
@@ -190,7 +268,7 @@
 }
 
 .dashboard-shell .stat-card:hover {
-  border-color: #2c3746;
+  border-color: var(--brand);
   transform: translateY(-2px);
 }
 
@@ -206,7 +284,7 @@
   font-weight: 700;
   letter-spacing: -0.5px;
   margin: 6px 0 4px;
-  color: #eef2f6;
+  color: var(--text-main);
 }
 
 .dashboard-shell .stat-card .foot {
@@ -276,7 +354,7 @@
 .dashboard-shell .section-title h2 {
   font-size: 18px;
   font-weight: 800;
-  color: #f3f4f6;
+  color: var(--text-main);
 }
 
 .dashboard-shell .section-title .link {
@@ -302,7 +380,7 @@
 .dashboard-shell .panel-head h3 {
   font-size: 16px;
   font-weight: 800;
-  color: #f3f4f6;
+  color: var(--text-main);
 }
 
 .dashboard-shell .panel-head .meta {
@@ -335,12 +413,12 @@
 .dashboard-shell td {
   padding: 12px 10px;
   font-size: 13px;
-  border-top: 1px solid #1a222c;
-  color: #eef2f6;
+  border-top: 1px solid var(--border);
+  color: var(--text-main);
 }
 
 .dashboard-shell tr:hover td {
-  background: #171f2a;
+  background: var(--surface-hover);
 }
 
 .dashboard-shell .item-cell {
@@ -419,7 +497,7 @@
   display: flex;
   gap: 12px;
   padding: 12px 4px;
-  border-top: 1px solid #1a222c;
+  border-top: 1px solid var(--border);
 }
 
 .dashboard-shell .activity-item:first-child {
@@ -445,7 +523,7 @@
 
 .dashboard-shell .a-body .msg {
   font-size: 12.5px;
-  color: #eef2f6;
+  color: var(--text-main);
   line-height: 1.45;
 }
 
@@ -476,7 +554,7 @@
 
 .dashboard-shell .listing-card:hover {
   transform: translateY(-3px);
-  border-color: #2c3746;
+  border-color: var(--brand);
 }
 
 .dashboard-shell .listing-img {
@@ -529,7 +607,7 @@
   font-size: 13.5px;
   font-weight: 600;
   margin-bottom: 5px;
-  color: #eef2f6;
+  color: var(--text-main);
 }
 
 .dashboard-shell .listing-body .cat {
@@ -590,7 +668,7 @@
   font-size: 11.5px;
   margin-top: 40px;
   padding-top: 20px;
-  border-top: 1px solid #1a222c;
+  border-top: 1px solid var(--border);
 }
 
 /* Form Styles for Dashboard Shell */
@@ -598,11 +676,11 @@
 .dashboard-shell select,
 .dashboard-shell textarea {
   width: 100%;
-  background: #0d1218 !important;
-  border: 1px solid #232c38 !important;
+  background: var(--input-bg) !important;
+  border: 1px solid var(--input-border) !important;
   border-radius: 10px !important;
   padding: 12px 14px !important;
-  color: #eef2f6 !important;
+  color: var(--text-main) !important;
   outline: none !important;
 }
 
@@ -632,7 +710,7 @@
 
 .dashboard-shell button.btn-surface {
   background: var(--surface) !important;
-  color: #eef2f6 !important;
+  color: var(--text-main) !important;
   border: 1px solid var(--border) !important;
   padding: 12px 20px !important;
   border-radius: 10px !important;
@@ -643,7 +721,7 @@
 }
 
 .dashboard-shell button.btn-surface:hover {
-  background: #1a222c !important;
+  background: var(--surface-hover) !important;
 }
 
 /* responsive */
@@ -651,9 +729,11 @@
   .dashboard-shell .stat-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+
   .dashboard-shell .listing-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+
   .dashboard-shell .two-col {
     grid-template-columns: 1fr;
   }
@@ -663,6 +743,7 @@
   .dashboard-shell .stat-grid {
     grid-template-columns: 1fr;
   }
+
   .dashboard-shell .listing-grid {
     grid-template-columns: 1fr;
   }

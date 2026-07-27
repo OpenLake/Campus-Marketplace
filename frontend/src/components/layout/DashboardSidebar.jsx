@@ -1,32 +1,32 @@
-// components/layout/DashboardSidebar.jsx (floating sidebar matching file.html style)
+// components/layout/DashboardSidebar.jsx
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import listingService from "../../services/listingService";
 import orderService from "../../services/orderService";
 
-const DashboardSidebar = () => {
+const DashboardSidebar = ({ onClose }) => {
   const location = useLocation();
   const { logout } = useAuth();
   const [counts, setCounts] = useState({
     myProducts: 0,
-    myInterests: 0,
+    myRequests: 0,
     incoming: 0,
   });
 
   useEffect(() => {
     const fetchCounts = async () => {
       try {
-        const [statsRes, myInterestsRes, incomingRes] = await Promise.all([
+        const [statsRes, myRequestsRes, incomingRes] = await Promise.all([
           listingService.getStats().catch(() => null),
-          orderService.getMyInterests(1, 'pending').catch(() => null),
-          orderService.getIncomingInterests(1, 'pending').catch(() => null)
+          orderService.getMyRequests(1, 'pending').catch(() => null),
+          orderService.getIncomingRequests(1, 'pending').catch(() => null)
         ]);
-        
+
         setCounts({
           myProducts: statsRes?.overview?.totalListings || 0,
-          myInterests: myInterestsRes?.data?.interests?.length || 0,
-          incoming: incomingRes?.data?.interests?.length || 0,
+          myRequests: myRequestsRes?.data?.requests?.length || 0,
+          incoming: incomingRes?.data?.requests?.length || 0,
         });
       } catch (error) {
         console.error("Error fetching sidebar counts:", error);
@@ -42,6 +42,10 @@ const DashboardSidebar = () => {
     return location.pathname.startsWith(path);
   };
 
+  const handleNavClick = () => {
+    if (onClose) onClose();
+  };
+
   return (
     <aside className="dashboard-sidebar">
       <div className="sidebar-head">
@@ -52,7 +56,8 @@ const DashboardSidebar = () => {
       <nav className="nav-group">
         <Link
           to="/dashboard"
-          className={`nav-item ${isActive("/dashboard") && !isActive("/dashboard/products/add") && !isActive("/dashboard/my-listings") && !isActive("/dashboard/transactions") && !isActive("/dashboard/profile") && !isActive("/dashboard/my-interests") && !isActive("/dashboard/incoming-interests") ? "active" : ""}`}
+          className={`nav-item ${isActive("/dashboard") && !isActive("/dashboard/products/add") && !isActive("/dashboard/my-listings") && !isActive("/dashboard/profile") && !isActive("/dashboard/my-requests") && !isActive("/dashboard/incoming-requests") ? "active" : ""}`}
+          onClick={handleNavClick}
         >
           <svg viewBox="0 0 24 24">
             <rect x="3" y="3" width="7" height="9" rx="1" />
@@ -66,11 +71,10 @@ const DashboardSidebar = () => {
         <Link
           to="/dashboard/products/add"
           className={`nav-item ${isActive("/dashboard/products/add") ? "active" : ""}`}
+          onClick={handleNavClick}
         >
           <svg viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="9" />
-            <line x1="12" y1="8" x2="12" y2="16" />
-            <line x1="8" y1="12" x2="16" y2="12" />
+            <path d="M12 5v14M5 12h14" />
           </svg>
           Add Product
         </Link>
@@ -78,6 +82,7 @@ const DashboardSidebar = () => {
         <Link
           to="/dashboard/my-listings"
           className={`nav-item ${isActive("/dashboard/my-listings") ? "active" : ""}`}
+          onClick={handleNavClick}
         >
           <svg viewBox="0 0 24 24">
             <line x1="8" y1="6" x2="21" y2="6" />
@@ -91,19 +96,9 @@ const DashboardSidebar = () => {
         </Link>
 
         <Link
-          to="/dashboard/transactions"
-          className={`nav-item ${isActive("/dashboard/transactions") ? "active" : ""}`}
-        >
-          <svg viewBox="0 0 24 24">
-            <rect x="1" y="4" width="22" height="16" rx="2" />
-            <line x1="1" y1="10" x2="23" y2="10" />
-          </svg>
-          Transactions
-        </Link>
-
-        <Link
           to="/dashboard/profile"
           className={`nav-item ${isActive("/dashboard/profile") ? "active" : ""}`}
+          onClick={handleNavClick}
         >
           <svg viewBox="0 0 24 24">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -115,18 +110,20 @@ const DashboardSidebar = () => {
         <div className="nav-label">Engagement</div>
 
         <Link
-          to="/dashboard/my-interests"
-          className={`nav-item ${isActive("/dashboard/my-interests") ? "active" : ""}`}
+          to="/dashboard/my-requests"
+          className={`nav-item ${isActive("/dashboard/my-requests") ? "active" : ""}`}
+          onClick={handleNavClick}
         >
           <svg viewBox="0 0 24 24">
             <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.6z" />
           </svg>
-          My Interests {counts.myInterests > 0 && <span className="count">{counts.myInterests}</span>}
+          My Requests {counts.myRequests > 0 && <span className="count">{counts.myRequests}</span>}
         </Link>
 
         <Link
-          to="/dashboard/incoming-interests"
-          className={`nav-item ${isActive("/dashboard/incoming-interests") ? "active" : ""}`}
+          to="/dashboard/incoming-requests"
+          className={`nav-item ${isActive("/dashboard/incoming-requests") ? "active" : ""}`}
+          onClick={handleNavClick}
         >
           <svg viewBox="0 0 24 24">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -149,7 +146,7 @@ const DashboardSidebar = () => {
           onClick={logout}
           className="flex items-center gap-3 w-full py-2 px-3 text-gray-500 hover:text-red-400 font-medium text-sm transition-colors cursor-pointer"
         >
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
           Logout
         </button>
       </div>

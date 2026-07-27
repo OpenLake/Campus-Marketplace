@@ -20,11 +20,9 @@ const EditListing = () => {
     category: "",
     condition: "",
     images: [],
-    location: {
-      hostel: "",
-      roomNumber: "",
-      landmark: ""
-    },
+    hostel: "",
+    roomNumber: "",
+    additionalNotes: "",
     isNegotiable: false
   });
 
@@ -66,7 +64,7 @@ const EditListing = () => {
       if (sellerId !== currentUserId) {
         console.error("❌ Permission denied - User is not the seller");
         toast.error("You don't have permission to edit this listing");
-        navigate("/my-listings");
+        navigate("/dashboard/my-listings");
         return;
       }
       
@@ -85,11 +83,10 @@ const EditListing = () => {
         category: categoryId || "",
         condition: listing.condition || "",
         images: listing.images || [],
-        location: {
-          hostel: listing.location?.hostel || "",
-          roomNumber: listing.location?.roomNumber || "",
-          landmark: listing.location?.landmark || ""
-        },
+        // STListing stores location as flat top-level fields
+        hostel: listing.hostel || "",
+        roomNumber: listing.roomNumber || "",
+        additionalNotes: listing.additionalNotes || "",
         isNegotiable: listing.isNegotiable || false
       });
       
@@ -97,7 +94,7 @@ const EditListing = () => {
     } catch (error) {
       console.error("Error fetching listing:", error);
       toast.error(error.message || "Failed to load listing");
-      navigate("/my-listings");
+      navigate("/dashboard/my-listings");
     } finally {
       setLoading(false);
     }
@@ -135,14 +132,16 @@ const EditListing = () => {
     setSubmitting(true);
     
     try {
-      // Prepare data for API
+      // Prepare data for API — use flat fields matching STListing schema
       const updateData = {
         title: formData.title,
         description: formData.description,
         basePrice: Number(formData.basePrice),
         category: formData.category,
         condition: formData.condition,
-        location: formData.location,
+        hostel: formData.hostel,
+        roomNumber: formData.roomNumber,
+        additionalNotes: formData.additionalNotes,
         isNegotiable: formData.isNegotiable
       };
       
@@ -159,6 +158,7 @@ const EditListing = () => {
     }
   };
 
+  // Condition options matching STListing schema enum exactly
   const conditionOptions = [
     { value: "new", label: "New" },
     { value: "like_new", label: "Like New" },
@@ -167,6 +167,7 @@ const EditListing = () => {
   ];
 
   const hostelOptions = [
+    { value: "", label: "Select hostel" },
     { value: "BH-1", label: "BH-1" },
     { value: "BH-2", label: "BH-2" },
     { value: "BH-3", label: "BH-3" },
@@ -303,11 +304,10 @@ const EditListing = () => {
                   Hostel
                 </label>
                 <select
-                  name="location.hostel"
-                  value={formData.location.hostel}
+                  name="hostel"
+                  value={formData.hostel}
                   onChange={handleChange}
                 >
-                  <option value="">Select hostel</option>
                   {hostelOptions.map((opt) => (
                     <option key={opt.value} value={opt.value}>
                       {opt.label}
@@ -323,8 +323,8 @@ const EditListing = () => {
                 </label>
                 <input
                   type="text"
-                  name="location.roomNumber"
-                  value={formData.location.roomNumber}
+                  name="roomNumber"
+                  value={formData.roomNumber}
                   onChange={handleChange}
                   placeholder="e.g., A-201"
                 />
@@ -333,12 +333,12 @@ const EditListing = () => {
               {/* Landmark */}
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Landmark (Optional)
+                  Additional Notes (Optional)
                 </label>
                 <input
                   type="text"
-                  name="location.landmark"
-                  value={formData.location.landmark}
+                  name="additionalNotes"
+                  value={formData.additionalNotes}
                   onChange={handleChange}
                   placeholder="e.g., Near Mess, Ground Floor"
                 />
@@ -354,10 +354,10 @@ const EditListing = () => {
               name="isNegotiable"
               checked={formData.isNegotiable}
               onChange={handleChange}
-              className="h-4 w-4 text-[#10b981] border-[#232c38] bg-[#0d1218] rounded focus:ring-0"
+              className="h-4 w-4 text-[#10b981] border-[var(--input-border)] bg-[var(--input-bg)] rounded focus:ring-0"
               style={{ width: 'auto', background: 'transparent' }}
             />
-            <label htmlFor="isNegotiable" className="ml-2 block text-sm text-gray-300 font-medium">
+            <label htmlFor="isNegotiable" className="ml-2 block text-sm text-[var(--text-main)] font-medium">
               Price is negotiable
             </label>
           </div>
