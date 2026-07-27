@@ -1,40 +1,40 @@
-// src/pages/user/MyInterests.jsx
+// src/pages/user/MyRequests.jsx
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import orderService from '../../services/orderService';
- import { MessageCircle, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { MessageCircle, Clock, CheckCircle, XCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
-import InterestCard from '../../components/listings/InterestedCard';
+import RequestCard from '../../components/listings/RequestCard';
 
-const MyInterests = () => {
+const MyRequests = () => {
   const { user } = useAuth();
-  const [interests, setInterests] = useState([]);
+  const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('pending');
 
   useEffect(() => {
-    fetchInterests();
+    fetchRequests();
   }, [filter]);
 
-  const fetchInterests = async () => {
+  const fetchRequests = async () => {
     try {
       setLoading(true);
-      const response = await orderService.getMyInterests(1, filter);
-      setInterests(response.data.interests || []);
+      const response = await orderService.getMyRequests(1, filter);
+      setRequests(response.data.requests || []);
     } catch (error) {
-      toast.error('Failed to fetch interests');
+      toast.error('Failed to fetch requests');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleWithdraw = async (interestId) => {
-    if (!window.confirm('Are you sure you want to withdraw your interest?')) return;
+  const handleWithdraw = async (requestId) => {
+    if (!window.confirm('Are you sure you want to withdraw your request?')) return;
     
     try {
-      await orderService.withdrawInterest(interestId);
-      toast.success('Interest withdrawn');
-      fetchInterests();
+      await orderService.withdrawRequest(requestId);
+      toast.success('Request withdrawn');
+      fetchRequests();
     } catch (error) {
       toast.error(error.message || 'Failed to withdraw');
     }
@@ -69,22 +69,22 @@ const MyInterests = () => {
         ))}
       </div>
 
-      {interests.length === 0 ? (
+      {requests.length === 0 ? (
         <div className="panel text-center py-16 flex flex-col items-center justify-center">
           <MessageCircle className="h-12 w-12 text-[#5d6b7d] mb-4" />
-          <h3 className="text-lg font-semibold text-gray-200 mb-1">No interests found</h3>
+          <h3 className="text-lg font-semibold text-gray-200 mb-1">No requests found</h3>
           <p className="text-sm text-gray-505">
             {filter === 'pending' 
-              ? "You haven't expressed interest in any items yet."
-              : `No ${filter} interests found.`}
+              ? "You haven't requested any items yet."
+              : `No ${filter} requests found.`}
           </p>
         </div>
       ) : (
         <div className="space-y-4">
-          {interests.map(interest => (
-            <InterestCard 
-              key={interest._id}
-              interest={interest}
+          {requests.map(request => (
+            <RequestCard 
+              key={request._id}
+              request={request}
               isSeller={false}
               onWithdraw={handleWithdraw}
             />
@@ -95,4 +95,4 @@ const MyInterests = () => {
   );
 };
 
-export default MyInterests;
+export default MyRequests;

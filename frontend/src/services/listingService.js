@@ -234,12 +234,12 @@ createListing: async (listingData) => {
       throw error;
     }
   },
- getListingWithInterestStatus: async (id) => {
+  getListingWithRequestStatus: async (id) => {
     try {
-      const response = await api.get(`/listings/${id}?includeInterest=true`);
+      const response = await api.get(`/listings/${id}?includeRequest=true`);
       return response.data;
     } catch (error) {
-      console.error("Error fetching listing with interest:", error);
+      console.error("Error fetching listing with request status:", error);
       throw error;
     }
   },
@@ -334,15 +334,15 @@ createListing: async (listingData) => {
       throw error;
     }
   },
-  async expressInterest(data) {
-  try {
-    const response = await api.post("/orders/st/interest", data);
-    return response.data;
-  } catch (error) {
-    console.error("Error expressing interest:", error);
-    throw error.response?.data || error;
+  async requestItem(data) {
+    try {
+      const response = await api.post("/orders/st/request", data);
+      return response.data;
+    } catch (error) {
+      console.error("Error requesting item:", error);
+      throw error.response?.data || error;
+    }
   }
-}
 };
 
 export default listingService;

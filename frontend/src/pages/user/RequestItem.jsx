@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, DollarSign, MessageCircle } from 'lucide-react';
 
-const InterestModal = ({ isOpen, onClose, listing, onSubmit, isSubmitting }) => {
+const RequestModal = ({ isOpen, onClose, listing, onSubmit, isSubmitting }) => {
   const [offeredPrice, setOfferedPrice] = useState(listing?.basePrice || 0);
   const [message, setMessage] = useState('');
 
@@ -20,7 +20,7 @@ const InterestModal = ({ isOpen, onClose, listing, onSubmit, isSubmitting }) => 
     <div className="fixed inset-0 bg-[#000000]/80 flex items-center justify-center z-50 p-4 animate-[fadeIn_0.2s_ease]">
       <div className="bg-[#111827] border border-[#1f2937] rounded-[12px] max-w-md w-full p-6 shadow-2xl">
         <div className="flex justify-between items-center mb-5">
-          <h2 className="text-lg font-bold text-gray-200">Express Interest</h2>
+          <h2 className="text-lg font-bold text-gray-200">Request Item</h2>
           <button onClick={onClose} className="p-1 hover:bg-[#1f2937] text-gray-400 hover:text-gray-200 rounded-full transition-colors">
             <X className="h-5 w-5" />
           </button>
@@ -28,7 +28,7 @@ const InterestModal = ({ isOpen, onClose, listing, onSubmit, isSubmitting }) => 
 
         <div className="mb-5 p-4 bg-[#030712] border border-[#1f2937]/60 rounded-[8px]">
           <p className="font-semibold text-gray-200 text-sm">{listing?.title}</p>
-          <p className="text-xs text-gray-505 mt-1">Base Price: <span className="text-[#10b981] font-semibold">₹{listing?.basePrice}</span></p>
+          <p className="text-xs text-gray-550 mt-1">Base Price: <span className="text-[#10b981] font-semibold">₹{listing?.basePrice}</span></p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -56,11 +56,11 @@ const InterestModal = ({ isOpen, onClose, listing, onSubmit, isSubmitting }) => 
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 rows={3}
-                placeholder="Tell the seller why you're interested..."
+                placeholder="Tell the seller why you want to request this item..."
                 maxLength={500}
               />
             </div>
-            <p className="text-[10px] text-gray-500 mt-1 text-right">{message.length}/500 characters</p>
+            <p className="text-[10px] text-gray-550 mt-1 text-right">{message.length}/500 characters</p>
           </div>
 
           <div className="flex gap-3 pt-2">
@@ -76,7 +76,7 @@ const InterestModal = ({ isOpen, onClose, listing, onSubmit, isSubmitting }) => 
               disabled={isSubmitting}
               className="btn-brand flex-1 py-2"
             >
-              {isSubmitting ? 'Submitting...' : 'Submit Interest'}
+              {isSubmitting ? 'Submitting...' : 'Submit Request'}
             </button>
           </div>
         </form>
@@ -85,4 +85,4 @@ const InterestModal = ({ isOpen, onClose, listing, onSubmit, isSubmitting }) => 
   );
 };
 
-export default InterestModal;
+export default RequestModal;
