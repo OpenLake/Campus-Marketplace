@@ -236,14 +236,26 @@ const initDatabase = async () => {
   
   try {
     // 1. Connect directly to PostgreSQL using the provided credentials
-    appPool = new Pool({
-      host: process.env.PG_HOST,
-      port: process.env.PG_PORT || 5432,
-      user: process.env.PG_USER,
-      password: process.env.PG_PASSWORD,
-      database: process.env.PG_DATABASE,
-      ssl: process.env.PG_SSL === 'true' ? { rejectUnauthorized: false } : false,
-    });
+    // Support Vercel/Supabase deployment by defaulting to DATABASE_URL / POSTGRES_URL
+    const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+
+    if (connectionString) {
+      console.log('🔗 Connecting to PostgreSQL using Connection String...');
+      appPool = new Pool({
+        connectionString,
+        ssl: { rejectUnauthorized: false }, // Vercel and Supabase usually require SSL
+      });
+    } else {
+      console.log('🔗 Connecting to PostgreSQL using individual variables...');
+      appPool = new Pool({
+        host: process.env.PG_HOST,
+        port: process.env.PG_PORT || 5432,
+        user: process.env.PG_USER,
+        password: process.env.PG_PASSWORD,
+        database: process.env.PG_DATABASE,
+        ssl: process.env.PG_SSL === 'true' ? { rejectUnauthorized: false } : false,
+      });
+    }
 
     // 2. Test PostgreSQL connection
     const testResult = await appPool.query('SELECT NOW()');
