@@ -22,17 +22,17 @@ export const USER_NAVIGATION = [
 	},
 	{
 		name: 'My Listings',
-		href: '/my-listings',
+		href: '/dashboard/my-listings',
 		icon: Package,
 	},
 	{
 		name: 'Profile',
-		href: '/profile',
+		href: '/dashboard/profile',
 		icon: User,
 	},
 	{
 		name: 'Settings',
-		href: '/settings',
+		href: '/dashboard/profile',
 		icon: Settings,
 	},
 ];

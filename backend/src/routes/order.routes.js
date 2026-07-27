@@ -12,12 +12,12 @@ import {
 
 // Import student marketplace controllers
 import {
-    expressInterest,
-    getMyInterests,
-    getIncomingInterests,
-    acceptInterest,
-    rejectInterest,
-    withdrawInterest,
+    requestItem,
+    getMyRequests,
+    getIncomingRequests,
+    acceptRequest,
+    rejectRequest,
+    withdrawRequest,
     getBuyerSTOrders,
     getSellerSTOrders,
     getSTOrderDetails,
@@ -41,18 +41,18 @@ orderRouter.patch("/:id/status", updateOrderStatus);
 /* ========== STUDENT MARKETPLACE ROUTES ========== */
 
 // --- STATIC ROUTES FIRST (no parameters) ---
-orderRouter.post("/st/interest", expressInterest);
-orderRouter.get("/st/my-interests", getMyInterests);
-orderRouter.get("/st/incoming-interests", getIncomingInterests);
+orderRouter.post("/st/request", requestItem);
+orderRouter.get("/st/my-requests", getMyRequests);
+orderRouter.get("/st/incoming-requests", getIncomingRequests);
 orderRouter.get("/st/my-purchases", getBuyerSTOrders);
 orderRouter.get("/st/my-sales", getSellerSTOrders);
 orderRouter.get("/st/stats", getSTOrderStats);
 
 // --- ROUTES WITH PARAMETERS (must come after static routes) ---
 
-orderRouter.patch("/st/withdraw-interest/:interestId", withdrawInterest);
-orderRouter.post("/st/accept-interest/:interestId", acceptInterest);
-orderRouter.patch("/st/reject-interest/:interestId", rejectInterest);
+orderRouter.patch("/st/withdraw-request/:requestId", withdrawRequest);
+orderRouter.post("/st/accept-request/:requestId", acceptRequest);
+orderRouter.patch("/st/reject-request/:requestId", rejectRequest);
 orderRouter.get("/st/:id", getSTOrderDetails);               // <-- Parameter route LAST
 orderRouter.patch("/st/:id/status", updateSTOrderStatus);
 orderRouter.post("/st/buy-now", createSTOrder);               // legacy

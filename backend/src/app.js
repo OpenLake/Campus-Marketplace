@@ -9,12 +9,37 @@ import cookieParser from "cookie-parser";
  import listingRouter from "./routes/listing.routes.js";
 
 
+const allowedOrigins = [
+  "http://localhost:4173",
+  "http://172.19.0.5:4173",
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://campus-marketplace-frontend-psi.vercel.app"
+];
+
+if (process.env.CORS_ORIGIN) {
+  const origins = process.env.CORS_ORIGIN.split(",").map(o => o.trim().replace(/\/$/, ""));
+  allowedOrigins.push(...origins);
+}
+
 const app = express();
 app.use(cors({
-  origin: ['http://localhost:4173', 'http://172.19.0.5:4173', process.env.CORS_ORIGIN], // Your frontend URLs
-  credentials: true, // Important for cookies/authentication
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS','PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    
+    const normalizedOrigin = origin.replace(/\/$/, "");
+    const isAllowed = allowedOrigins.includes(normalizedOrigin) || 
+                      /^https:\/\/campus-marketplace-.*\.vercel\.app$/.test(normalizedOrigin);
+                      
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error(`Origin ${origin} not allowed by CORS`));
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Idempotency-Key"]
 }));
 import orderRouter from "./routes/order.routes.js"; 
 // --- 1. Global Middleware (Order matters!) ---

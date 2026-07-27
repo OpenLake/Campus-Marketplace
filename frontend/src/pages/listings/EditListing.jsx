@@ -77,7 +77,7 @@ const EditListing = () => {
       // Verify ownership
       if (listing.seller._id !== user?._id && !user?.roles?.includes('admin')) {
         toast.error('You do not have permission to edit this listing');
-        navigate('/my-listings');
+        navigate('/dashboard/my-listings');
         return;
       }
 
@@ -110,7 +110,7 @@ const EditListing = () => {
     } catch (error) {
       console.error('Error fetching listing:', error);
       toast.error('Failed to load listing');
-      navigate('/my-listings');
+      navigate('/dashboard/my-listings');
     } finally {
       setLoading(false);
     }

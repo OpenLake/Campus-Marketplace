@@ -20,11 +20,9 @@ const EditListing = () => {
     category: "",
     condition: "",
     images: [],
-    location: {
-      hostel: "",
-      roomNumber: "",
-      landmark: ""
-    },
+    hostel: "",
+    roomNumber: "",
+    additionalNotes: "",
     isNegotiable: false
   });
 
@@ -66,7 +64,7 @@ const EditListing = () => {
       if (sellerId !== currentUserId) {
         console.error("❌ Permission denied - User is not the seller");
         toast.error("You don't have permission to edit this listing");
-        navigate("/my-listings");
+        navigate("/dashboard/my-listings");
         return;
       }
       
@@ -85,11 +83,10 @@ const EditListing = () => {
         category: categoryId || "",
         condition: listing.condition || "",
         images: listing.images || [],
-        location: {
-          hostel: listing.location?.hostel || "",
-          roomNumber: listing.location?.roomNumber || "",
-          landmark: listing.location?.landmark || ""
-        },
+        // STListing stores location as flat top-level fields
+        hostel: listing.hostel || "",
+        roomNumber: listing.roomNumber || "",
+        additionalNotes: listing.additionalNotes || "",
         isNegotiable: listing.isNegotiable || false
       });
       
@@ -97,7 +94,7 @@ const EditListing = () => {
     } catch (error) {
       console.error("Error fetching listing:", error);
       toast.error(error.message || "Failed to load listing");
-      navigate("/my-listings");
+      navigate("/dashboard/my-listings");
     } finally {
       setLoading(false);
     }
@@ -135,14 +132,16 @@ const EditListing = () => {
     setSubmitting(true);
     
     try {
-      // Prepare data for API
+      // Prepare data for API — use flat fields matching STListing schema
       const updateData = {
         title: formData.title,
         description: formData.description,
         basePrice: Number(formData.basePrice),
         category: formData.category,
         condition: formData.condition,
-        location: formData.location,
+        hostel: formData.hostel,
+        roomNumber: formData.roomNumber,
+        additionalNotes: formData.additionalNotes,
         isNegotiable: formData.isNegotiable
       };
       
@@ -159,6 +158,7 @@ const EditListing = () => {
     }
   };
 
+  // Condition options matching STListing schema enum exactly
   const conditionOptions = [
     { value: "new", label: "New" },
     { value: "like_new", label: "Like New" },
@@ -167,6 +167,7 @@ const EditListing = () => {
   ];
 
   const hostelOptions = [
+    { value: "", label: "Select hostel" },
     { value: "BH-1", label: "BH-1" },
     { value: "BH-2", label: "BH-2" },
     { value: "BH-3", label: "BH-3" },
@@ -177,37 +178,34 @@ const EditListing = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-emerald-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading listing details...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#10b981] mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading listing details...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto px-4 max-w-4xl">
-        {/* Header with back button */}
-        <div className="flex items-center justify-between mb-6">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center text-gray-600 hover:text-emerald-600 transition"
-          >
-            <ArrowLeft className="h-5 w-5 mr-2" />
-            Back
-          </button>
-          <h1 className="text-2xl font-bold text-gray-900">Edit Listing</h1>
-          <div className="w-20"></div> {/* Spacer */}
-        </div>
+    <div className="page animate-[fadeIn_0.2s_ease]">
+      {/* Back Button */}
+      <div className="mb-6">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center text-gray-400 hover:text-[#10b981] transition-colors text-sm"
+        >
+          <ArrowLeft className="h-4 w-4 mr-1.5" />
+          Back to Listings
+        </button>
+      </div>
 
-        {/* Main Form */}
-        <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-8">
+      <div className="panel max-w-3xl">
+        <form onSubmit={handleSubmit} className="space-y-6">
           
           {/* Title */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
               Title <span className="text-red-500">*</span>
             </label>
             <input
@@ -215,61 +213,54 @@ const EditListing = () => {
               name="title"
               value={formData.title}
               onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
               placeholder="e.g., Mathematics Textbook"
               required
             />
           </div>
 
           {/* Description */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
               Description <span className="text-red-500">*</span>
             </label>
             <textarea
               name="description"
               value={formData.description}
               onChange={handleChange}
-              rows={5}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+              rows={4}
               placeholder="Describe your item in detail..."
               required
             />
           </div>
 
           {/* Price and Category Row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Price */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-1">
                 Price (₹) <span className="text-red-500">*</span>
               </label>
-              <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  type="number"
-                  name="basePrice"
-                  value={formData.basePrice}
-                  onChange={handleChange}
-                  min="0"
-                  step="1"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                  placeholder="500"
-                  required
-                />
-              </div>
+              <input
+                type="number"
+                name="basePrice"
+                value={formData.basePrice}
+                onChange={handleChange}
+                min="0"
+                step="1"
+                placeholder="500"
+                required
+              />
             </div>
 
             {/* Category */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-1">
                 Category <span className="text-red-500">*</span>
               </label>
               <select
                 name="category"
                 value={formData.category}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                 required
               >
                 <option value="">Select a category</option>
@@ -283,15 +274,14 @@ const EditListing = () => {
           </div>
 
           {/* Condition */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
               Condition <span className="text-red-500">*</span>
             </label>
             <select
               name="condition"
               value={formData.condition}
               onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
               required
             >
               <option value="">Select condition</option>
@@ -304,25 +294,20 @@ const EditListing = () => {
           </div>
 
           {/* Location Section */}
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <MapPin className="h-5 w-5 mr-2 text-emerald-600" />
-              Location Details
-            </h3>
+          <div className="pt-4 border-t border-[#232c38]">
+            <h3 className="text-md font-semibold text-gray-200 mb-3">Location Details</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Hostel */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
                   Hostel
                 </label>
                 <select
-                  name="location.hostel"
-                  value={formData.location.hostel}
+                  name="hostel"
+                  value={formData.hostel}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                 >
-                  <option value="">Select hostel</option>
                   {hostelOptions.map((opt) => (
                     <option key={opt.value} value={opt.value}>
                       {opt.label}
@@ -333,30 +318,28 @@ const EditListing = () => {
 
               {/* Room Number */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
                   Room Number
                 </label>
                 <input
                   type="text"
-                  name="location.roomNumber"
-                  value={formData.location.roomNumber}
+                  name="roomNumber"
+                  value={formData.roomNumber}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                   placeholder="e.g., A-201"
                 />
               </div>
 
               {/* Landmark */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Landmark (Optional)
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Additional Notes (Optional)
                 </label>
                 <input
                   type="text"
-                  name="location.landmark"
-                  value={formData.location.landmark}
+                  name="additionalNotes"
+                  value={formData.additionalNotes}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                   placeholder="e.g., Near Mess, Ground Floor"
                 />
               </div>
@@ -364,62 +347,34 @@ const EditListing = () => {
           </div>
 
           {/* Negotiable Checkbox */}
-          <div className="mb-8">
-            <label className="flex items-center space-x-3">
-              <input
-                type="checkbox"
-                name="isNegotiable"
-                checked={formData.isNegotiable}
-                onChange={handleChange}
-                className="h-5 w-5 text-emerald-600 rounded border-gray-300 focus:ring-emerald-500"
-              />
-              <span className="text-gray-700">Price is negotiable</span>
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="isNegotiable"
+              name="isNegotiable"
+              checked={formData.isNegotiable}
+              onChange={handleChange}
+              className="h-4 w-4 text-[#10b981] border-[var(--input-border)] bg-[var(--input-bg)] rounded focus:ring-0"
+              style={{ width: 'auto', background: 'transparent' }}
+            />
+            <label htmlFor="isNegotiable" className="ml-2 block text-sm text-[var(--text-main)] font-medium">
+              Price is negotiable
             </label>
           </div>
 
-          {/* Preview Section */}
-          <div className="mb-8 p-4 bg-gray-50 rounded-lg">
-            <h4 className="font-semibold text-gray-900 mb-3">Preview</h4>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-gray-500">Title:</span>
-                <p className="font-medium text-gray-900">{formData.title || 'Not set'}</p>
-              </div>
-              <div>
-                <span className="text-gray-500">Price:</span>
-                <p className="font-medium text-gray-900">
-                  ₹{formData.basePrice || '0'} {formData.isNegotiable && '(Negotiable)'}
-                </p>
-              </div>
-              <div>
-                <span className="text-gray-500">Condition:</span>
-                <p className="font-medium text-gray-900 capitalize">
-                  {formData.condition?.replace('_', ' ') || 'Not set'}
-                </p>
-              </div>
-              <div>
-                <span className="text-gray-500">Location:</span>
-                <p className="font-medium text-gray-900">
-                  {formData.location.hostel} {formData.location.roomNumber}
-                </p>
-              </div>
-            </div>
-          </div>
-
           {/* Action Buttons */}
-          <div className="flex gap-4">
+          <div className="flex gap-4 pt-4 border-t border-[#232c38]">
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition flex items-center justify-center gap-2"
+              className="btn-surface flex-1"
             >
-              <X className="h-5 w-5" />
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="flex-1 px-6 py-3 bg-emerald-600 text-white font-semibold rounded-lg hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="btn-brand flex-1 flex items-center justify-center gap-2"
             >
               <Save className="h-5 w-5" />
               {submitting ? "Saving..." : "Save Changes"}

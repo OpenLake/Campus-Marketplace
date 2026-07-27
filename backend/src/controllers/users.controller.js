@@ -17,6 +17,8 @@ import { ApiError } from "../utils/api-error.js";
 import { ApiResponse } from "../utils/api-response.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { getPool } from "../db/pgConnect.js";
+import { STListing } from "../models/st_listing.model.js";
+import { STOrder } from "../models/st_order.model.js";
 
 // Helper to generate tokens and set cookies
 const generateTokensAndSetCookies = async (res, user) => {
@@ -374,23 +376,56 @@ export const listUsers = asyncHandler(async (req, res) => {
 export const deleteUser = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
+    
+    // 1. Check for active listings
+    const activeListings = await STListing.countDocuments({
+      sellerId: id,
+      status: { $in: ["active", "pending_completion"] }
+    });
+
+    if (activeListings > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot deactivate user: user has active listings"
+      });
+    }
+
+    // 2. Check for active orders
+    const activeOrders = await STOrder.countDocuments({
+      $or: [{ buyerId: id }, { sellerId: id }],
+      status: "awaiting_meetup"
+    });
+
+    if (activeOrders > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot deactivate user: user has pending orders"
+      });
+    }
+
+    // 3. Soft delete the user
     const pool = getPool();
-    const result = await pool.query('DELETE FROM users WHERE user_id = $1 RETURNING user_id', [id]);
+    const result = await pool.query(
+      'UPDATE users SET is_active = false WHERE user_id = $1 RETURNING user_id', 
+      [id]
+    );
+
     if (result.rowCount === 0) {
       return res.status(404).json({
         success: false,
         message: "User not found"
       });
     }
+    
     return res.json({ 
       success: true,
-      message: "User deleted successfully" 
+      message: "User deactivated successfully" 
     });
   } catch (error) {
-    console.error("Delete user error:", error);
+    console.error("Deactivate user error:", error);
     return res.status(500).json({
       success: false,
-      message: error.message || "Failed to delete user"
+      message: error.message || "Failed to deactivate user"
     });
   }
 });

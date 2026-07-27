@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-primary-50: #f5f3ff;
   --color-primary-100: #ede9fe;
@@ -14,13 +16,14 @@
 }
 
 :root {
+  --navbar-height: 4.25rem;
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
   color-scheme: light;
-  color: #213547;
-  background-color: #ffffff;
+  color: #222222;
+  background-color: #fcfbf9;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -28,22 +31,22 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+@media (min-width: 1024px) {
+  :root {
+    --navbar-height: 6.5rem;
+  }
+}
+
 html,
 body {
   width: 100vw;
   height: 100vh;
   min-height: 100vh;
-  background: radial-gradient(
-    ellipse at top right,
-    #e0e7ff,
-    #ffffff,
-    #f3e8ff
-  ) !important;
-  background-attachment: fixed !important;
+  @apply bg-[#fcfbf9] dark:bg-gray-950 text-[#222222] dark:text-gray-100;
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 .glass {
@@ -110,7 +113,7 @@ h1 {
 
 @media (prefers-color-scheme: light) {
   :root {
-    color: #213547;
+    color: #222222;
     background-color: transparent;
   }
 

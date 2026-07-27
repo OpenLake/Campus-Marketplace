@@ -17,13 +17,25 @@ const stListingSchema = new mongoose.Schema({
   }],
 
   // Polling aggregates – auto‑updated via middleware
-  interestCount: { type: Number, default: 0 },
+  requestCount: { type: Number, default: 0 },
   highestOffer: { type: Number, default: 0 },
 
   status: {
     type: String,
     enum: ["active", "pending_completion", "sold", "archived"],
     default: "active"
+  },
+  location: { type: String, default: "" },
+  hostel: { type: String, default: "" },
+  roomNumber: { type: String, default: "" },
+  additionalNotes: { type: String, default: "" },
+  acceptedRequestId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "STRequest"
+  },
+  lockedByOrderId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "STOrder"
   }
 }, { timestamps: true });
 

@@ -250,33 +250,64 @@ const initDatabase = async () => {
     console.log(`🕐 PostgreSQL time: ${testResult.rows[0].now}`);
     console.log('📊 PostgreSQL connected successfully');
 
-    // 3. Execute schema SQL (create tables if not exist)
-    console.log('📝 Creating/updating tables...');
-    const schemaSQL = fs.readFileSync(
-      path.join(__dirname, 'init.sql'),
-      'utf8'
-    );
+    // 3. Execute schema SQL if tables don't exist
+    const tableCheck = await appPool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'users'
+      );
+    `);
     
-    const statements = schemaSQL
-      .split(';')
-      .filter(statement => statement.trim() !== '');
-    
-    for (let statement of statements) {
-      if (statement.trim()) {
-        await appPool.query(statement);
+    const dbInitialized = tableCheck.rows[0].exists;
+    if (!dbInitialized) {
+      console.log('📝 Creating/updating tables...');
+      try {
+        const schemaSQL = fs.readFileSync(
+          path.join(__dirname, 'init.sql'),
+          'utf8'
+        );
+        
+        const statements = schemaSQL
+          .split(';')
+          .filter(statement => statement.trim() !== '');
+        
+        for (let statement of statements) {
+          if (statement.trim()) {
+            await appPool.query(statement);
+          }
+        }
+        console.log('✅ Tables created/verified successfully');
+      } catch (fileError) {
+        console.error('⚠️ Could not read or execute init.sql:', fileError.message);
+        // Do not crash the server if DB might already have tables through other means
       }
+    } else {
+      console.log('✅ Tables already exist, skipping schema creation');
     }
-    
-    console.log('✅ Tables created/verified successfully');
     
     // 4. Connect to MongoDB
     console.log('🔌 Connecting to MongoDB...');
     await mongoose.connect(process.env.MONGO_URI);
     console.log('✅ MongoDB connected successfully');
     
-    // 5. Seed categories
-    await seedCategories();
-    await seedSubCategories();
+    // Drop old strict unique index to prevent index rebuild error with partial unique index
+    try {
+      const db = mongoose.connection.db;
+      await db.collection('st_requests').dropIndex('listingId_1_buyerId_1');
+      console.log('🧹 Dropped old unique index listingId_1_buyerId_1 from st_requests');
+    } catch (e) {
+      console.log('ℹ️ listingId_1_buyerId_1 index drop skipped or already dropped:', e.message);
+    }
+    
+    // 5. Seed categories if empty
+    const categoryCount = await STCategory.countDocuments();
+    if (categoryCount === 0) {
+      await seedCategories();
+      await seedSubCategories();
+    } else {
+      console.log('✅ Categories already exist, skipping seeding');
+    }
     
     return appPool;
     

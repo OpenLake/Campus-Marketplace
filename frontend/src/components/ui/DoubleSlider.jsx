@@ -3,7 +3,7 @@ import React from 'react';
 import RangeSlider from 'react-range-slider-input';
 import 'react-range-slider-input/dist/style.css';
 
-const DoubleSlider = ({ min = 0, max = 10000, step = 100, value, onChange, className = '' }) => {
+const DoubleSlider = ({ min = 0, max = 10000, step = 100, value, onChange, onDragEnd, className = '' }) => {
   return (
     <div className={`w-full ${className}`}>
       <RangeSlider
@@ -12,6 +12,8 @@ const DoubleSlider = ({ min = 0, max = 10000, step = 100, value, onChange, class
         step={step}
         value={value}
         onInput={onChange}
+        onThumbDragEnd={onDragEnd}
+        onRangeDragEnd={onDragEnd}
         className="custom-range-slider"
       />
       

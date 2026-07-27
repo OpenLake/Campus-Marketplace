@@ -5,6 +5,7 @@ import {
   MapPin, Home, Phone, Mail, User, Truck, Shield,
   Edit, BookOpen, Bike, Coffee
 } from 'lucide-react';
+import siteLogo from '../../assets/site_logo.png';
 
 const CheckoutPage = () => {
   const [shippingMethod, setShippingMethod] = useState('free');
@@ -34,10 +35,8 @@ const CheckoutPage = () => {
               </Link>
               <div className="h-6 w-px bg-gray-300"></div>
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">O</span>
-                </div>
-                <span className="font-bold text-lg hidden sm:block">Openlake</span>
+                <img src={siteLogo} alt="Logo" className="w-8 h-8 object-contain" />
+                <span className="font-bold text-lg hidden sm:block">Campus Marketplace</span>
               </div>
             </div>
             <div className="flex items-center gap-2 text-sm">
@@ -434,7 +433,7 @@ const CheckoutPage = () => {
                     placeholder="Enter code" 
                     className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500"
                   />
-                  <button className="px-4 py-2 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition">
+                  <button className="px-4 py-2 bg-[var(--surface-alt)] border border-[var(--border)] text-[var(--text-main)] font-medium rounded-lg hover:bg-[var(--surface-hover)] transition">
                     Apply
                   </button>
                 </div>

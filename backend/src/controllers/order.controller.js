@@ -3,9 +3,11 @@ import { ApiError } from "../utils/api-error.js";
 import { ApiResponse } from "../utils/api-response.js";
 import { Order } from "../models/order.model.js";  
 import { STListing } from "../models/st_listing.model.js";
-import { STInterest } from "../models/st_interest.model.js";
+import { STRequest } from "../models/st_request.model.js";
 import Listing from "../models/listing.model.js";
 import { STOrder } from "../models/st_order.model.js";
+import { IdempotencyKey } from "../models/idempotency_key.model.js";
+import mongoose from "mongoose";
 
 // Create a new order
 export const createOrder = asyncHandler(async (req, res) => {
@@ -139,12 +141,12 @@ const getUserId = (req) => {
 /* ========== CLUB/VENDOR ORDER FUNCTIONS (unchanged) ========== */
 // ... keep your existing createOrder, getOrderById, etc. for club orders ...
 
-/* ========== STUDENT MARKETPLACE INTEREST FUNCTIONS ========== */
+/* ========== STUDENT MARKETPLACE REQUEST FUNCTIONS ========== */
 
-// @desc    Express interest in a listing
-// @route   POST /api/orders/st/interest
+// @desc    Request an item
+// @route   POST /api/orders/st/request
 // @access  Private
-export const expressInterest = asyncHandler(async (req, res) => {
+export const requestItem = asyncHandler(async (req, res) => {
   const { listingId, offeredPrice, message, buyerImages } = req.body;
   const buyerId = getUserId(req); 
   if (!listingId) {
@@ -162,225 +164,255 @@ export const expressInterest = asyncHandler(async (req, res) => {
     throw new ApiError(400, "This item is not available for purchase");
   }
 
-  // Prevent self-interest
+  // Prevent self-request
   if (listing.sellerId === buyerId) {
-    throw new ApiError(400, "You cannot express interest in your own item");
+    throw new ApiError(400, "You cannot request your own item");
   }
 
-  // Check if buyer already has pending interest
-  const existingInterest = await STInterest.findOne({
+  // Check if buyer already has pending request
+  const existingRequest = await STRequest.findOne({
     listingId,
     buyerId,
     status: "pending"
   });
 
-  if (existingInterest) {
-    throw new ApiError(400, "You already have a pending interest for this item");
+  if (existingRequest) {
+    throw new ApiError(400, "You already have a pending request for this item");
   }
 
-  // Create interest
-  const interest = await STInterest.create({
+  // Create request
+  const request = await STRequest.create({
     listingId,
     sellerId: listing.sellerId,
     buyerId,
     offeredPrice: offeredPrice || listing.basePrice,
-    message: message || "Interested in this item",
+    message: message || "Request for this item",
     buyerImages: buyerImages || [],
     status: "pending"
   });
 
   // Populate listing details for response
-  await interest.populate("listingId");
+  await request.populate("listingId");
   console.log("Listing sellerId:", listing.sellerId);
   res.status(201).json(
-    new ApiResponse(201, interest, "Interest expressed successfully")
+    new ApiResponse(201, request, "Request item submitted successfully")
   );
 });
 
-// @desc    Get my expressed interests (as buyer)
-// @route   GET /api/orders/st/my-interests
+// @desc    Get my requests (as buyer)
+// @route   GET /api/orders/st/my-requests
 // @access  Private
-export const getMyInterests = asyncHandler(async (req, res) => {
+export const getMyRequests = asyncHandler(async (req, res) => {
   const buyerId = getUserId(req);
   const { status, page = 1, limit = 10 } = req.query;
 
   const query = { buyerId };
   if (status) query.status = status;
 
-  const interests = await STInterest.find(query)
+  const requests = await STRequest.find(query)
     .populate("listingId")
     .sort({ createdAt: -1 })
     .skip((Number(page) - 1) * Number(limit))
     .limit(Number(limit));
 
-  const total = await STInterest.countDocuments(query);
+  const total = await STRequest.countDocuments(query);
 
   res.json(
     new ApiResponse(200, {
-      interests,
+      requests,
       pagination: {
         page: Number(page),
         limit: Number(limit),
         total,
         pages: Math.ceil(total / Number(limit))
       }
-    }, "Interests fetched successfully")
+    }, "Requests fetched successfully")
   );
 });
 
-// @desc    Get incoming interests for my listings (as seller)
-// @route   GET /api/orders/st/incoming-interests
+// @desc    Get incoming requests for my listings (as seller)
+// @route   GET /api/orders/st/incoming-requests
 // @access  Private
-export const getIncomingInterests = asyncHandler(async (req, res) => {
+export const getIncomingRequests = asyncHandler(async (req, res) => {
   const sellerId = getUserId(req);
   const { status = "pending", page = 1, limit = 10 } = req.query;
 
   const query = { sellerId, status };
 
-  const interests = await STInterest.find(query)
+  const requests = await STRequest.find(query)
     .populate("listingId")
     .sort({ createdAt: -1 })
     .skip((Number(page) - 1) * Number(limit))
     .limit(Number(limit));
 
-  const total = await STInterest.countDocuments(query);
+  const total = await STRequest.countDocuments(query);
 
   res.json(
     new ApiResponse(200, {
-      interests,
+      requests,
       pagination: {
         page: Number(page),
         limit: Number(limit),
         total,
         pages: Math.ceil(total / Number(limit))
       }
-    }, "Incoming interests fetched successfully")
+    }, "Incoming requests fetched successfully")
   );
 });
 
-// @desc    Accept an interest (creates order, rejects others)
-// @route   POST /api/orders/st/accept-interest/:interestId
+// @desc    Accept a request (creates order, rejects others)
+// @route   POST /api/orders/st/accept-request/:requestId
 // @access  Private (Seller only)
-export const acceptInterest = asyncHandler(async (req, res) => {
-  const { interestId } = req.params;
+export const acceptRequest = asyncHandler(async (req, res) => {
+  const { requestId } = req.params;
   const { meetupDetails } = req.body;
   const userId = getUserId(req);
+  const idempotencyKey = req.header("Idempotency-Key");
 
-  // Get the interest
-  const interest = await STInterest.findById(interestId).populate("listingId");
-  if (!interest) {
-    throw new ApiError(404, "Interest not found");
+  if (!idempotencyKey) {
+    throw new ApiError(400, "Idempotency-Key header is required for acceptance");
   }
 
-  // Verify seller
-  if (interest.sellerId !== userId) {
-    throw new ApiError(403, "Only the seller can accept interests");
+  // Idempotency check
+  const existingKey = await IdempotencyKey.findOne({ key: idempotencyKey });
+  if (existingKey) {
+    if (existingKey.responseStatus) {
+      return res.status(existingKey.responseStatus).json(existingKey.responseBody);
+    } else {
+      throw new ApiError(409, "Request already in progress");
+    }
   }
 
-  // Check if still pending
-  if (interest.status !== "pending") {
-    throw new ApiError(400, "This interest is no longer pending");
-  }
-
-  const listing = interest.listingId;
-  if (listing.status !== "active") {
-    throw new ApiError(400, "This listing is no longer active");
-  }
-
-  // --- Atomic operations (should be in a transaction in production) ---
-  // 1. Accept this interest
-  interest.status = "accepted";
-  await interest.save();
-
-  // 2. Reject all other pending interests for this listing
-  await STInterest.updateMany(
-    { 
-      listingId: interest.listingId, 
-      status: "pending", 
-      _id: { $ne: interestId } 
-    },
-    { status: "rejected" }
-  );
-
-  // 3. Update listing status
-  listing.status = "pending_completion";
-  await listing.save();
-
-  // 4. Create order
-  const order = await STOrder.create({
-    interestId: interest._id,
-    listingId: interest.listingId,
-    buyerId: interest.buyerId,
-    sellerId: interest.sellerId,
-    finalPrice: interest.offeredPrice,
-    meetupDetails: meetupDetails || {},
-    statusHistory: [{
-      status: "awaiting_meetup",
-      changedBy: userId,
-      note: "Order created from accepted interest"
-    }]
+  const idempRecord = await IdempotencyKey.create({
+    key: idempotencyKey,
+    actor: userId,
+    endpoint: `/api/orders/st/accept-request/${requestId}`,
+    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
   });
 
-  await order.populate("listingId");
+  let result;
+  try {
+    // 1. Get the request
+    const request = await STRequest.findById(requestId);
+    if (!request) throw new ApiError(404, "Request not found");
+    if (request.sellerId !== userId) throw new ApiError(403, "Only the seller can accept requests");
+    if (request.status !== "pending") throw new ApiError(400, "This request is no longer pending");
 
-  res.status(201).json(
-    new ApiResponse(201, { interest, order }, "Interest accepted, order created")
-  );
+    const listing = await STListing.findById(request.listingId);
+    if (!listing) throw new ApiError(404, "Listing not found");
+    if (listing.status !== "active") throw new ApiError(400, "This listing is no longer active");
+
+    // 2. Accept this request and add the seller's message
+    request.status = "accepted";
+    if (meetupDetails && meetupDetails.notes) {
+      request.sellerMessage = meetupDetails.notes;
+    }
+    await request.save();
+
+    // 3. Reject all other pending requests for this listing
+    await STRequest.updateMany(
+      { 
+        listingId: request.listingId, 
+        status: "pending", 
+        _id: { $ne: requestId } 
+      },
+      { status: "rejected" }
+    );
+
+    // 4. Create order
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7); // Default 7-day policy
+
+    const orderDocs = await STOrder.create([{
+      requestId: request._id,
+      listingId: request.listingId,
+      buyerId: request.buyerId,
+      sellerId: request.sellerId,
+      finalPrice: request.offeredPrice,
+      meetupDetails: meetupDetails || {},
+      expiresAt,
+      statusHistory: [{
+        status: "awaiting_meetup",
+        changedBy: userId,
+        note: "Order created from accepted request"
+      }]
+    }]);
+
+    const order = orderDocs[0];
+
+    // 5. Update listing status
+    listing.status = "pending_completion";
+    listing.acceptedRequestId = request._id;
+    listing.lockedByOrderId = order._id;
+    await listing.save();
+
+    result = { request, order };
+  } catch (error) {
+    throw error;
+  }
+
+  const responseBody = new ApiResponse(201, result, "Request accepted, order created");
+  
+  idempRecord.responseStatus = 201;
+  idempRecord.responseBody = responseBody;
+  await idempRecord.save();
+
+  res.status(201).json(responseBody);
 });
 
-// @desc    Reject an interest
-// @route   PATCH /api/orders/st/reject-interest/:interestId
+// @desc    Reject a request
+// @route   PATCH /api/orders/st/reject-request/:requestId
 // @access  Private (Seller only)
-export const rejectInterest = asyncHandler(async (req, res) => {
-  const { interestId } = req.params;
+export const rejectRequest = asyncHandler(async (req, res) => {
+  const { requestId } = req.params;
   const userId = getUserId(req);
 
-  const interest = await STInterest.findById(interestId);
-  if (!interest) {
-    throw new ApiError(404, "Interest not found");
+  const request = await STRequest.findById(requestId);
+  if (!request) {
+    throw new ApiError(404, "Request not found");
   }
 
-  if (interest.sellerId !== userId) {
-    throw new ApiError(403, "Only the seller can reject interests");
+  if (request.sellerId !== userId) {
+    throw new ApiError(403, "Only the seller can reject requests");
   }
 
-  if (interest.status !== "pending") {
-    throw new ApiError(400, "This interest is no longer pending");
+  if (request.status !== "pending") {
+    throw new ApiError(400, "This request is no longer pending");
   }
 
-  interest.status = "rejected";
-  await interest.save();
+  request.status = "rejected";
+  await request.save();
 
   res.json(
-    new ApiResponse(200, interest, "Interest rejected")
+    new ApiResponse(200, request, "Request rejected")
   );
 });
 
-// @desc    Withdraw my interest (as buyer)
-// @route   PATCH /api/orders/st/withdraw-interest/:interestId
+// @desc    Withdraw my request (as buyer)
+// @route   PATCH /api/orders/st/withdraw-request/:requestId
 // @access  Private (Buyer only)
-export const withdrawInterest = asyncHandler(async (req, res) => {
-  const { interestId } = req.params;
+export const withdrawRequest = asyncHandler(async (req, res) => {
+  const { requestId } = req.params;
   const userId = getUserId(req);
 
-  const interest = await STInterest.findById(interestId);
-  if (!interest) {
-    throw new ApiError(404, "Interest not found");
+  const request = await STRequest.findById(requestId);
+  if (!request) {
+    throw new ApiError(404, "Request not found");
   }
 
-  if (interest.buyerId !== userId) {
-    throw new ApiError(403, "Only the buyer can withdraw their interest");
+  if (request.buyerId !== userId) {
+    throw new ApiError(403, "Only the buyer can withdraw their request");
   }
 
-  if (interest.status !== "pending") {
-    throw new ApiError(400, "Can only withdraw pending interests");
+  if (request.status !== "pending") {
+    throw new ApiError(400, "Can only withdraw pending requests");
   }
 
-  interest.status = "withdrawn";
-  await interest.save();
+  request.status = "withdrawn";
+  await request.save();
 
   res.json(
-    new ApiResponse(200, interest, "Interest withdrawn")
+    new ApiResponse(200, request, "Request withdrawn")
   );
 });
 
@@ -457,7 +489,7 @@ export const getSTOrderDetails = asyncHandler(async (req, res) => {
 
   const order = await STOrder.findById(id)
     .populate("listingId")
-    .populate("interestId");
+    .populate("requestId");
 
   if (!order) {
     throw new ApiError(404, "Order not found");
@@ -478,31 +510,82 @@ export const getSTOrderDetails = asyncHandler(async (req, res) => {
 // @access  Private
 export const updateSTOrderStatus = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { status, note } = req.body;
+  const { status, note, cancelReason } = req.body;
   const userId = getUserId(req);
+  const idempotencyKey = req.header("Idempotency-Key");
 
-  const order = await STOrder.findById(id).populate("listingId");
-  if (!order) {
-    throw new ApiError(404, "Order not found");
+  if (!idempotencyKey) {
+    throw new ApiError(400, "Idempotency-Key header is required for status updates");
   }
 
-  // Validate status transition using the model's method
+  // Idempotency check
+  const existingKey = await IdempotencyKey.findOne({ key: idempotencyKey });
+  if (existingKey) {
+    if (existingKey.responseStatus) {
+      return res.status(existingKey.responseStatus).json(existingKey.responseBody);
+    } else {
+      throw new ApiError(409, "Request already in progress");
+    }
+  }
+
+  const idempRecord = await IdempotencyKey.create({
+    key: idempotencyKey,
+    actor: userId,
+    endpoint: `/api/orders/st/${id}/status`,
+    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
+  });
+
+  let result;
+  
   try {
-    await order.updateStatus(status, userId, note);
+    const order = await STOrder.findById(id);
+    if (!order) {
+      throw new ApiError(404, "Order not found");
+    }
+
+    const listing = await STListing.findById(order.listingId);
+    
+    // Role checking
+    if (status === "completed" && order.sellerId !== userId) {
+      throw new ApiError(403, "Only the seller can mark order as completed");
+    }
+
+    // Validate status transition using the model's method
+    try {
+      await order.updateStatus(status, userId, note || cancelReason);
+      await order.save();
+    } catch (error) {
+      throw new ApiError(400, error.message);
+    }
+
+    if (listing) {
+      if (status === "completed") {
+        listing.status = "sold";
+      } else if (status === "cancelled") {
+        if (cancelReason === "mutual" || cancelReason === "timeout") {
+          listing.status = "active";
+          listing.acceptedRequestId = null;
+          listing.lockedByOrderId = null;
+        } else {
+          listing.status = "needs_review";
+        }
+      }
+      // disputed leaves listing in pending_completion state
+      await listing.save();
+    }
+    
+    result = order;
   } catch (error) {
-    throw new ApiError(400, error.message);
+    throw error;
   }
 
-  // If order is completed, mark listing as sold
-  if (status === "completed") {
-    await STListing.findByIdAndUpdate(order.listingId._id, {
-      status: "sold"
-    });
-  }
+  const responseBody = new ApiResponse(200, result, `Order ${status} successfully`);
+  
+  idempRecord.responseStatus = 200;
+  idempRecord.responseBody = responseBody;
+  await idempRecord.save();
 
-  res.json(
-    new ApiResponse(200, order, `Order ${status} successfully`)
-  );
+  res.json(responseBody);
 });
 
 // @desc    Get student order statistics
@@ -552,8 +635,8 @@ export const getSTOrderStats = asyncHandler(async (req, res) => {
   );
 });
 
-// Optional: Keep old buy-now for backward compatibility, but redirect to interest
+// Optional: Keep old buy-now for backward compatibility, but redirect to requestItem
 export const createSTOrder = asyncHandler(async (req, res) => {
-  // Redirect to expressInterest
-  return expressInterest(req, res);
+  // Redirect to requestItem
+  return requestItem(req, res);
 });

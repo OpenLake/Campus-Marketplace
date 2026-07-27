@@ -11,9 +11,13 @@ const ListingCard = ({ listing }) => {
     _id = "",
     title = "Untitled Listing",
     price = 0,
+    basePrice = 0,
     images = [],
     condition = "good",
-    location = "Location not specified",
+    location = "",
+    hostel = "",
+    roomNumber = "",
+    additionalNotes = "",
     category = "other",
     createdAt = new Date().toISOString(),
     status = "active",
@@ -45,33 +49,26 @@ const ListingCard = ({ listing }) => {
     return "/placeholder-image.jpg";
   };
 
-  // Extract location string safely
+  // Extract location string from top-level fields (hostel, roomNumber)
   const getLocationString = () => {
-    if (!location) return "Location not specified";
-
-    // If location is a string, return it
-    if (typeof location === "string") return location;
-
-    // If location is an object
-    if (typeof location === "object") {
-      const parts = [];
-      if (location.hostel) parts.push(location.hostel);
-      if (location.pickupPoint) parts.push(location.pickupPoint);
-      return parts.length > 0 ? parts.join(", ") : "Location not specified";
-    }
-
-    return "Location not specified";
+    const parts = [];
+    if (hostel) parts.push(hostel);
+    if (roomNumber) parts.push(`Room ${roomNumber}`);
+    if (parts.length > 0) return parts.join(", ");
+    // Fallback: if legacy location string field has a value
+    if (location && typeof location === "string" && location.trim()) return location.trim();
+    return null;
   };
 
   return (
-    <Link to={`/listings/${_id}`} className="block">
-      <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 group h-full">
+    <Link to={`/listings/${_id}`} className="block h-full">
+      <div className="rounded-md overflow-hidden cursor-pointer transition-transform duration-200 hover:-translate-y-1 group h-full flex flex-col">
         {/* Image */}
-        <div className="relative aspect-4/3 overflow-hidden bg-gray-100">
+        <div className="relative aspect-square overflow-hidden bg-gray-50 flex items-center justify-center rounded-md">
           <img
             src={getImageUrl()}
             alt={title}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+            className="w-4/5 h-4/5 object-contain group-hover:scale-105 transition-transform duration-300"
             onError={(e) => {
               e.target.src = "/placeholder-image.jpg";
             }}
@@ -89,38 +86,29 @@ const ListingCard = ({ listing }) => {
         </div>
 
         {/* Content */}
-        <div className="p-4">
-          <div className="flex items-start justify-between mb-2">
-            <h3 className="text-lg font-bold text-gray-900 line-clamp-1 group-hover:text-blue-600 transition-colors flex-1">
+        <div className="py-4 px-0 flex flex-col flex-grow">
+          <div className="flex items-start justify-between mb-1.5">
+            <h3 className="text-[16px] font-bold text-gray-900 line-clamp-1 group-hover:text-black transition-colors flex-1">
               {title}
             </h3>
-            <span
-              className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ml-2 ${
-                conditionColors[condition] || conditionColors["good"]
-              }`}
-            >
-              {condition
-                .split("-")
-                .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-                .join(" ")}
-            </span>
           </div>
 
-          <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
-            <MapPin className="h-4 w-4 shrink-0" />
-            <span className="line-clamp-1">{getLocationString()}</span>
-          </div>
+          {getLocationString() && (
+            <div className="flex items-center gap-2 text-[13px] text-gray-500 mb-2 mt-auto">
+              <MapPin className="h-3.5 w-3.5 shrink-0" />
+              <span className="line-clamp-1">{getLocationString()}</span>
+            </div>
+          )}
 
-          <div className="flex items-center justify-between">
-            <div className="text-2xl font-bold text-blue-600">
+          <div className="flex items-center gap-2.5 mt-1">
+            <div className="text-[20px] font-extrabold text-black">
               ₹{(price || 0).toLocaleString()}
             </div>
-            <div className="flex items-center gap-1 text-xs text-gray-500">
-              <Calendar className="h-3 w-3" />
-              <span>
-                {createdAt ? new Date(createdAt).toLocaleDateString() : "N/A"}
+            {condition && condition !== "good" && (
+              <span className="bg-[#FFDEDE] text-[#FF4136] text-[11px] font-bold px-2.5 py-0.5 rounded-full whitespace-nowrap">
+                {condition.replace('-', ' ').toUpperCase()}
               </span>
-            </div>
+            )}
           </div>
         </div>
       </div>

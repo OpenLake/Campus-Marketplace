@@ -21,10 +21,12 @@ import DoubleSlider from '../../components/ui/DoubleSlider';
 import listingService from '../../services/listingService';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import Breadcrumb from '../../components/ui/Breadcrumb.jsx';
 
 const ListingPage = () => {
   const navigate = useNavigate();
   const [priceRange, setPriceRange] = useState([0, 5000]);
+  const [tempPriceRange, setTempPriceRange] = useState([0, 5000]);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [listings, setListings] = useState([]);
@@ -148,8 +150,15 @@ const ListingPage = () => {
   };
 
   const handleApplyFilters = () => {
+    const isPriceChanged = priceRange[0] !== tempPriceRange[0] || priceRange[1] !== tempPriceRange[1];
+    const isPageChanged = currentPage !== 1;
+
     setCurrentPage(1);
-    fetchListings();
+    if (isPriceChanged) {
+      setPriceRange(tempPriceRange);
+    } else if (!isPageChanged) {
+      fetchListings();
+    }
   };
 
   const handleSortChange = (value) => {
@@ -196,141 +205,90 @@ const ListingPage = () => {
   }
 
   return (
-    <div className="bg-[#f8f9fa] min-h-screen font-sans pb-20">
-      {/* Breadcrumbs */}
-      <div className="container mx-auto px-4 py-6 text-sm flex items-center gap-2">
-        <span className="text-emerald-500 font-semibold cursor-pointer hover:underline">Home</span> 
-        <ChevronRight size={14} className="text-gray-300" /> 
-        <span className="text-gray-500">Campus Marketplace</span>
+    <div className="bg-[#f8f9fa] dark:bg-gray-950 min-h-screen font-sans text-gray-900 dark:text-gray-100 pb-20 transition-colors">
+      
+      {/* HEADER SECTION */}
+      <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 mb-8 transition-colors">
+        <div className="container mx-auto px-4 py-8">
+          <Breadcrumb items={[{ label: 'Listings' }]} />
+          <h1 className="text-3xl font-black text-gray-900 dark:text-gray-100 mb-2">
+            All Campus Listings
+          </h1>
+          <p className="text-gray-500 dark:text-gray-400">Showing {listings.length} items from your campus community</p>
+        </div>
       </div>
 
       <div className="container mx-auto px-4 flex flex-col lg:flex-row gap-10">
         
         {/* SIDEBAR FILTERS */}
-        <aside className="w-full lg:w-1/4 space-y-8">
-          
-          <div className="bg-white rounded-3xl p-6 shadow-[0_10px_30px_rgba(0,0,0,0.03)]">
-            <h3 className="text-xl font-bold mb-6 relative">
-              Category
-              <span className="absolute bottom-[-6px] left-0 w-10 h-1 bg-emerald-100 rounded-full"></span>
-            </h3>
-            <ul className="space-y-3">
-              {categories.map((cat) => (
-                <li 
-                  key={cat.name} 
-                  onClick={() => handleCategoryClick(cat.name)}
-                  className={`flex items-center justify-between group cursor-pointer p-2.5 rounded-xl transition-all duration-300 ${
-                    selectedCategory === cat.name.toLowerCase() 
-                      ? 'bg-emerald-100 text-emerald-700' 
-                      : 'hover:bg-emerald-50'
-                  }`}
-                >
-                  <div className="flex items-center gap-3 text-gray-800 font-medium">
-                    <span className={`group-hover:scale-110 transition-transform ${
-                      selectedCategory === cat.name.toLowerCase() ? 'text-emerald-600' : 'text-emerald-500'
-                    }`}>{cat.icon}</span>
-                    <span className={`text-[14px] font-semibold ${
-                      selectedCategory === cat.name.toLowerCase() ? 'text-emerald-700' : 'group-hover:text-emerald-600'
-                    }`}>{cat.name}</span>
-                  </div>
-                  <span className="bg-emerald-100 text-emerald-700 text-[11px] font-bold px-2.5 py-1 rounded-full">
-                    {cat.count}
-                  </span>
-                </li>
-              ))}
-            </ul>
+        <aside className="w-full lg:w-[260px] flex-shrink-0 border-[1.5px] border-gray-200 dark:border-gray-800 p-5 bg-white dark:bg-gray-900 h-fit transition-colors rounded-2xl">
+          <div className="flex justify-between items-center text-[20px] font-bold pb-5 border-b-[1.5px] border-gray-200 dark:border-gray-800 mb-6 text-gray-900 dark:text-gray-100">
+            Filters
+            <Filter size={18} className="text-gray-400 dark:text-gray-500" />
           </div>
 
-          <div className="bg-white rounded-3xl p-6 shadow-[0_10px_30px_rgba(0,0,0,0.03)]">
-            <h3 className="text-xl font-bold mb-6 relative">
-              Filter by Price
-              <span className="absolute bottom-[-6px] left-0 w-10 h-1 bg-emerald-100 rounded-full"></span>
-            </h3>
-            
+
+
+          <div className="mb-6 pb-6 border-b-[1.5px] border-gray-200 dark:border-gray-800">
+            <h4 className="flex justify-between items-center text-[16px] font-bold mb-4 text-gray-900 dark:text-gray-100">
+              Price <span className="text-xs">^</span>
+            </h4>
             <DoubleSlider
               min={0}
               max={10000}
               step={100}
-              value={priceRange}
-              onChange={setPriceRange}
+              value={tempPriceRange}
+              onChange={setTempPriceRange}
             />
-            
-            <div className="flex justify-between items-center mb-6 bg-emerald-50 rounded-xl p-4 mt-6">
-              <div className="text-center">
-                <label className="block text-xs font-bold text-gray-500 mb-1">Min</label>
-                <div className="flex items-center gap-1">
-                  <span className="text-lg font-bold text-gray-800">₹</span>
-                  <input
-                    type="number"
-                    value={priceRange[0]}
-                    onChange={(e) => {
-                      const val = Number(e.target.value);
-                      setPriceRange([val, priceRange[1]]);
-                    }}
-                    className="w-20 bg-transparent border-none text-lg font-bold text-gray-800 focus:outline-none focus:ring-1 focus:ring-emerald-500 rounded px-1"
-                    min={0}
-                    max={priceRange[1] - 1}
-                  />
-                </div>
-              </div>
-              <div className="w-5 h-0.5 bg-gray-300"></div>
-              <div className="text-center">
-                <label className="block text-xs font-bold text-gray-500 mb-1">Max</label>
-                <div className="flex items-center gap-1">
-                  <span className="text-lg font-bold text-gray-800">₹</span>
-                  <input
-                    type="number"
-                    value={priceRange[1]}
-                    onChange={(e) => {
-                      const val = Number(e.target.value);
-                      setPriceRange([priceRange[0], val]);
-                    }}
-                    className="w-20 bg-transparent border-none text-lg font-bold text-gray-800 focus:outline-none focus:ring-1 focus:ring-emerald-500 rounded px-1"
-                    min={priceRange[0] + 1}
-                    max={10000}
-                  />
-                </div>
-              </div>
+            <div className="flex justify-between text-sm font-bold text-gray-500 dark:text-gray-400 mt-4">
+              <span>₹{tempPriceRange[0]}</span>
+              <span>₹{tempPriceRange[1]}</span>
             </div>
+          </div>
 
-            <div className="space-y-4">
-              <p className="text-xs font-bold uppercase text-gray-400 tracking-widest">Item Condition</p>
+          <div className="mb-6 pb-6 border-b-[1.5px] border-gray-200 dark:border-gray-800">
+            <h4 className="flex justify-between items-center text-[16px] font-bold mb-4 text-gray-900 dark:text-gray-100">
+              Condition <span className="text-xs">^</span>
+            </h4>
+            <div className="space-y-3">
               {['New', 'Like New', 'Good', 'Fair', 'Poor'].map((cond) => (
-                <label key={cond} className="flex items-center gap-3 cursor-pointer group p-2 rounded-lg hover:bg-emerald-50">
+                <label key={cond} className="flex items-center gap-3 cursor-pointer group">
                   <input 
                     type="checkbox" 
                     checked={selectedConditions.includes(cond.toLowerCase())}
                     onChange={() => handleConditionChange(cond.toLowerCase())}
-                    className="w-4 h-4 rounded border-gray-300 text-emerald-500 focus:ring-emerald-500" 
+                    className="w-4 h-4 border-gray-300 dark:border-gray-600 dark:bg-gray-800 text-emerald-500 focus:ring-emerald-500" 
                   />
-                  <span className="text-[14px] text-gray-700 font-medium group-hover:text-emerald-600 transition-colors">{cond}</span>
+                  <span className={`text-[15px] font-medium transition-colors ${
+                     selectedConditions.includes(cond.toLowerCase()) ? 'text-emerald-600 dark:text-emerald-500' : 'text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-200'
+                  }`}>{cond}</span>
                 </label>
               ))}
             </div>
-            
-            <button 
-              onClick={handleApplyFilters}
-              className="w-full mt-6 bg-emerald-500 text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-emerald-600 shadow-lg shadow-emerald-100 transition-all"
-            >
-              <Filter size={18} /> Apply Filters
-            </button>
           </div>
+          
+          <button 
+            onClick={handleApplyFilters}
+            className="w-full bg-emerald-600 text-white py-[14px] font-bold text-[15px] hover:bg-emerald-700 transition-colors"
+          >
+            Apply Filter
+          </button>
         </aside>
 
         {/* MAIN LISTING CONTENT */}
         <main className="flex-1">
           {/* Search Bar */}
-          <div className="bg-white rounded-2xl p-4 shadow-sm mb-8">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 border border-gray-200 dark:border-gray-800 mb-8 transition-colors">
             <div className="flex items-center gap-4">
               <div className="flex-1 relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={20} />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                   placeholder="Search for books, cycles, electronics, clothing..."
-                  className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-gray-700 font-medium"
+                  className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-xl border-0 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-gray-700 dark:text-gray-200 font-medium"
                 />
               </div>
               <button 
@@ -345,15 +303,15 @@ const ListingPage = () => {
           {/* Results Info */}
           <div className="flex justify-between items-center mb-8">
             <div>
-              <p className="text-gray-500 text-[15px]">
-                Showing <span className="text-emerald-600 font-bold">{listings.length}</span> of{" "}
-                <span className="text-emerald-600 font-bold">{totalListings}</span> products
+              <p className="text-gray-500 dark:text-gray-400 text-[15px]">
+                Showing <span className="text-emerald-600 dark:text-emerald-500 font-bold">{listings.length}</span> of{" "}
+                <span className="text-emerald-600 dark:text-emerald-500 font-bold">{totalListings}</span> products
               </p>
             </div>
             <div className="flex gap-4">
               <select 
                 onChange={(e) => handleSortChange(e.target.value)}
-                className="bg-white px-5 py-3 rounded-2xl shadow-sm text-sm font-medium text-gray-600 border-0 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+                className="bg-white dark:bg-gray-900 px-5 py-3 rounded-2xl border border-gray-200 dark:border-gray-800 text-sm font-medium text-gray-600 dark:text-gray-300 focus:ring-2 focus:ring-emerald-500 cursor-pointer transition-colors"
               >
                 <option value="createdAt-desc">Newest First</option>
                 <option value="price-asc">Price: Low to High</option>
@@ -378,68 +336,38 @@ const ListingPage = () => {
                   <div 
                     key={item._id} 
                     onClick={() => handleViewListing(item._id)}
-                    className="bg-white rounded-[30px] p-6 shadow-sm hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500 group relative flex flex-col border border-transparent hover:border-emerald-100 cursor-pointer"
+                    className="border border-gray-200 dark:border-gray-800 p-4 bg-white dark:bg-gray-900 cursor-pointer group transition-transform duration-200 hover:-translate-y-1"
                   >
                     
                     {/* Image Area */}
-                    <div className="relative h-56 bg-[#f2f3f4] rounded-2xl flex items-center justify-center text-7xl mb-6 overflow-hidden">
+                    <div className="bg-gray-50 dark:bg-gray-800 aspect-square flex items-center justify-center overflow-hidden relative border border-gray-200 dark:border-gray-700">
                       {item.images && item.images.length > 0 ? (
                         <img 
                           src={item.images[0].url} 
                           alt={item.title}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                          className="w-[80%] h-[80%] object-contain mix-blend-multiply dark:mix-blend-normal transition-transform duration-300 group-hover:scale-105"
                         />
                       ) : (
                         <span className="text-6xl">📦</span>
                       )}
                       
-                      {/* Absolute UI overlay */}
-                      <div className="absolute top-4 left-4 flex flex-col gap-2">
-                        <span className={`px-4 py-1.5 text-white text-[10px] font-bold rounded-full ${tag.color}`}>
-                          {tag.text}
+                      {item.originalPrice && (
+                        <span className="absolute top-3 left-3 bg-red-100 text-red-600 text-[11px] font-bold px-2.5 py-1 border border-red-200">
+                          -{Math.round((1 - (item.basePrice || item.price || 0) / item.originalPrice) * 100)}%
                         </span>
-                        <span className={`px-4 py-1.5 ${getConditionColor(item.condition)} text-[10px] font-bold rounded-full`}>
-                          {item.condition}
-                        </span>
-                      </div>
-
-                      {/* Hover Quick Actions */}
-                      <div className="absolute inset-0 bg-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                        <button className="bg-white p-3 rounded-xl text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all shadow-md">
-                          <Heart size={18} />
-                        </button>
-                        <button className="bg-white p-3 rounded-xl text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all shadow-md">
-                          <Eye size={18} />
-                        </button>
-                      </div>
+                      )}
                     </div>
 
                     {/* Content */}
-                    <div className="flex-1 flex flex-col">
-                      <span className="text-[12px] text-gray-400 font-bold uppercase tracking-widest mb-2">
-                        {item.category?.name || item.category || 'Uncategorized'}
-                      </span>
-                      <h4 className="text-[17px] font-extrabold text-[#253D4E] mb-3 group-hover:text-emerald-500 transition-colors line-clamp-2">
+                    <div className="py-4">
+                      <h4 className="font-bold text-[15px] mb-1 text-gray-900 dark:text-gray-100 line-clamp-1">
                         {item.title}
                       </h4>
-                      
-                      <p className="text-sm text-gray-400 mb-6 line-clamp-2">
-                        {item.description?.substring(0, 60)}...
-                      </p>
-
-                      <div className="mt-auto flex items-center justify-between pt-4 border-t border-gray-50">
-                        <div>
-                          <span className="text-2xl font-black text-emerald-500">
-                            ₹{item.basePrice || item.price || 0}
-                          </span>
-                          {item.isNegotiable && (
-                            <span className="text-xs text-gray-400 block">Negotiable</span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-1 text-sm text-gray-400">
-                          <Eye size={16} />
-                          <span>{item.views || 0}</span>
-                        </div>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="text-lg font-extrabold text-emerald-600 dark:text-emerald-500">₹{item.basePrice || item.price || 0}</span>
+                        {item.originalPrice && (
+                          <span className="text-gray-400 dark:text-gray-500 line-through text-sm font-medium">₹{item.originalPrice}</span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -454,7 +382,7 @@ const ListingPage = () => {
               <button
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="flex items-center gap-2 px-4 py-3 rounded-xl bg-white text-gray-600 font-medium hover:bg-emerald-50 hover:text-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+                className="flex items-center gap-2 px-4 py-3 rounded-xl bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 font-medium hover:bg-emerald-50 dark:hover:bg-gray-800 hover:text-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all border border-gray-200 dark:border-gray-800"
               >
                 <ChevronLeft size={18} /> Previous
               </button>
@@ -472,8 +400,8 @@ const ListingPage = () => {
                         onClick={() => setCurrentPage(pageNum)}
                         className={`w-10 h-10 rounded-xl font-bold transition-all ${
                           isCurrent 
-                            ? 'bg-emerald-500 text-white shadow-md' 
-                            : 'bg-white text-gray-600 hover:bg-emerald-50 hover:text-emerald-600'
+                            ? 'bg-emerald-500 text-white border border-emerald-500' 
+                            : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-gray-800 hover:text-emerald-600 border border-gray-200 dark:border-gray-800'
                         }`}
                       >
                         {pageNum}
@@ -492,7 +420,7 @@ const ListingPage = () => {
               <button
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
-                className="flex items-center gap-2 px-4 py-3 rounded-xl bg-white text-gray-600 font-medium hover:bg-emerald-50 hover:text-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+                className="flex items-center gap-2 px-4 py-3 rounded-xl bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 font-medium hover:bg-emerald-50 dark:hover:bg-gray-800 hover:text-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all border border-gray-200 dark:border-gray-800"
               >
                 Next <ChevronRight size={18} />
               </button>

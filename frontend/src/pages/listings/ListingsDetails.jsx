@@ -22,7 +22,7 @@ import RelatedListings from "../../components/listings/RelatedListings.jsx";
 import ShareButtons from "../../components/ui/ShareButton.jsx";
 import Breadcrumb from "../../components/ui/Breadcrumb.jsx";
 import Button from "../../components/ui/Button.jsx";
-import InterestModal from "../../components/listings/InterestModal.jsx";
+import RequestModal from "../../components/listings/RequestModal.jsx";
 import toast from "react-hot-toast";
 
 /**
@@ -38,9 +38,9 @@ const ListingDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [deleting, setDeleting] = useState(false);
-  const [expressingInterest, setExpressingInterest] = useState(false);
-  const [showInterestModal, setShowInterestModal] = useState(false);
-  const [userInterest, setUserInterest] = useState(null);
+  const [requestingItem, setRequestingItem] = useState(false);
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [userRequest, setUserRequest] = useState(null);
 
   useEffect(() => {
     fetchListing();
@@ -53,9 +53,9 @@ const ListingDetail = () => {
       const response = await listingService.getListingById(id);
       setListing(response.data);
       
-      // Check if user has pending interest
-      if (response.data.userInterest) {
-        setUserInterest(response.data.userInterest);
+      // Check if user has pending request
+      if (response.data.userRequest) {
+        setUserRequest(response.data.userRequest);
       }
     } catch (err) {
       console.error("Error fetching listing:", err);
@@ -66,37 +66,37 @@ const ListingDetail = () => {
     }
   };
 
-  const handleExpressInterest = async (interestData) => {
+  const handleRequestItem = async (requestData) => {
     try {
-      setExpressingInterest(true);
-      const response = await orderService.expressInterest(interestData);
-      toast.success("Interest expressed successfully!");
-      setShowInterestModal(false);
-      setUserInterest(response.data);
-      fetchListing(); // Refresh to update interest count
+      setRequestingItem(true);
+      const response = await orderService.requestItem(requestData);
+      toast.success("Item requested successfully!");
+      setShowRequestModal(false);
+      setUserRequest(response.data);
+      fetchListing(); // Refresh to update request count
     } catch (err) {
-      console.error("Error expressing interest:", err);
-      toast.error(err.response?.data?.message || "Failed to express interest");
+      console.error("Error requesting item:", err);
+      toast.error(err.response?.data?.message || "Failed to request item");
     } finally {
-      setExpressingInterest(false);
+      setRequestingItem(false);
     }
   };
 
-  const handleWithdrawInterest = async () => {
-    if (!userInterest) return;
+  const handleWithdrawRequest = async () => {
+    if (!userRequest) return;
     
-    if (!window.confirm("Are you sure you want to withdraw your interest?")) {
+    if (!window.confirm("Are you sure you want to withdraw your request?")) {
       return;
     }
 
     try {
-      await orderService.withdrawInterest(userInterest._id);
-      toast.success("Interest withdrawn");
-      setUserInterest(null);
-      fetchListing(); // Refresh to update interest count
+      await orderService.withdrawRequest(userRequest._id);
+      toast.success("Request withdrawn");
+      setUserRequest(null);
+      fetchListing(); // Refresh to update request count
     } catch (err) {
-      console.error("Error withdrawing interest:", err);
-      toast.error(err.response?.data?.message || "Failed to withdraw interest");
+      console.error("Error withdrawing request:", err);
+      toast.error(err.response?.data?.message || "Failed to withdraw request");
     }
   };
 
@@ -108,9 +108,9 @@ const ListingDetail = () => {
     }
 
     // Open email client
-    const subject = encodeURIComponent(`Interested in: ${listing.title}`);
+    const subject = encodeURIComponent(`Request for: ${listing.title}`);
     const body = encodeURIComponent(
-      `Hi ${listing.seller?.first_name},\n\nI'm interested in your listing "${listing.title}".\n\n` +
+      `Hi ${listing.seller?.first_name},\n\nI would like to request your listing "${listing.title}".\n\n` +
       `Base Price: ₹${listing.basePrice}\n` +
       `Condition: ${listing.condition}\n\n` +
       `Please let me know if it's still available.\n\nThanks!`
@@ -135,7 +135,7 @@ const ListingDetail = () => {
       setDeleting(true);
       await listingService.deleteListing(id);
       toast.success("Listing deleted successfully");
-      navigate("/my-listings");
+      navigate("/dashboard/my-listings");
     } catch (err) {
       console.error("Error deleting listing:", err);
       toast.error(err.response?.data?.message || "Failed to delete listing");
@@ -190,10 +190,13 @@ const ListingDetail = () => {
     );
   }
 
-  const isOwner = user?._id === listing.seller?.user_id;
+  const currentUserId = user?._id || user?.user_id || user?.id;
+  const isOwner = currentUserId && (
+    (listing.seller && currentUserId === listing.seller.user_id) || 
+    currentUserId === listing.sellerId
+  );
 
   const breadcrumbItems = [
-    { label: "Home", link: "/" },
     { label: "Listings", link: "/listings" },
     { label: listing.category?.name || listing.category, link: `/listings?category=${listing.category?._id || listing.category}` },
     { label: listing.title },
@@ -233,10 +236,10 @@ const ListingDetail = () => {
     return labels[status] || status;
   };
 
-  const canExpressInterest = 
+  const canRequestItem = 
     listing.status === "active" && 
     !isOwner && 
-    !userInterest;
+    !userRequest;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -283,13 +286,13 @@ const ListingDetail = () => {
                 </div>
               </div>
 
-              {/* Interest Stats */}
-              {listing.interestCount > 0 && (
+              {/* Request Stats */}
+              {listing.requestCount > 0 && (
                 <div className="flex items-center gap-4 bg-orange-50 p-3 rounded-lg mb-4">
                   <Users className="h-5 w-5 text-orange-600" />
                   <div>
                     <p className="text-sm font-medium text-orange-800">
-                      {listing.interestCount} interested {listing.interestCount === 1 ? 'person' : 'people'}
+                      {listing.requestCount} request{listing.requestCount === 1 ? '' : 's'} received
                     </p>
                     {listing.highestOffer > 0 && (
                       <p className="text-xs text-orange-600">
@@ -344,39 +347,72 @@ const ListingDetail = () => {
               {!isOwner && (
                 <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    Interested?
+                    Request Item?
                   </h3>
                   
                   {!user ? (
-                    <p className="text-sm text-gray-600 mb-4">
-                      Please login to express interest
-                    </p>
-                  ) : userInterest ? (
                     <div className="space-y-3">
-                      <div className="bg-green-50 p-4 rounded-lg">
-                        <p className="text-sm text-green-800 font-medium mb-2">
-                          You've expressed interest!
+                      <p className="text-sm text-gray-600">
+                        Please login to request this item
+                      </p>
+                      <Button
+                        onClick={() => navigate("/login", { state: { from: window.location.pathname } })}
+                        className="w-full"
+                      >
+                        Login to Request Item
+                      </Button>
+                    </div>
+                  ) : userRequest && userRequest.status === 'pending' ? (
+                    <div className="space-y-3">
+                      <div className="bg-orange-50 p-4 rounded-lg border border-orange-100 animate-[fadeIn_0.2s_ease]">
+                        <p className="text-sm text-orange-900 font-semibold mb-1 flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-orange-500 animate-ping"></span>
+                          Request Pending
                         </p>
-                        <p className="text-xs text-green-600">
-                          Offered: ₹{userInterest.offeredPrice.toLocaleString()}
+                        <p className="text-xs text-gray-700">
+                          Offered Price: ₹{userRequest.offeredPrice.toLocaleString()}
                         </p>
                       </div>
                       <Button
-                        onClick={handleWithdrawInterest}
+                        onClick={handleWithdrawRequest}
                         variant="outline"
-                        className="w-full"
+                        className="w-full text-red-650 hover:bg-red-50 border-red-200"
                       >
-                        Withdraw Interest
+                        Withdraw Request
                       </Button>
                     </div>
-                  ) : canExpressInterest ? (
+                  ) : userRequest && userRequest.status === 'accepted' ? (
+                    <div className="space-y-3">
+                      <div className="bg-emerald-50 p-4 rounded-lg border border-emerald-200 animate-[fadeIn_0.2s_ease]">
+                        <p className="text-sm text-emerald-950 font-bold mb-1 flex items-center gap-1.5">
+                          <CheckCircle className="h-4 w-4 text-emerald-600" />
+                          Offer Accepted!
+                        </p>
+                        <p className="text-xs text-emerald-800">
+                          The seller accepted your offer of ₹{userRequest.offeredPrice.toLocaleString()}!
+                        </p>
+                        {userRequest.sellerMessage && (
+                          <div className="mt-2 p-3 bg-emerald-100/50 rounded-lg border border-emerald-200">
+                            <p className="text-xs text-emerald-700 font-semibold mb-1">Message from Seller:</p>
+                            <p className="text-sm text-emerald-900">{userRequest.sellerMessage}</p>
+                          </div>
+                        )}
+                      </div>
+                      <Link
+                        to="/dashboard/my-requests"
+                        className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-center text-sm font-semibold rounded-lg shadow-sm transition block"
+                      >
+                        Manage Meetup Details
+                      </Link>
+                    </div>
+                  ) : canRequestItem ? (
                     <>
                       <Button
-                        onClick={() => setShowInterestModal(true)}
+                        onClick={() => setShowRequestModal(true)}
                         className="w-full mb-3"
                       >
                         <Heart className="h-4 w-4 mr-2" />
-                        Express Interest
+                        Request Item
                       </Button>
                       <Button
                         onClick={handleContact}
@@ -388,9 +424,11 @@ const ListingDetail = () => {
                       </Button>
                     </>
                   ) : (
-                    <p className="text-sm text-gray-600">
-                      This item is no longer available
-                    </p>
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+                      <p className="text-xs text-gray-500 font-medium">
+                        {listing.status === 'sold' ? 'Sold: This item is no longer available.' : 'Reserved: Pending meetup completion.'}
+                      </p>
+                    </div>
                   )}
                 </div>
               )}
@@ -409,14 +447,14 @@ const ListingDetail = () => {
                     Manage Your Listing
                   </h3>
                   
-                  {/* Interest Summary for Owner */}
-                  {listing.interestCount > 0 && (
+                  {/* Request Summary for Owner */}
+                  {listing.requestCount > 0 && (
                     <div className="mb-4 p-3 bg-white rounded-lg">
                       <Link 
-                        to="/incoming-interests"
+                        to="/dashboard/incoming-requests"
                         className="flex items-center justify-between text-sm text-blue-600 hover:text-blue-700"
                       >
-                        <span>View {listing.interestCount} interested {listing.interestCount === 1 ? 'buyer' : 'buyers'}</span>
+                        <span>View {listing.requestCount} incoming request{listing.requestCount === 1 ? '' : 's'}</span>
                         <Users className="h-4 w-4" />
                       </Link>
                     </div>
@@ -452,13 +490,13 @@ const ListingDetail = () => {
         />
       </div>
 
-      {/* Interest Modal */}
-      <InterestModal
-        isOpen={showInterestModal}
-        onClose={() => setShowInterestModal(false)}
+      {/* Request Modal */}
+      <RequestModal
+        isOpen={showRequestModal}
+        onClose={() => setShowRequestModal(false)}
         listing={listing}
-        onSubmit={handleExpressInterest}
-        isSubmitting={expressingInterest}
+        onSubmit={handleRequestItem}
+        isSubmitting={requestingItem}
       />
     </div>
   );
