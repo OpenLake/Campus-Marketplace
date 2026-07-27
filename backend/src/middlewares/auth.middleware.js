@@ -1,8 +1,7 @@
 import jwt from "jsonwebtoken";
-import { getPool } from "../db/pgConnect.js";
 import { ApiError } from "../utils/api-error.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { findUserById } from "../models/users.model.js"; // add this import
+import { findUserById } from "../models/users.model.js";
 
  
 

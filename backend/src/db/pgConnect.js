@@ -7,19 +7,12 @@ let pool;
 
 const connectPostgres = async () => {
   try {
-    // Initialize database and get connection pool
-    pool = await initDatabase();
-    
-    console.log('📊 PostgreSQL connected successfully');
-     
-    // Handle pool errors
-    pool.on('error', (err) => {
-      console.error('Unexpected PostgreSQL pool error:', err);
-    });
-    
-    return pool;
+    // Initialize database (MongoDB and categories)
+    await initDatabase();
+    console.log('✅ Supabase REST API initialized');
+    return null;
   } catch (error) {
-    console.error('PostgreSQL connection error:', error);
+    console.error('Database initialization error:', error);
     process.exit(1);
   }
 };

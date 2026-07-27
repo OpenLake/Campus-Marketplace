@@ -11,6 +11,7 @@
     "dev": "nodemon src/index.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.109.0",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.2",
     "cloudinary": "^2.7.0",
@@ -34,7 +35,8 @@
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "pg": "^8.19.0",
-    "pg-promise": "^12.6.1"
+    "pg-promise": "^12.6.1",
+    "ws": "^8.21.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

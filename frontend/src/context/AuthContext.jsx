@@ -91,9 +91,12 @@ export const AuthProvider = ({ children } = {}) => {
         return { requiresDetails: true };
       } else {
         const userData = data.user || data.data?.user || data.data;
+        if (!userData) {
+          throw new Error("Invalid response from server: user data is missing.");
+        }
         setUserAndToken(userData);
         setIsAuthenticated(true);
-        toast.success(`Welcome back, ${userData.first_name || "User"}!`);
+        toast.success(`Welcome back, ${userData?.first_name || "User"}!`);
         return { success: true, user: userData };
       }
     } catch (error) {
