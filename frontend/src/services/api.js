@@ -40,7 +40,8 @@ api.interceptors.response.use(
     if (originalRequest.url === '/users/refresh-token' || 
         originalRequest.url === '/users/login' || 
         originalRequest.url === '/users/google' ||
-        originalRequest.url === '/users/register') {
+        originalRequest.url === '/users/register' ||
+        originalRequest.url === '/users/me') {
       return Promise.reject(error);
     }
 

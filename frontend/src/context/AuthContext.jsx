@@ -6,12 +6,10 @@ import toast from "react-hot-toast";
 
 export const AuthContext = createContext(null);
 
-const IS_DEV_MODE = import.meta.env.VITE_APP_MODE === "dev";
-
 export const AuthProvider = ({ children } = {}) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => tokenManager.getUser());
   const [loading, setLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => !!tokenManager.getUser());
   const [tempToken, setTempToken] = useState(null);
 
   const normalizeUser = (userData) => {
@@ -54,22 +52,6 @@ export const AuthProvider = ({ children } = {}) => {
         }
       } catch (err) {
         console.log("No active real session found, checking dev mode fallback...");
-      }
-
-      // 2. If no real session, check dev mode fallback
-      if (IS_DEV_MODE) {
-        setUserAndToken({
-          _id: "dev-admin-id",
-          email: "dev-admin@campus.com",
-          first_name: "Dev",
-          last_name: "Admin",
-          role: "admin",
-          roles: ["admin"],
-          is_verified: true,
-          avatar: "https://via.placeholder.com/150",
-        });
-        setIsAuthenticated(true);
-        return;
       }
 
       setUserAndToken(null);
@@ -155,9 +137,7 @@ export const AuthProvider = ({ children } = {}) => {
 
   const logout = async () => {
     try {
-      if (!IS_DEV_MODE) {
-        await authService.logout();
-      }
+      await authService.logout();
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
@@ -214,7 +194,6 @@ export const AuthProvider = ({ children } = {}) => {
     checkAuth,
     hasRole,
     hasAnyRole,
-    isTestMode: IS_DEV_MODE,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

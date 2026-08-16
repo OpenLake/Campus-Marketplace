@@ -1,14 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  MapPin, 
-  PhoneCall, 
-  Mail, 
-  Clock, 
-  Facebook, 
-  Twitter, 
-  Instagram, 
-  Github 
+import {
+  MapPin,
+  PhoneCall,
+  Mail,
+  Clock,
+  Facebook,
+  Twitter,
+  Instagram,
+  Github
 } from 'lucide-react';
 import siteLogo from '../../assets/site_logo.png';
 
@@ -19,7 +19,7 @@ const Footer = () => {
     <footer className="bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 font-sans border-t border-gray-100 dark:border-gray-800 pt-3 transition-colors">
       <div className="container mx-auto px-2">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pb-3">
-          
+
           {/* Column 1: Brand & Contact */}
           <div className="space-y-6">
             <div className="flex items-center space-x-2">
@@ -34,7 +34,7 @@ const Footer = () => {
             <ul className="space-y-3 text-[14px]">
               <li className="flex items-start gap-2">
                 <MapPin className="w-5 h-5 text-emerald-500 shrink-0" />
-                <span>Address: IIT Bhilai, GEC Campus, Sejbahar</span>
+                <span>Address: IIT Bhilai,Durg</span>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="w-5 h-5 text-emerald-500 shrink-0" />
@@ -63,8 +63,8 @@ const Footer = () => {
               <li><Link to="/dashboard/products/add" className="hover:text-emerald-500 transition-all hover:translate-x-1 inline-block">List an Item</Link></li>
             </ul>
           </div>
- 
-           
+
+
         </div>
 
         {/* Bottom Bar */}
@@ -76,26 +76,10 @@ const Footer = () => {
             </div>
 
             <div className="hidden xl:flex items-center gap-8">
-             
-            </div>
-
-            <div className="flex flex-col items-center lg:items-end gap-2">
-              <div className="flex items-center gap-3">
-                <span className="font-bold text-gray-700 dark:text-gray-300">Follow Us</span>
-                <div className="flex gap-2">
-                  <div className="w-8 h-8 bg-emerald-500 text-white rounded-full flex items-center justify-center hover:bg-emerald-600 cursor-pointer transition-colors">
-                    <Facebook size={16} />
-                  </div>
-                  <div className="w-8 h-8 bg-emerald-500 text-white rounded-full flex items-center justify-center hover:bg-emerald-600 cursor-pointer transition-colors">
-                    <Twitter size={16} />
-                  </div>
-                  <div className="w-8 h-8 bg-emerald-500 text-white rounded-full flex items-center justify-center hover:bg-emerald-600 cursor-pointer transition-colors">
-                    <Instagram size={16} />
-                  </div>
-                </div>
-              </div>
 
             </div>
+
+
           </div>
         </div>
       </div>

@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { supabase } from "../db/supabaseClient.js";
- 
 import { ApiError } from "../utils/api-error.js";
 import { ApiResponse } from "../utils/api-response.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -227,14 +227,17 @@ export const createVendorProfile = async (vendorData) => {
 // ========== REFRESH TOKEN MANAGEMENT ==========
 export const saveRefreshToken = async (userId, token, expiresInDays = 7) => {
   const expiresAt = new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000).toISOString();
-  await supabase.from('refresh_tokens').insert([{ user_id: userId, token, expires_at: expiresAt }]);
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+  await supabase.from('refresh_tokens').insert([{ user_id: userId, token: tokenHash, expires_at: expiresAt }]);
 };
 
 export const deleteRefreshToken = async (token) => {
-  await supabase.from('refresh_tokens').delete().eq('token', token);
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+  await supabase.from('refresh_tokens').delete().eq('token', tokenHash);
 };
 
 export const findRefreshToken = async (token) => {
-  const { data } = await supabase.from('refresh_tokens').select('*').eq('token', token).gt('expires_at', new Date().toISOString()).single();
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+  const { data } = await supabase.from('refresh_tokens').select('*').eq('token', tokenHash).gt('expires_at', new Date().toISOString()).single();
   return data || null;
 };

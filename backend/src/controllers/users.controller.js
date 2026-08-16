@@ -76,6 +76,13 @@ export const registerUser = asyncHandler(async (req, res) => {
       });
     }
 
+    if (!email.endsWith('@iitbhilai.ac.in') && !email.endsWith('@iitbhilai.edu.in')) {
+      return res.status(400).json({
+        success: false,
+        message: "Must use @iitbhilai.ac.in or @iitbhilai.edu.in email"
+      });
+    }
+
     // Check if user already exists
     const existingUser = await findUserByEmail(email);
     if (existingUser) {

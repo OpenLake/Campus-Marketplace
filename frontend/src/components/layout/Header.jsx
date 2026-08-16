@@ -121,7 +121,7 @@ const Header = () => {
 
 
 
-          {loading ? (
+          {loading && isAuthenticated ? (
             <div className="flex items-center gap-3 animate-pulse">
               <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
               <div className="w-16 h-4 bg-gray-200 dark:bg-gray-700 rounded hidden xl:block"></div>
@@ -331,7 +331,7 @@ const Header = () => {
                 </button>
               </div>
 
-              {loading ? (
+              {loading && isAuthenticated ? (
                 <div className="flex flex-col gap-2 mt-4 animate-pulse px-4 py-3">
                   <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded-lg w-full"></div>
                 </div>

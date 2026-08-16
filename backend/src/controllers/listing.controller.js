@@ -8,6 +8,7 @@ import { ApiResponse } from "../utils/api-response.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import mongoose from "mongoose";
 import { uploadToCloudinary } from "../utils/upload.js";
+import { getCachedData, setCachedData, invalidateListingCache } from "../utils/cache.js";
 
 // Helper to get user ID 
 const getUserId = (req) => {
@@ -114,6 +115,9 @@ export const createListing = asyncHandler(async (req, res) => {
   // Populate category for response
   await listing.populate("category");
 
+  // Invalidate cache since a new listing was added
+  await invalidateListingCache();
+
   console.log("Listing created:", listing._id);
 
   res.status(201).json(
@@ -135,6 +139,12 @@ export const getListings = asyncHandler(async (req, res) => {
     page = 1,
     limit = 20
   } = req.query;
+
+  // Try fetching from cache
+  const cacheData = await getCachedData("campus:v1:listings", req.query);
+  if (cacheData) {
+    return res.json(new ApiResponse(200, cacheData, "Listings fetched from cache"));
+  }
 
   // Base filter: only active listings
   const filter = { status: "active" };
@@ -181,11 +191,9 @@ export const getListings = asyncHandler(async (req, res) => {
           seller: seller ? {
             user_id: seller.user_id,
             first_name: seller.first_name,
-            
             last_name: seller.last_name,
             email: seller.email,           
             phone_number: seller.phone_number, 
-
             avatar: seller.avatar,
             rating: seller.average_rating || 0
           } : null
@@ -196,17 +204,19 @@ export const getListings = asyncHandler(async (req, res) => {
     })
   );
 
-  res.json(
-    new ApiResponse(200, {
-      listings: listingsWithSellers,
-      pagination: {
-        page: Number(page),
-        limit: Number(limit),
-        total,
-        pages: Math.ceil(total / Number(limit))
-      }
-    }, "Listings fetched successfully")
-  );
+  const responseData = {
+  listings: listingsWithSellers,
+  pagination: {
+    page: Number(page),
+    limit: Number(limit),
+    total,
+    pages: Math.ceil(total / Number(limit))
+  }
+};
+
+await setCachedData("campus:v1:listings", req.query, responseData, 30);
+
+res.json(new ApiResponse(200, responseData, "Listings fetched successfully"));
 });
 
 export const getListingById = asyncHandler(async (req, res) => {
@@ -214,6 +224,13 @@ export const getListingById = asyncHandler(async (req, res) => {
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
     throw new ApiError(400, "Invalid listing ID");
+  }
+
+  // Attempt to fetch from cache (include user context in queryParams)
+  const cacheKey = { id, userId: req.user ? getUserId(req) : null };
+  const cacheData = await getCachedData("campus:v1:listing", cacheKey);
+  if (cacheData) {
+    return res.json(new ApiResponse(200, cacheData, "Listing fetched from cache"));
   }
 
   const listing = await STListing.findById(id)
@@ -265,30 +282,38 @@ export const getListingById = asyncHandler(async (req, res) => {
     .populate("category", "name")
     .lean();
 
-  res.json(
-    new ApiResponse(200, {
-      ...listing,
-      seller: seller ? {
-        user_id: seller.user_id,
-        first_name: seller.first_name,
-        last_name: seller.last_name,
-        avatar: seller.avatar,
-        joined_date: seller.created_at,
-        rating: seller.average_rating || 0,
-        email: seller.email,           // ✅ ADD THIS
-        phone_number: seller.phone_number // ✅ ADD THIS
-      } : null,
-      userRequest,
-      similarListings,
-      requestCount: listing.requestCount,
-      highestOffer: listing.highestOffer
-    }, "Listing fetched successfully")
-  );
+  const responseData = {
+    ...listing,
+    seller: seller ? {
+      user_id: seller.user_id,
+      first_name: seller.first_name,
+      last_name: seller.last_name,
+      avatar: seller.avatar,
+      joined_date: seller.created_at,
+      rating: seller.average_rating || 0,
+      email: seller.email,
+      phone_number: seller.phone_number
+    } : null,
+    userRequest,
+    similarListings,
+    requestCount: listing.requestCount,
+    highestOffer: listing.highestOffer
+  };
+
+  await setCachedData("campus:v1:listing", cacheKey, responseData, 30);
+
+  res.json(new ApiResponse(200, responseData, "Listing fetched successfully"));
 });
 
 export const getSellerListings = asyncHandler(async (req, res) => {
   const { sellerId } = req.params;
   const { page = 1, limit = 10, status = "active" } = req.query;
+
+  const cacheKey = { sellerId, page, limit, status };
+  const cacheData = await getCachedData("campus:v1:seller_listings", cacheKey);
+  if (cacheData) {
+    return res.json(new ApiResponse(200, cacheData, "Seller listings fetched from cache"));
+  }
 
   const filter = { sellerId };
   if (status !== "all") filter.status = status;
@@ -305,25 +330,32 @@ export const getSellerListings = asyncHandler(async (req, res) => {
   // Get seller details
   const seller = await findUserById(sellerId);
 
-  res.json(
-    new ApiResponse(200, {
-      listings,
-      seller: seller ? {
-        first_name: seller.first_name,
-        last_name: seller.last_name,
-        avatar: seller.avatar
-      } : null,
-      pagination: {
-        page: Number(page),
-        limit: Number(limit),
-        total,
-        pages: Math.ceil(total / Number(limit))
-      }
-    }, "Seller listings fetched successfully")
-  );
+  const responseData = {
+    listings,
+    seller: seller ? {
+      first_name: seller.first_name,
+      last_name: seller.last_name,
+      avatar: seller.avatar
+    } : null,
+    pagination: {
+      page: Number(page),
+      limit: Number(limit),
+      total,
+      pages: Math.ceil(total / Number(limit))
+    }
+  };
+
+  await setCachedData("campus:v1:seller_listings", cacheKey, responseData, 60);
+
+  res.json(new ApiResponse(200, responseData, "Seller listings fetched successfully"));
 });
 
 export const getCategories = asyncHandler(async (req, res) => {
+  const cacheData = await getCachedData("campus:v1:categories", {});
+  if (cacheData) {
+    return res.json(new ApiResponse(200, cacheData, "Categories fetched from cache"));
+  }
+
   const categories = await STCategory.aggregate([
     { $match: { isActive: true } },
     { $lookup: {
@@ -340,9 +372,9 @@ export const getCategories = asyncHandler(async (req, res) => {
     { $sort: { count: -1 } }
   ]);
 
-  res.json(
-    new ApiResponse(200, categories, "Categories fetched successfully")
-  );
+  await setCachedData("campus:v1:categories", {}, categories, 300);
+
+  res.json(new ApiResponse(200, categories, "Categories fetched successfully"));
 });
 
 export const getMyListings = asyncHandler(async (req, res) => {
@@ -430,6 +462,8 @@ export const updateListing = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Listing not found after update");
   }
 
+  await invalidateListingCache();
+
   res.json(
     new ApiResponse(200, updatedListing, "Listing updated successfully")
   );
@@ -460,6 +494,8 @@ export const toggleListingActive = asyncHandler(async (req, res) => {
   listing.status = listing.status === "active" ? "archived" : "active";
   await listing.save();
 
+  await invalidateListingCache();
+
   res.json(
     new ApiResponse(200, listing, `Listing ${listing.status === "active" ? "activated" : "archived"} successfully`)
   );
@@ -486,6 +522,8 @@ export const addListingImages = asyncHandler(async (req, res) => {
 
   listing.images.push(...images);
   await listing.save();
+
+  await invalidateListingCache();
 
   res.json(
     new ApiResponse(200, listing.images, "Images added successfully")
@@ -514,6 +552,8 @@ export const removeListingImage = asyncHandler(async (req, res) => {
 
   await listing.save();
 
+  await invalidateListingCache();
+
   res.json(
     new ApiResponse(200, listing.images, "Image removed successfully")
   );
@@ -537,6 +577,8 @@ export const setPrimaryImage = asyncHandler(async (req, res) => {
   });
 
   await listing.save();
+
+  await invalidateListingCache();
 
   res.json(
     new ApiResponse(200, listing.images, "Primary image updated")
@@ -572,6 +614,8 @@ export const deleteListing = asyncHandler(async (req, res) => {
   }
 
   await listing.deleteOne();
+
+  await invalidateListingCache();
 
   res.json(
     new ApiResponse(200, null, "Listing deleted successfully")

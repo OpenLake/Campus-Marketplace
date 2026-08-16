@@ -22,7 +22,7 @@ const stListingSchema = new mongoose.Schema({
 
   status: {
     type: String,
-    enum: ["active", "pending_completion", "sold", "archived"],
+    enum: ["active", "pending_completion", "sold", "archived", "needs_review"],
     default: "active"
   },
   location: { type: String, default: "" },

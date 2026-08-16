@@ -60,7 +60,7 @@ const RegisterDetails = () => {
 
     try {
       setLoading(true);
-      
+
       const payload = {
         first_name: formData.first_name,
         last_name: formData.last_name,
@@ -94,7 +94,7 @@ const RegisterDetails = () => {
   }
 
   return (
-    <div 
+    <div
       className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden font-sans"
       style={{
         background: `
@@ -115,7 +115,7 @@ const RegisterDetails = () => {
         </div>
 
         {/* Register Card */}
-        <div className="bg-[#121922] border border-[#232c38] rounded-2xl p-8 md:p-9 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.8)] animate-[fadeIn_0.2s_ease]">
+        <div className="">
           <h1 className="text-2xl font-bold text-white mb-1 font-grotesk">Complete Registration</h1>
           <p className="text-sm text-[#93a2b3] mb-6">We just need a few more details to set up your profile.</p>
 
@@ -198,7 +198,7 @@ const RegisterDetails = () => {
             {formData.role === 'vendor' && (
               <div className="space-y-4 border-t border-[#232c38] pt-4 mt-4 animate-[fadeIn_0.15s_ease]">
                 <h3 className="font-semibold text-sm text-white">Vendor Details</h3>
-                
+
                 <div>
                   <label htmlFor="shop_name" className="block text-xs font-semibold text-[#93a2b3] mb-1.5">
                     Shop Name <span className="text-[#10b981]">*</span>

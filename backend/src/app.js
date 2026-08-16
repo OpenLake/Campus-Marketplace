@@ -1,13 +1,13 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-// import { errorHandler } from "./middlewares/error.middleware.js";
+import { errorHandler } from "./middlewares/error.middleware.js";
 
 // Import all routes
-// import heathcheckRouter from "./routes/healthcheck.route.js";
- import userRouter from "./routes/users.routes.js";
- import listingRouter from "./routes/listing.routes.js";
-
+import healthcheckRouter from "./routes/healthcheck.route.js";
+import userRouter from "./routes/users.routes.js";
+import listingRouter from "./routes/listing.routes.js";
+import cronRouter from "./routes/cron.routes.js";
 
 const allowedOrigins = [
   "http://localhost:4173",
@@ -50,12 +50,13 @@ app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(express.static("public"));
 app.use(cookieParser());
 // API routes
-// app.use("/api/healthcheck", heathcheckRouter);
+app.use("/api/healthcheck", healthcheckRouter);
 app.use("/api/users", userRouter);
 app.use("/api/listings", listingRouter);
 app.use("/api/orders", orderRouter);
+app.use("/api/cron", cronRouter);
 
-// app.use(errorHandler);
+app.use(errorHandler);
 
 export default app;
  

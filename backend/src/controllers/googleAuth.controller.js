@@ -91,12 +91,9 @@ export const completeGoogleSignup = async (req, res) => {
       return res.status(409).json({ message: "User already exists" });
     }
 
-  //  Validate student email
-  //  if (role === 'student' && !googleData.email.endsWith('@iitbhilai.ac.in')) {
-  //    return res.status(400).json({ 
-  //      message: "Students must use @iitbhilai.ac.in email" 
-  //    });
-  //  }
+    if (!googleData.email.endsWith('@iitbhilai.ac.in') && !googleData.email.endsWith('@iitbhilai.edu.in')) {
+      return res.status(400).json({ message: "Must use @iitbhilai.ac.in or @iitbhilai.edu.in email" });
+    }
 
     // Create user in PostgreSQL
     const newUser = await createUser({
