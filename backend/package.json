@@ -31,11 +31,12 @@
     "mongoose": "^8.17.1",
     "mongoose-paginate-v2": "^1.8.0",
     "multer": "^2.0.2",
-    "nodemailer": "^7.0.5",
+    "nodemailer": "^7.0.13",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "pg": "^8.19.0",
     "pg-promise": "^12.6.1",
+    "redis": "^6.2.1",
     "ws": "^8.21.1"
   },
   "devDependencies": {

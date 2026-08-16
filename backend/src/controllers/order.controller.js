@@ -8,6 +8,9 @@ import Listing from "../models/listing.model.js";
 import { STOrder } from "../models/st_order.model.js";
 import { IdempotencyKey } from "../models/idempotency_key.model.js";
 import mongoose from "mongoose";
+import { invalidateListingCache } from "../utils/cache.js";
+import { sendEmailNotification } from "../services/email.service.js";
+import { findUserById } from "../models/users.model.js";
 
 // Create a new order
 export const createOrder = asyncHandler(async (req, res) => {
@@ -193,7 +196,32 @@ export const requestItem = asyncHandler(async (req, res) => {
 
   // Populate listing details for response
   await request.populate("listingId");
-  console.log("Listing sellerId:", listing.sellerId);
+
+  await invalidateListingCache();
+
+  // Async email dispatch
+  Promise.all([
+    findUserById(buyerId),
+    findUserById(listing.sellerId)
+  ]).then(([buyer, seller]) => {
+    if (seller && seller.email) {
+      sendEmailNotification(seller.email, "NEW_REQUEST", {
+        itemTitle: listing.title,
+        sellerName: seller.first_name || "Seller",
+        buyerName: buyer ? (buyer.first_name || "A user") : "A user",
+        offeredPrice: request.offeredPrice,
+        message: request.message
+      }, buyer?.email);
+    }
+    if (buyer && buyer.email) {
+      sendEmailNotification(buyer.email, "REQUEST_SUBMITTED", {
+        itemTitle: listing.title,
+        buyerName: buyer.first_name || "Buyer",
+        offeredPrice: request.offeredPrice
+      }, seller?.email);
+    }
+  }).catch(err => console.error("Error dispatching request emails:", err));
+
   res.status(201).json(
     new ApiResponse(201, request, "Request item submitted successfully")
   );
@@ -276,6 +304,9 @@ export const acceptRequest = asyncHandler(async (req, res) => {
   // Idempotency check
   const existingKey = await IdempotencyKey.findOne({ key: idempotencyKey });
   if (existingKey) {
+    if (existingKey.actor !== userId || existingKey.endpoint !== `/api/orders/st/accept-request/${requestId}`) {
+      throw new ApiError(400, "Idempotency key is already used for a different request");
+    }
     if (existingKey.responseStatus) {
       return res.status(existingKey.responseStatus).json(existingKey.responseBody);
     } else {
@@ -292,62 +323,65 @@ export const acceptRequest = asyncHandler(async (req, res) => {
 
   let result;
   try {
-    // 1. Get the request
-    const request = await STRequest.findById(requestId);
-    if (!request) throw new ApiError(404, "Request not found");
-    if (request.sellerId !== userId) throw new ApiError(403, "Only the seller can accept requests");
-    if (request.status !== "pending") throw new ApiError(400, "This request is no longer pending");
+    const session = await mongoose.startSession();
+    await session.withTransaction(async () => {
+      // 1. Get the request
+      const request = await STRequest.findOne({ _id: requestId, status: "pending", sellerId: userId }).session(session);
+      if (!request) throw new ApiError(404, "Pending request not found or unauthorized");
 
-    const listing = await STListing.findById(request.listingId);
-    if (!listing) throw new ApiError(404, "Listing not found");
-    if (listing.status !== "active") throw new ApiError(400, "This listing is no longer active");
+      const listing = await STListing.findOne({ _id: request.listingId, status: "active" }).session(session);
+      if (!listing) throw new ApiError(400, "This listing is no longer active");
 
-    // 2. Accept this request and add the seller's message
-    request.status = "accepted";
-    if (meetupDetails && meetupDetails.notes) {
-      request.sellerMessage = meetupDetails.notes;
-    }
-    await request.save();
+      // 2. Accept this request and add the seller's message
+      request.status = "accepted";
+      if (meetupDetails && meetupDetails.notes) {
+        request.sellerMessage = meetupDetails.notes;
+      }
+      await request.save({ session });
 
-    // 3. Reject all other pending requests for this listing
-    await STRequest.updateMany(
-      { 
-        listingId: request.listingId, 
-        status: "pending", 
-        _id: { $ne: requestId } 
-      },
-      { status: "rejected" }
-    );
+      // 3. Reject all other pending requests for this listing
+      await STRequest.updateMany(
+        { 
+          listingId: request.listingId, 
+          status: "pending", 
+          _id: { $ne: requestId } 
+        },
+        { status: "rejected" },
+        { session }
+      );
 
-    // 4. Create order
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7); // Default 7-day policy
+      // 4. Create order
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7); // Default 7-day policy
 
-    const orderDocs = await STOrder.create([{
-      requestId: request._id,
-      listingId: request.listingId,
-      buyerId: request.buyerId,
-      sellerId: request.sellerId,
-      finalPrice: request.offeredPrice,
-      meetupDetails: meetupDetails || {},
-      expiresAt,
-      statusHistory: [{
-        status: "awaiting_meetup",
-        changedBy: userId,
-        note: "Order created from accepted request"
-      }]
-    }]);
+      const orderDocs = await STOrder.create([{
+        requestId: request._id,
+        listingId: request.listingId,
+        buyerId: request.buyerId,
+        sellerId: request.sellerId,
+        finalPrice: request.offeredPrice,
+        meetupDetails: meetupDetails || {},
+        expiresAt,
+        statusHistory: [{
+          status: "awaiting_meetup",
+          changedBy: userId,
+          note: "Order created from accepted request"
+        }]
+      }], { session });
 
-    const order = orderDocs[0];
+      const order = orderDocs[0];
 
-    // 5. Update listing status
-    listing.status = "pending_completion";
-    listing.acceptedRequestId = request._id;
-    listing.lockedByOrderId = order._id;
-    await listing.save();
+      // 5. Update listing status
+      listing.status = "pending_completion";
+      listing.acceptedRequestId = request._id;
+      listing.lockedByOrderId = order._id;
+      await listing.save({ session });
 
-    result = { request, order };
+      result = { request, order };
+    });
+    session.endSession();
   } catch (error) {
+    await IdempotencyKey.deleteOne({ _id: idempRecord._id });
     throw error;
   }
 
@@ -356,6 +390,23 @@ export const acceptRequest = asyncHandler(async (req, res) => {
   idempRecord.responseStatus = 201;
   idempRecord.responseBody = responseBody;
   await idempRecord.save();
+
+  await invalidateListingCache();
+
+  // Async email dispatch
+  Promise.all([
+    findUserById(result.request.buyerId),
+    findUserById(result.request.sellerId)
+  ]).then(([buyer, seller]) => {
+    if (buyer && buyer.email) {
+      sendEmailNotification(buyer.email, "REQUEST_ACCEPTED", {
+        itemTitle: result.request.listingId?.title || "an item",
+        buyerName: buyer.first_name || "Buyer",
+        sellerName: seller ? (seller.first_name || "The seller") : "The seller",
+        finalPrice: result.order.finalPrice
+      }, seller?.email);
+    }
+  }).catch(err => console.error("Error dispatching accept email:", err));
 
   res.status(201).json(responseBody);
 });
@@ -382,6 +433,22 @@ export const rejectRequest = asyncHandler(async (req, res) => {
 
   request.status = "rejected";
   await request.save();
+
+  await invalidateListingCache();
+
+  // Async email dispatch
+  await request.populate("listingId");
+  Promise.all([
+    findUserById(request.buyerId),
+    findUserById(request.sellerId)
+  ]).then(([buyer, seller]) => {
+    if (buyer && buyer.email) {
+      sendEmailNotification(buyer.email, "REQUEST_REJECTED", {
+        itemTitle: request.listingId?.title || "an item",
+        buyerName: buyer.first_name || "Buyer"
+      }, seller?.email);
+    }
+  }).catch(err => console.error("Error dispatching reject email:", err));
 
   res.json(
     new ApiResponse(200, request, "Request rejected")
@@ -410,6 +477,8 @@ export const withdrawRequest = asyncHandler(async (req, res) => {
 
   request.status = "withdrawn";
   await request.save();
+
+  await invalidateListingCache();
 
   res.json(
     new ApiResponse(200, request, "Request withdrawn")
@@ -521,6 +590,9 @@ export const updateSTOrderStatus = asyncHandler(async (req, res) => {
   // Idempotency check
   const existingKey = await IdempotencyKey.findOne({ key: idempotencyKey });
   if (existingKey) {
+    if (existingKey.actor !== userId || existingKey.endpoint !== `/api/orders/st/${id}/status`) {
+      throw new ApiError(400, "Idempotency key is already used for a different request");
+    }
     if (existingKey.responseStatus) {
       return res.status(existingKey.responseStatus).json(existingKey.responseBody);
     } else {
@@ -538,44 +610,49 @@ export const updateSTOrderStatus = asyncHandler(async (req, res) => {
   let result;
   
   try {
-    const order = await STOrder.findById(id);
-    if (!order) {
-      throw new ApiError(404, "Order not found");
-    }
-
-    const listing = await STListing.findById(order.listingId);
-    
-    // Role checking
-    if (status === "completed" && order.sellerId !== userId) {
-      throw new ApiError(403, "Only the seller can mark order as completed");
-    }
-
-    // Validate status transition using the model's method
-    try {
-      await order.updateStatus(status, userId, note || cancelReason);
-      await order.save();
-    } catch (error) {
-      throw new ApiError(400, error.message);
-    }
-
-    if (listing) {
-      if (status === "completed") {
-        listing.status = "sold";
-      } else if (status === "cancelled") {
-        if (cancelReason === "mutual" || cancelReason === "timeout") {
-          listing.status = "active";
-          listing.acceptedRequestId = null;
-          listing.lockedByOrderId = null;
-        } else {
-          listing.status = "needs_review";
-        }
+    const session = await mongoose.startSession();
+    await session.withTransaction(async () => {
+      const order = await STOrder.findById(id).session(session);
+      if (!order) {
+        throw new ApiError(404, "Order not found");
       }
-      // disputed leaves listing in pending_completion state
-      await listing.save();
-    }
-    
-    result = order;
+
+      const listing = await STListing.findById(order.listingId).session(session);
+      
+      // Role checking
+      if (status === "completed" && order.sellerId !== userId) {
+        throw new ApiError(403, "Only the seller can mark order as completed");
+      }
+
+      // Validate status transition using the model's method
+      try {
+        await order.updateStatus(status, userId, note || cancelReason);
+        await order.save({ session });
+      } catch (error) {
+        throw new ApiError(400, error.message);
+      }
+
+      if (listing) {
+        if (status === "completed") {
+          listing.status = "sold";
+        } else if (status === "cancelled") {
+          if (cancelReason === "mutual" || cancelReason === "timeout") {
+            listing.status = "active";
+            listing.acceptedRequestId = null;
+            listing.lockedByOrderId = null;
+          } else {
+            listing.status = "needs_review";
+          }
+        }
+        // disputed leaves listing in pending_completion state
+        await listing.save({ session });
+      }
+      
+      result = order;
+    });
+    session.endSession();
   } catch (error) {
+    await IdempotencyKey.deleteOne({ _id: idempRecord._id });
     throw error;
   }
 
@@ -584,6 +661,42 @@ export const updateSTOrderStatus = asyncHandler(async (req, res) => {
   idempRecord.responseStatus = 200;
   idempRecord.responseBody = responseBody;
   await idempRecord.save();
+
+  await invalidateListingCache();
+
+  // Async email dispatch
+  await result.populate("listingId");
+  if (status === "completed") {
+    Promise.all([
+      findUserById(result.buyerId),
+      findUserById(result.sellerId)
+    ]).then(([buyer, seller]) => {
+      if (buyer && buyer.email) {
+        sendEmailNotification(buyer.email, "ORDER_COMPLETED", {
+          itemTitle: result.listingId?.title || "an item",
+          buyerName: buyer.first_name || "Buyer",
+          finalPrice: result.finalPrice
+        }, seller?.email);
+      }
+    }).catch(err => console.error("Error dispatching completed email:", err));
+  } else if (status === "cancelled") {
+    const isBuyerCancelling = result.buyerId === userId;
+    const recipientId = isBuyerCancelling ? result.sellerId : result.buyerId;
+    
+    Promise.all([
+      findUserById(recipientId),
+      findUserById(userId) // The canceller
+    ]).then(([recipient, canceller]) => {
+      if (recipient && recipient.email) {
+        sendEmailNotification(recipient.email, "ORDER_CANCELLED", {
+          itemTitle: result.listingId?.title || "an item",
+          recipientName: recipient.first_name || "User",
+          cancellerRole: isBuyerCancelling ? "the buyer" : "the seller",
+          reason: cancelReason || note || "No reason provided"
+        }, canceller?.email);
+      }
+    }).catch(err => console.error("Error dispatching cancelled email:", err));
+  }
 
   res.json(responseBody);
 });
