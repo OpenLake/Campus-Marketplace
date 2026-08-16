@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import listingService from '../../services/listingService';
 import siteLogo from '../../assets/site_logo.png';
+import iitbhWallpaper from '../../assets/iitbh_wallpap.png';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -90,32 +91,38 @@ const HomePage = () => {
     <div className="min-h-screen bg-white dark:bg-gray-950 transition-colors" style={{ fontFamily: "'Roboto', sans-serif" }}>
 
       {/* ===== HERO SECTION ===== */}
-      <div className="bg-emerald-50 dark:bg-emerald-950/20 w-full py-16 md:py-24">
-        <div className="container mx-auto px-4 flex flex-col md:flex-row items-center gap-10">
+      <div 
+        className="relative w-full py-16 md:py-24 bg-cover bg-center bg-fixed"
+        style={{ backgroundImage: `url(${iitbhWallpaper})` }}
+      >
+        {/* Overlay with backdrop blur to blur the fixed background */}
+        <div className="absolute inset-0 bg-white/60 dark:bg-gray-950/70 backdrop-blur-[12px] z-0"></div>
 
-          <div className="flex-1 z-10 max-w-2xl">
+        <div className="relative z-10 container mx-auto px-4 flex flex-col md:flex-row items-center gap-10">
+
+          <div className="flex-1 max-w-2xl">
             <h1 className="text-5xl md:text-6xl lg:text-[72px] font-light text-[#1F2937] dark:text-gray-100 leading-[1.1] mb-6 tracking-tight">
               Campus Marketplace. <br />
-              <span className="text-emerald-600 dark:text-emerald-500 font-light">for IIT Bhilai.</span>
+              <span className="text-emerald-700 dark:text-emerald-500 font-light">for IIT Bhilai.</span>
             </h1>
 
-            <p className="text-lg text-gray-600 dark:text-gray-300 mb-10 max-w-lg leading-relaxed font-light">
+            <p className="text-lg text-gray-700 dark:text-gray-200 mb-10 max-w-lg leading-relaxed font-light">
               Buy and sell college essentials.
             </p>
             <button
               onClick={() => navigate('/listings')}
-              className="inline-block bg-emerald-600 text-white px-14 py-4 font-light text-[15px] transition-colors hover:bg-emerald-700"
+              className="inline-block bg-emerald-600 text-white px-14 py-4 font-light text-[15px] transition-colors hover:bg-emerald-700 rounded-sm"
             >
               Shop Now
             </button>
           </div>
 
-          <div className="flex-1 flex justify-center items-center max-w-[480px] relative">
-            <div className="w-64 h-64 md:w-80 md:h-80 bg-gradient-to-br from-emerald-100 to-emerald-50 dark:from-emerald-950/40 dark:to-emerald-900/10 rounded-full flex items-center justify-center shadow-[0_20px_60px_-15px_rgba(16,185,129,0.2)] border border-emerald-200/50 dark:border-emerald-800/30">
+          <div className="flex-1 flex justify-center items-center max-w-[480px]">
+            <div className="w-64 h-64 md:w-80 md:h-80 flex items-center justify-center">
               <img
                 src={siteLogo}
                 alt="Campus Marketplace"
-                className="w-48 h-48 md:w-64 md:h-64 object-contain drop-shadow-[0_8px_20px_rgba(16,185,129,0.2)]"
+                className="w-48 h-48 md:w-64 md:h-64 object-contain"
               />
             </div>
           </div>
