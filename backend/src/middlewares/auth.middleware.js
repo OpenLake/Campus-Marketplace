@@ -1,8 +1,7 @@
 import jwt from "jsonwebtoken";
-import { getPool } from "../db/pgConnect.js";
 import { ApiError } from "../utils/api-error.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { findUserById } from "../models/users.model.js"; // add this import
+import { findUserById } from "../models/users.model.js";
 
  
 
@@ -10,6 +9,9 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
   try {
     // DEV MODE BYPASS: If APP_MODE is 'dev', bypass JWT verification and provide a mock admin user
     if (process.env.APP_MODE === "dev") {
+      if (process.env.NODE_ENV === "production") {
+        throw new ApiError(500, "APP_MODE=dev cannot be used in production environment.");
+      }
       req.user = {
         _id: "dev-admin-id",
         email: "dev-admin@campus.com",

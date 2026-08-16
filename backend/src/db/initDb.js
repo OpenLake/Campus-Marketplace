@@ -235,56 +235,8 @@ const initDatabase = async () => {
   console.log('🚀 Initializing database...');
   
   try {
-    // 1. Connect directly to PostgreSQL using the provided credentials
-    appPool = new Pool({
-      host: process.env.PG_HOST,
-      port: process.env.PG_PORT || 5432,
-      user: process.env.PG_USER,
-      password: process.env.PG_PASSWORD,
-      database: process.env.PG_DATABASE,
-      ssl: process.env.PG_SSL === 'true' ? { rejectUnauthorized: false } : false,
-    });
-
-    // 2. Test PostgreSQL connection
-    const testResult = await appPool.query('SELECT NOW()');
-    console.log(`🕐 PostgreSQL time: ${testResult.rows[0].now}`);
-    console.log('📊 PostgreSQL connected successfully');
-
-    // 3. Execute schema SQL if tables don't exist
-    const tableCheck = await appPool.query(`
-      SELECT EXISTS (
-        SELECT FROM information_schema.tables 
-        WHERE table_schema = 'public' 
-        AND table_name = 'users'
-      );
-    `);
-    
-    const dbInitialized = tableCheck.rows[0].exists;
-    if (!dbInitialized) {
-      console.log('📝 Creating/updating tables...');
-      try {
-        const schemaSQL = fs.readFileSync(
-          path.join(__dirname, 'init.sql'),
-          'utf8'
-        );
-        
-        const statements = schemaSQL
-          .split(';')
-          .filter(statement => statement.trim() !== '');
-        
-        for (let statement of statements) {
-          if (statement.trim()) {
-            await appPool.query(statement);
-          }
-        }
-        console.log('✅ Tables created/verified successfully');
-      } catch (fileError) {
-        console.error('⚠️ Could not read or execute init.sql:', fileError.message);
-        // Do not crash the server if DB might already have tables through other means
-      }
-    } else {
-      console.log('✅ Tables already exist, skipping schema creation');
-    }
+    // 1-3. PostgreSQL initialization removed in favor of Supabase REST API
+    console.log('🔗 Using Supabase REST API via supabase-js');
     
     // 4. Connect to MongoDB
     console.log('🔌 Connecting to MongoDB...');

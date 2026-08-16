@@ -16,7 +16,7 @@ import {
 import { ApiError } from "../utils/api-error.js";
 import { ApiResponse } from "../utils/api-response.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { getPool } from "../db/pgConnect.js";
+import { supabase } from "../db/supabaseClient.js";
 import { STListing } from "../models/st_listing.model.js";
 import { STOrder } from "../models/st_order.model.js";
 
@@ -73,6 +73,13 @@ export const registerUser = asyncHandler(async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "First name, last name, email and password are required"
+      });
+    }
+
+    if (!email.endsWith('@iitbhilai.ac.in') && !email.endsWith('@iitbhilai.edu.in')) {
+      return res.status(400).json({
+        success: false,
+        message: "Must use @iitbhilai.ac.in or @iitbhilai.edu.in email"
       });
     }
 
@@ -321,46 +328,23 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
 export const listUsers = asyncHandler(async (req, res) => {
   try {
     const { page = 1, limit = 10, search, role } = req.query;
-    const pool = getPool();
-    let query = 'SELECT user_id, email, first_name, last_name, phone_number, role, is_verified, avatar, created_at FROM users';
-    const conditions = [];
-    const values = [];
-    let paramIndex = 1;
+    let query = supabase.from('users').select('user_id, email, first_name, last_name, phone_number, role, is_verified, avatar, created_at', { count: 'exact' });
 
-    if (search) {
-      conditions.push(`(email ILIKE $${paramIndex} OR first_name ILIKE $${paramIndex} OR last_name ILIKE $${paramIndex})`);
-      values.push(`%${search}%`);
-      paramIndex++;
-    }
-    if (role) {
-      conditions.push(`role = $${paramIndex}`);
-      values.push(role);
-      paramIndex++;
-    }
-    if (conditions.length) {
-      query += ' WHERE ' + conditions.join(' AND ');
-    }
-    query += ' ORDER BY created_at DESC LIMIT $' + paramIndex + ' OFFSET $' + (paramIndex + 1);
-    values.push(parseInt(limit), (parseInt(page) - 1) * parseInt(limit));
-
-    const result = await pool.query(query, values);
+    if (role) query = query.eq('role', role);
+    if (search) query = query.or(`email.ilike.%${search}%,first_name.ilike.%${search}%,last_name.ilike.%${search}%`);
     
-    // Count total
-    let countQuery = 'SELECT COUNT(*) FROM users';
-    if (conditions.length) {
-      countQuery += ' WHERE ' + conditions.join(' AND ');
-    }
-    const countResult = await pool.query(countQuery, values.slice(0, paramIndex - 1));
-    const total = parseInt(countResult.rows[0].count);
+    query = query.order('created_at', { ascending: false }).range((page - 1) * limit, page * limit - 1);
+    const { data, count, error } = await query;
+    if (error) throw new Error(error.message);
 
     return res.json({
       success: true,
-      users: result.rows,
+      users: data,
       pagination: {
         currentPage: parseInt(page),
-        totalPages: Math.ceil(total / parseInt(limit)),
-        totalUsers: total,
-        hasNext: parseInt(page) < Math.ceil(total / parseInt(limit)),
+        totalPages: Math.ceil(count / parseInt(limit)),
+        totalUsers: count,
+        hasNext: parseInt(page) < Math.ceil(count / parseInt(limit)),
         hasPrev: parseInt(page) > 1,
       }
     });
@@ -404,13 +388,15 @@ export const deleteUser = asyncHandler(async (req, res) => {
     }
 
     // 3. Soft delete the user
-    const pool = getPool();
-    const result = await pool.query(
-      'UPDATE users SET is_active = false WHERE user_id = $1 RETURNING user_id', 
-      [id]
-    );
+    const { data, error } = await supabase
+      .from('users')
+      .update({ is_active: false })
+      .eq('user_id', id)
+      .select('user_id');
 
-    if (result.rowCount === 0) {
+    if (error) throw new Error(error.message);
+
+    if (!data || data.length === 0) {
       return res.status(404).json({
         success: false,
         message: "User not found"

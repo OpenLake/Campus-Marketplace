@@ -97,7 +97,8 @@ const stOrderSchema = new mongoose.Schema(
 
     // Timestamps
     completedAt: Date,
-    cancelledAt: Date
+    cancelledAt: Date,
+    expiresAt: Date
   },
   {
     timestamps: true, // This automatically adds createdAt and updatedAt
@@ -120,8 +121,7 @@ stOrderSchema.pre("validate", function (next) {
 stOrderSchema.index({ buyerId: 1, createdAt: -1 });
 stOrderSchema.index({ sellerId: 1, status: 1, createdAt: -1 });
 stOrderSchema.index({ listingId: 1, status: 1 });
-stOrderSchema.index({ orderNumber: 1 });
-stOrderSchema.index({ requestId: 1 }); // 🔹 NEW: index for request lookup
+stOrderSchema.index({ status: 1, expiresAt: 1 }); // 🔹 NEW: index for tracking expirations
 
 // Add pagination plugin
 stOrderSchema.plugin(mongoosePaginate);

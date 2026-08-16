@@ -19,7 +19,7 @@ services:
       # Added PGDATA to support the parent-folder mount strategy
       PGDATA: /var/lib/postgresql/data/pgdata 
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres-data:/var/lib/postgresql
     networks:
@@ -32,9 +32,6 @@ services:
   backend:
     build: ./backend
     container_name: campus-backend
-    dns:
-      - 1.1.1.1  # Cloudflare
-      - 8.8.8.8  # Google
     ports:
       - "5000:5000"
     env_file:
@@ -48,6 +45,8 @@ services:
     volumes:
       - ./backend:/app
       - /app/node_modules # Critical: Prevents local folder from wiping container modules
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - mongodb
       - postgres
@@ -66,6 +65,8 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules # Critical: Ensures @react-oauth/google stays available
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - backend
     networks:

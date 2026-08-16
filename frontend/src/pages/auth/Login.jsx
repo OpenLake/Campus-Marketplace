@@ -59,7 +59,7 @@ const Login = () => {
         </div>
 
         {/* Login Box */}
-        <div className="bg-white dark:bg-[#121922] border border-gray-200 dark:border-[#232c38] rounded-2xl shadow-[0_20px_60px_-20px_rgba(0,0,0,0.08)] dark:shadow-[0_20px_60px_-20px_rgba(0,0,0,0.8)] animate-[fadeIn_0.2s_ease] overflow-hidden grid grid-cols-1 md:grid-cols-2">
+        <div className=" overflow-hidden grid grid-cols-1 md:grid-cols-2">
 
           {/* Left Column: Form content */}
           <div className="p-8 md:p-10 flex flex-col justify-between text-center md:text-left border-b md:border-b-0 md:border-r border-gray-200 dark:border-[#232c38]">
