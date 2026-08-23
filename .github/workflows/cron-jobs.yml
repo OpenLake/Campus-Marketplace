@@ -1,0 +1,32 @@
+name: Scheduled Database Ping and Nightly Tasks
+
+on:
+  schedule:
+    # Run nightly tasks at 2:00 AM UTC every day
+    - cron: '0 2 * * *'
+    # Ping databases (healthcheck) every 2 days at 12:00 PM UTC
+    - cron: '0 12 */2 * *'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  nightly_tasks:
+    name: Run Nightly Cron Tasks
+    # Only run this step if triggered by the nightly cron or manual dispatch
+    if: github.event.schedule == '0 2 * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Nightly API Endpoint
+        run: |
+          curl -X POST "https://campus-marketplace-backend-omega.vercel.app/api/cron/nightly" \
+          -H "Content-Type: application/json" \
+          -H "x-cron-secret: ${{ secrets.CRON_SECRET }}"
+
+  ping_databases:
+    name: Ping Databases
+    # Only run this step if triggered by the 2-day ping schedule or manual dispatch
+    if: github.event.schedule == '0 12 */2 * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Healthcheck Endpoint
+        run: |
+          curl -X GET "https://campus-marketplace-backend-omega.vercel.app/api/healthcheck"
