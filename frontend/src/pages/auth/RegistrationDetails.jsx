@@ -80,7 +80,7 @@ const RegisterDetails = () => {
       if (result.success) {
         navigate('/dashboard');
       } else {
-        setError(result.message || 'Registration failed. Please try again.');
+        setError(result.error || 'Registration failed. Please try again.');
       }
     } catch (err) {
       setError(err.message || 'Registration failed. Please try again.');
