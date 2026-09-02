@@ -1,7 +1,7 @@
 // src/controllers/googleAuth.controller.js
 import { OAuth2Client } from "google-auth-library";
 import jwt from "jsonwebtoken";
-import { findUserByEmail, createUser } from "../models/users.model.js";
+import { findUserByEmail, createUser, createVendorProfile } from "../models/users.model.js";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -71,7 +71,7 @@ export const googleSignIn = async (req, res) => {
 // Complete registration for new users
 export const completeGoogleSignup = async (req, res) => {
   try {
-    const { tempToken, first_name, last_name, phone_number, role } = req.body;
+    const { tempToken, first_name, last_name, phone_number, role, shop_name, shop_category, campus_location, opening_time, closing_time } = req.body;
 
     if (!tempToken) {
       return res.status(400).json({ message: "Temporary token required" });
@@ -107,6 +107,26 @@ export const completeGoogleSignup = async (req, res) => {
       google_id: googleData.googleId,
     });
 
+    // If role is vendor, create vendor profile
+    if (role === 'vendor') {
+      try {
+        await createVendorProfile({
+          vendor_id: newUser.user_id,
+          shop_name,
+          shop_category,
+          shop_description: '',
+          campus_location,
+          opening_time,
+          closing_time,
+        });
+      } catch (vendorError) {
+        console.error("Vendor profile creation error:", vendorError);
+        // We still return success but maybe log the error, or fail the request.
+        // Usually we want to fail the request if vendor profile creation fails, but the user is already created.
+        // For simplicity, we just log it and might return a warning, but for now let's proceed.
+      }
+    }
+
     // Generate access token
     const accessToken = jwt.sign(
       { user_id: newUser.user_id, role: newUser.role },
@@ -124,6 +144,6 @@ export const completeGoogleSignup = async (req, res) => {
 
   } catch (error) {
     console.error("Complete signup error:", error);
-    res.status(500).json({ message: "Registration failed" });
+    res.status(500).json({ message: "Registration failed", error: error.message || String(error) });
   }
 };

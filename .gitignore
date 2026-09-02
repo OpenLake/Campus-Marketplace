@@ -212,3 +212,4 @@ backend/src/uploads/
 
 # Docker volumes
 mongodb_data/
+.env*
